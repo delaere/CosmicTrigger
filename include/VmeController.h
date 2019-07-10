@@ -2,14 +2,13 @@
 #define __VMECONTROLLER
 
 #include "CommonDef.h"
+#include "CAENVMEtypes.h"
 
 #include <iostream>
 #include <cmath>
 #include <sstream>
 #include <stdlib.h>
 #include <unistd.h>
-using namespace std;
-
 
 /**
  * \brief Main controller virtual class.
@@ -19,19 +18,20 @@ using namespace std;
  * It has been created in order to be able to control any VME based system and therefore, the functions are pure virtual.
  * 
  */
+//TODO rewrite this by transfering some of the (new) functions from the USB bridge class.
+//TODO also review the conventions
 class vmeController{
 public:
-  virtual   void setMode(AddressModifier AM, DataWidth DW)=0;///<Sets default modes.
-  virtual   int writeData(long unsigned int address,void* data)=0;///<Short write data function using default modes.
-  virtual   int readData(long unsigned int address,void* data)=0;///<Short read data function using default modes.
-  virtual   int writeData(long unsigned int address,void* data,AddressModifier AM, DataWidth DW)=0;///<Write data function using given mode.
-  virtual   int readData(long unsigned int address,void* data,AddressModifier AM, DataWidth DW)=0;///<Read data function using given mode.
+  virtual   void setMode(CVAddressModifier AM, CVDataWidth DW)=0;///<Sets default modes.
+  virtual   int writeData(long unsigned int address,void* data) const = 0;///<Short write data function using default modes.
+  virtual   int readData (long unsigned int address,void* data) const = 0;///<Short read data function using default modes.
+
   int verbose; ///<Defines verbosity level of any board using this controller
   
   void setVerbose(int verbose){this->verbose=verbose;}///< Sets verbosity level
   
-  virtual AddressModifier getAM(void)=0;///<Gets default mode
-  virtual DataWidth getDW(void)=0;///<Gets default mode
+  virtual CVAddressModifier getAM(void) const = 0;///<Gets default mode
+  virtual CVDataWidth getDW(void) const = 0;///<Gets default mode
   
 };
 

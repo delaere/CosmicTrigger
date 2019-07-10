@@ -42,48 +42,48 @@ UsbController::~UsbController(){
   }
 }
 
-void UsbController::setMode(AddressModifier AM, DataWidth DW){
+void UsbController::setMode(CVAddressModifier AM, CVDataWidth DW){
   this->AM_=AM;
   this->DW_=DW;
   this->AMtmp_=AM;
   this->DWtmp_=DW;
 }
 
-void UsbController::setAM(AddressModifier AM){
+void UsbController::setAM(CVAddressModifier AM){
   this->AM_=AM;
   this->AMtmp_=AM;
 }
 
-void UsbController::setDW(DataWidth DW){
+void UsbController::setDW(CVDataWidth DW){
   this->DW_=DW;
   this->DWtmp_=DW;
 }
 
-AddressModifier UsbController::getAM(void){
+CVAddressModifier UsbController::getAM(void){
   return(this->AM);
   
 }
 
-DataWidth UsbController::getDW(void){
+CVDataWidth UsbController::getDW(void){
   return(this->DW);
 }
 
-UsbController* UsbController::mode(const AddressModifier AM, const DataWidth DW){
+UsbController* UsbController::mode(const CVAddressModifier AM, const CVDataWidth DW){
   this->AMtmp_=AM;
   this->DWtmp_=DW;
 }
 
 int UsbController::writeData(long unsigned int address,void* data){
-  AddressModifier AM = this->AMtmp_;
-  DataWidth DW = this->DWtmp_;
+  CVAddressModifier AM = this->AMtmp_;
+  CVDataWidth DW = this->DWtmp_;
   this->AMtmp_ = this->AM_;
   this->DWtmp_ = this->DW_;
   return(CAENVME_WriteCycle(this->BHandle,address,data,AM,DW);
 }
 
 int UsbController::readData(long unsigned int address,void* data){
-  AddressModifier AM = this->AMtmp_;
-  DataWidth DW = this->DWtmp_;
+  CVAddressModifier AM = this->AMtmp_;
+  CVDataWidth DW = this->DWtmp_;
   this->AMtmp_ = this->AM_;
   this->DWtmp_ = this->DW_;
   return(CAENVME_ReadCycle(this->BHandle,address,data,AM,DW);
@@ -152,9 +152,7 @@ unsigned char IRQCheck() const {
 }
 
 uint16_t IACK(CVIRQLevels level) const {
-  AddressModifier AM = this->AMtmp_;
-  DataWidth DW = this->DWtmp_;
-  this->AMtmp_ = this->AM_;
+  CVDataWidth DW = this->DWtmp_;
   this->DWtmp_ = this->DW_;
   uint16_t vector;
   CAENVME_API status = CAENVME_IACKCycle(this->BHandle_, level, &vector, DW);

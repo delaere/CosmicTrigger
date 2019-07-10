@@ -1,62 +1,6 @@
 #include "CommonDef.h"
 
-
-
-bool TestError(int erreur,string endroit, bool fatal){
-  if(!erreur==0){
-    if (fatal) cerr<<"***FATAL ";
-    cerr<<"ERROR, code "<<erreur;
-    if(!(endroit=="")) cerr<<" @ "<<endroit<<endl;
-    else cerr<<endl;
-    if (fatal) exit(-1);
-    return(0);
-  }
-  else return(1);
-}
-
-string show_hex(int number, int size){
-  ostringstream to_return;
-  to_return<<"0x";
-  int i=size-1;
-  if(size==-1){
-    while(number>=pow(16.0,i))i++;
-    i--;
-  }
-  for (int k=i; k>-1; k--){
-    for (int j=1; j<18; j++){
-      if (number<j*pow(16.0,k)){
-	  switch (j){
-	    case 11:
-	      to_return<<"A";
-	      break;
-	    case 12:
-	      to_return<<"B";
-	      break;
-	    case 13:
-	      to_return<<"C";
-	      break;
-	    case 14:
-	      to_return<<"D";
-	      break;
-	    case 15:
-	      to_return<<"E";
-	      break;
-	    case 16:
-	      to_return<<"F";
-	      break;
-	    default:
-	      to_return<<j-1;
-	  }
-	  number=number-(j-1)*pow(16.0,k);
-	  break;
-      }
-    }
-  }
-  return(to_return.str());
-}
-
-
-
+// TODO rewrite this: it looks like an awkward way to apply a bit mask
 unsigned int digit(unsigned int data, int begin, int end)
 {
     if (begin<end){return -1;}
