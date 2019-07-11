@@ -2,6 +2,7 @@
 #define __UsbVmeBridge
 
 #include <iostream>
+#include <tuple>
 
 #include "CommonDef.h"
 #include "VmeController.h"
@@ -106,18 +107,14 @@ public:
      void setAM(CVAddressModifier AM);
      void setDW(CVDataWidth DW);
 
+     /* VME data cycles */
      void writeData(const long unsigned int address,void* data) const;
      void readData (const long unsigned int address,void* data) const;
-     /* more RW methods here */
-     //TODO
-     /*
      void readWriteData(const long unsigned int address,void* data) const;
-     void blockReadData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
-     void MBlockReadData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
-     void blockWriteData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
-     void MBlockWriteData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
+     void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const;
+     void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const;
      void ADOCycle(const long unsigned int address) const;
-*/
+     
      /* Pulser */
      V1718Pulser& getPulser(CVPulserSelect); 
      
@@ -125,13 +122,31 @@ public:
      V1718Scaler& getScaler();
      
      /* Input and output registers */
-     //TODO
-     
+     void configureOutputLine(CVOutputSelect line, CVIOPolarity polarity, CVLEDPolarity LEDpolarity, CVIOSources source) const;
+     void configureInputLine(CVInputSelect line, CVIOPolarity polarity, CVLEDPolarity LEDpolarity) const;
+     std::tuple<CVIOPolarity, CVLEDPolarity, CVIOSources> outputLineConfiguration(CVOutputSelect line) const;
+     std::tuple<CVIOPolarity, CVLEDPolarity> inputLineConfiguration(CVInputSelect line) const;
+     uint32_t readRegister(CVRegisters reg) const;
+     void setOutputRegister(unsigned short mask) const;
+     void clearOutputRegister(unsigned short mask) const;
+     void pulseOutputRegister(unsigned short mask) const;
+
      /* Read display */
      CVDisplay readDisplay() const;
-     
+
      /* Behavior */
-     //TODO
+     void setArbiterType(CVArbiterTypes type) const;
+     void setRequesterType(CVRequesterTypes type) const;
+     void setReleaseType(CVReleaseTypes type) const;
+     void setBusReqLevel(CVBusReqLevels level) const;
+     void setTimeout(CVVMETimeouts timeout) const;
+     void setFIFOMode(bool mode) const;
+     CVArbiterTypes getArbiterType() const;
+     CVRequesterTypes getRequesterType() const;
+     CVReleaseTypes getReleaseType() const;
+     CVBusReqLevels getBusReqLevel() const;
+     CVVMETimeouts getTimeout() const;
+     bool getFIFOMode() const;
      
      /* System reset */
      void systemReset() const;

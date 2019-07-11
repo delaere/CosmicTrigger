@@ -1,19 +1,11 @@
 #ifndef __COMMONTYPEDEF
 #define __COMMONTYPEDEF
 
-//#include <iostream>
-//#include <cmath>
-//#include <sstream>
-//#include <stdlib.h>
 #include <exception>
 
 #include "CAENVMElib.h"
 #include "CAENVMEoslib.h"
 #include "CAENVMEtypes.h"
-
-//TODO only used by TDC... check and move there.
-unsigned int digit(unsigned int data, int begin, int end);
-unsigned int digit(unsigned int data, int digit);
 
 /// Defines coutLevels to manage library output.
 typedef enum coutLevel{
@@ -38,7 +30,6 @@ class CAENVMEexception: public std::exception
     CAENVME_API errorcode_;
 };
 
-//TODO generalize the use of this macro
 #define checkCAENVMEexception(x) {CAENVME_API status = (x); if (status) throw CAENVMEexception(status);}
 
 #endif

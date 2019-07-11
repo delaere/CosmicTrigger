@@ -41,10 +41,10 @@ const vmeController* vmeController::mode(const CVAddressModifier AM, const CVDat
   return this;
 }
 
-std::pair<CVAddressModifier,CVDataWidth> vmeController::useMode() const {
+std::tuple<CVAddressModifier,CVDataWidth> vmeController::useMode() const {
   CVAddressModifier AM = this->AMtmp_;
   CVDataWidth DW = this->DWtmp_;
   this->AMtmp_ = this->AM_;
   this->DWtmp_ = this->DW_;
-  return std::make_pair(AM,DW);
+  return std::tie(AM,DW);
 }

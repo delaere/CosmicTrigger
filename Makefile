@@ -14,10 +14,10 @@ EXE	=	main
 
 CC	=	g++
 
-COPTS	=	-fPIC -DLINUX -Wall 
+COPTS	=	-fPIC -DLINUX -Wall -std=c++17
 #COPTS	=	-g -fPIC -DLINUX -Wall 
 
-FLAGS	=	-Wall -s
+FLAGS	=	-Wall -s -std=c++17
 #FLAGS	=	-Wall
 
 DEPLIBS	=       -l CAENVME -l ncurses -lc -lm

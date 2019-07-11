@@ -1,8 +1,17 @@
 #include "TDC.h"
-#include<vector>
+#include <vector>
 #include "time.h"
 #include <iostream>
 using namespace std;
+
+unsigned int digit(unsigned int data, int begin, int end) {
+    if (begin<end){return -1;}
+    else return (((1<<(begin+1))-1)&data)>>end;
+}
+
+unsigned int digit(unsigned int data, int position) {
+    return (data>>position)&1;
+}
 
 tdc::tdc(vmeController* controller,int address):vmeBoard(controller,cvA32_U_DATA,cvD16){
     this->add=address;
@@ -13,7 +22,6 @@ tdc::tdc(vmeController* controller,int address):vmeBoard(controller,cvA32_U_DATA
     EventFIFO=add+0x1038;
     ControlRegister=add+0x10;
 }
-
 
 int tdc::waitRead(void)
 {

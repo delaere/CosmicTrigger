@@ -3,7 +3,7 @@
 
 #include "CommonDef.h"
 #include "CAENVMEtypes.h"
-#include <utility>
+#include <tuple>
 
 /**
  * \brief Main controller virtual class.
@@ -13,7 +13,7 @@
  * It has been created in order to be able to control any VME based system and therefore, the functions are pure virtual.
  * 
  */
-//TODO rewrite this by transfering some of the (new) functions from the USB bridge class.
+
 class vmeController{
   public:
     vmeController(int verbose);
@@ -28,13 +28,16 @@ class vmeController{
   
     virtual void writeData(long unsigned int address,void* data) const = 0;///<Short write data function using default modes.
     virtual void readData (long unsigned int address,void* data) const = 0;///<Short read data function using default modes.
-    //TODO more data methods
+    virtual void readWriteData(const long unsigned int address,void* data) const = 0;
+    virtual void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
+    virtual void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
+    virtual void ADOCycle(const long unsigned int address) const = 0;
 
     inline void setVerbosity(int verbose){this->verbose_=verbose;}///< Sets verbosity level
-    inline int verbosity() { return verbose_; }
+    inline int verbosity() { return verbose_; }///<Gets verbosity level
 
   protected:
-    virtual std::pair<CVAddressModifier,CVDataWidth> useMode() const;///< more than a getter: it "consumes" the tmp mode.
+    virtual std::tuple<CVAddressModifier,CVDataWidth> useMode() const;///< more than a getter: it "consumes" the tmp mode.
     
   private:
     int verbose_; ///<Defines verbosity level of any board using this controller
