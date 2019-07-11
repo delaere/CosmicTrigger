@@ -1,14 +1,9 @@
 #include "VmeUsbBridge.h"
 #include <iostream>
 
-UsbController::UsbController(int verbose){
-  this->verbose_ = verbose;
+UsbController::UsbController(int verbose):vmeController(verbose) {
   this->board_ = cvV1718;
   char FWRel[128];
-  this->AM_=cvA32_S_DATA;
-  this->DW_=cvD16;
-  this->AMtmp_=cvA32_S_DATA;
-  this->DWtmp_=cvD16;
   
   checkCAENVMEexception(CAENVME_Init((CVBoardTypes)(int)board_, 0, 0, &this->BHandle_));
   this->pulserA_ = new V1718Pulser(this->BHandle_,cvPulserA);
@@ -18,7 +13,7 @@ UsbController::UsbController(int verbose){
   checkCAENVMEexception(CAENVME_BoardFWRelease(this->BHandle_,FWRel));
   this->firmwareVersion_ = std::string(FWRel);
   
-  if(verbose>=3) {
+  if(verbosity()>=3) {
     std::cout << "VME USB Init... ok!"<< std::endl;
     std::cout << "Firmware version: " << this->firmwareVersion_ << std::endl;
   }
@@ -29,56 +24,19 @@ UsbController::~UsbController(){
   delete this->pulserB_;
   delete this->scaler_;
   CAENVME_End(this->BHandle_);
-  if(verbose_>=3) {
+  if(verbosity()>=3) {
     std::cout << "Disconnected from USB controler." << std::endl; 
   }
 }
 
-void UsbController::setMode(CVAddressModifier AM, CVDataWidth DW){
-  this->AM_=AM;
-  this->DW_=DW;
-  this->AMtmp_=AM;
-  this->DWtmp_=DW;
-}
-
-void UsbController::setAM(CVAddressModifier AM){
-  this->AM_=AM;
-  this->AMtmp_=AM;
-}
-
-void UsbController::setDW(CVDataWidth DW){
-  this->DW_=DW;
-  this->DWtmp_=DW;
-}
-
-CVAddressModifier UsbController::getAM(void) const {
-  return(this->AM_);
-}
-
-CVDataWidth UsbController::getDW(void) const {
-  return(this->DW_);
-}
-
-const UsbController* UsbController::mode(const CVAddressModifier AM, const CVDataWidth DW) const {
-  this->AMtmp_=AM;
-  this->DWtmp_=DW;
-  return this;
-}
-
 void UsbController::writeData(long unsigned int address,void* data) const{
-  CVAddressModifier AM = this->AMtmp_;
-  CVDataWidth DW = this->DWtmp_;
-  this->AMtmp_ = this->AM_;
-  this->DWtmp_ = this->DW_;
-  checkCAENVMEexception(CAENVME_WriteCycle(this->BHandle_,address,data,AM,DW));
+  std::pair<CVAddressModifier,CVDataWidth> AMDW = useMode();
+  checkCAENVMEexception(CAENVME_WriteCycle(this->BHandle_,address,data,AMDW.first,AMDW.second));
 }
 
 void UsbController::readData(long unsigned int address,void* data) const {
-  CVAddressModifier AM = this->AMtmp_;
-  CVDataWidth DW = this->DWtmp_;
-  this->AMtmp_ = this->AM_;
-  this->DWtmp_ = this->DW_;
-  checkCAENVMEexception(CAENVME_ReadCycle(this->BHandle_,address,data,AM,DW));
+  std::pair<CVAddressModifier,CVDataWidth> AMDW = useMode();
+  checkCAENVMEexception(CAENVME_ReadCycle(this->BHandle_,address,data,AMDW.first,AMDW.second));
 }
 
 V1718Pulser& UsbController::getPulser(CVPulserSelect pulser){
@@ -144,10 +102,9 @@ unsigned char UsbController::IRQCheck() const {
 }
 
 uint16_t UsbController::IACK(CVIRQLevels level) const {
-  CVDataWidth DW = this->DWtmp_;
-  this->DWtmp_ = this->DW_;
+  std::pair<CVAddressModifier,CVDataWidth> AMDW = useMode();
   uint16_t vector;
-  CAENVME_API status = CAENVME_IACKCycle(this->BHandle_, level, &vector, DW);
+  CAENVME_API status = CAENVME_IACKCycle(this->BHandle_, level, &vector, AMDW.second);
   if (status) {
     throw CAENVMEexception(status);
   }

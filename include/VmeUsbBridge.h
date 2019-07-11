@@ -145,22 +145,7 @@ public:
      
 private:
   std::string firmwareVersion_;
-  CVAddressModifier AM_;
-  CVDataWidth DW_;
-  mutable CVAddressModifier AMtmp_;
-  mutable CVDataWidth DWtmp_;
   int32_t BHandle_;
-  /**<
-   * 
-   * \brief Communication identifier.
-   * 
-   * This object is primordial in any communication with the VME bridge. 
-   * It is used every single time DATA has to be transfered from the 
-   * host computer to a VME Board.
-   * 
-   * It is created with the class and will die with the class. Long live BHandle!
-   * 
-   */
   CVBoardTypes board_;
 
   V1718Pulser* pulserA_;
