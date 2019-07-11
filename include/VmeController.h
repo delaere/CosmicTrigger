@@ -4,11 +4,11 @@
 #include "CommonDef.h"
 #include "CAENVMEtypes.h"
 
-#include <iostream>
-#include <cmath>
-#include <sstream>
-#include <stdlib.h>
-#include <unistd.h>
+//#include <iostream>
+//#include <cmath>
+//#include <sstream>
+//#include <stdlib.h>
+//#include <unistd.h>
 
 /**
  * \brief Main controller virtual class.
@@ -22,17 +22,22 @@
 //TODO also review the conventions
 class vmeController{
 public:
-  virtual   void setMode(CVAddressModifier AM, CVDataWidth DW)=0;///<Sets default modes.
-  virtual   int writeData(long unsigned int address,void* data) const = 0;///<Short write data function using default modes.
-  virtual   int readData (long unsigned int address,void* data) const = 0;///<Short read data function using default modes.
+  
+  virtual void setMode(const CVAddressModifier AM, const CVDataWidth DW);///<Sets default modes.
+  virtual const vmeController* mode(const CVAddressModifier AM, const CVDataWidth DW) const = 0;
+  virtual CVAddressModifier getAM() const = 0;///<Gets default mode
+  virtual CVDataWidth getDW() const = 0;///<Gets default mode
+  virtual void setAM(CVAddressModifier AM) = 0;
+  virtual void setDW(CVDataWidth DW) = 0;
+  
+  virtual void writeData(long unsigned int address,void* data) const = 0;///<Short write data function using default modes.
+  virtual void readData (long unsigned int address,void* data) const = 0;///<Short read data function using default modes.
 
-  int verbose; ///<Defines verbosity level of any board using this controller
-  
-  void setVerbose(int verbose){this->verbose=verbose;}///< Sets verbosity level
-  
-  virtual CVAddressModifier getAM(void) const = 0;///<Gets default mode
-  virtual CVDataWidth getDW(void) const = 0;///<Gets default mode
-  
+  void setVerbosity(int verbose){this->verbose_=verbose;}///< Sets verbosity level
+  int verbosity() { return verbose_; }
+
+protected:
+  int verbose_; ///<Defines verbosity level of any board using this controller
 };
 
 #endif

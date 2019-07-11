@@ -1,6 +1,8 @@
 #ifndef __VMEBOARD
 #define __VMEBOARD
 
+#include "CommonDef.h"
+#include "CAENVMEtypes.h"
 #include "VmeController.h"
 
   /**
@@ -21,9 +23,8 @@
 
 class vmeBoard{
   
-  
 public:
-  vmeBoard(vmeController* cont,AddressModifier AM=A32_U_DATA,DataWidth DW=D16);
+  vmeBoard(vmeController* cont,CVAddressModifier AM=cvA32_U_DATA,CVDataWidth DW=cvD16);
   /**< \brief Constructor
    * 
    *  When a daughter card is created, it will call this constructor. The vmeController pointer is always given, and if the card uses special AddressModifier or DataWidth, those argument should be sent then.
@@ -36,7 +37,7 @@ public:
 protected:
   vmeController* Controller(void) { return cont; }/**<\brief Allows daughter class to get the controller*/
   
-  int writeData(long unsigned int add, void *DATA);
+  void writeData(long unsigned int add, void *DATA);
   /**<\brief Uses default values
   *
   *This function will use the virtual controller functions with the stored data in order to communicate with a daughter board.
@@ -47,7 +48,7 @@ protected:
   *
   */
   
-  int readData(long unsigned int add, void *DATA);
+  void readData(long unsigned int add, void *DATA);
   /**<\brief Uses default values
   *
   *This function will use the virtual controller functions with the stored data in order to communicate with a daughter board.
@@ -57,31 +58,29 @@ protected:
   * The default DW and AM are set when the vmeBoard is created but can be changed with setDW or setAM.
   *
   */  
-
   
-  int writeData(long unsigned int add, void *DATA,AddressModifier tAM, DataWidth tDW);
+  void writeData(long unsigned int add, void *DATA,CVAddressModifier tAM, CVDataWidth tDW);
   /**<\brief Uses temporary values
    *
    * This write function will use the virtual controller's write function with the given parameters.
    *
    */
   
-  int readData(long unsigned int add, void *DATA,AddressModifier tAM, DataWidth tDW);
+  void readData(long unsigned int add, void *DATA,CVAddressModifier tAM, CVDataWidth tDW);
     /**<\brief Uses temporary values
    *
    * This read function will use the virtual controller's read function with the given parameters.
    *
    */
-
   
-  void setAM(AddressModifier AM);
+  void setAM(CVAddressModifier AM);
   /**< \brief Saves default value
    *
    * This function allows the user to change the stored AddressModifier value that will be used to communicate with the Board if no parameter is specified.
    *
    */
   
-  void setDW(DataWidth DW);
+  void setDW(CVDataWidth DW);
   /**< \brief Saves default value
    *
    * This function allows the user to change the stored DataWidth value that will be used to communicate with the Board if no parameter is specified.
@@ -101,21 +100,10 @@ protected:
   
   void setAdd(int add){this->add=add;}///<Changes the address of the board.
   
-  bool TestError(int erreur,string endroit="",bool fatal=false);
- /**<
- * \brief Handles errors.
- * 
- * \param erreur Return value of a readData or writeData function. This will be shown in an error message if useful.
- * \param endroit1 String indicating the place of the error. Will be shown in error message.
- * \param fatal If set to true, the program exists.
- * 
- */
-
-
   int add;
 private:
-  AddressModifier AM; ///< Stored AM value
-  DataWidth DW; ///<Stored DW value
+  CVAddressModifier AM; ///< Stored AM value
+  CVDataWidth DW; ///<Stored DW value
   vmeController *cont; ///<Pointer to the controller. Only this class can access it.
 };
 

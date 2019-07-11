@@ -1,4 +1,5 @@
 #include "CommonDef.h"
+#include <cmath>
 
 // TODO rewrite this: it looks like an awkward way to apply a bit mask
 unsigned int digit(unsigned int data, int begin, int end)

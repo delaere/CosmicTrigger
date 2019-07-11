@@ -1,59 +1,68 @@
 #include "HV.h"
+#include <iostream>
+#include <unistd.h>
+using namespace std;
 
-hv::hv(vmeController *controller, int bridgeAdd, int hvAdd):vmeBoard(controller,A24_S_DATA,D16){
+hv::hv(vmeController *controller, int bridgeAdd, int hvAdd):vmeBoard(controller,cvA24_S_DATA,cvD16){
   this->add=bridgeAdd;
   this->hvAdd=hvAdd;
-  setAM(A24_S_DATA);
-  setDW(D16);
+  setAM(cvA24_S_DATA);
+  setDW(cvD16);
 }
 
 int hv::reset(void){
-  //cout<<show_hex(bridgeAdd)<<endl;
   int DATA=0x0000;
   if(vLevel(NORMAL))cout<<"Reseting HV...";
-  if(TestError(writeData(add+0x06,&DATA),"HV: reset")){
+  try {
+    writeData(add+0x06,&DATA);
     if (vLevel(NORMAL))cout<<" ok!"<<endl;
-    return(1);
+  } catch (CAENVMEexception &e) {
+    std::cout << "HV: " << e.what() << " while resetting." << std::endl;
+    return -1;
   }
-  return(-1);
+  return 1;
 }
 
 int hv::getStatus(){
     int DATA=0;
     if(vLevel(DEBUG))cout<<"Getting HV status...";
-    if(TestError(readData(add+0x02,&DATA),"HV: getStatus")){
+    try {
+      readData(add+0x02,&DATA);
       if (vLevel(DEBUG))cout<<" ok!"<<endl;
-      return(DATA);
+    } catch (CAENVMEexception &e) {
+      std::cout << "HV: " << e.what() << " while getting status." << std::endl;
+      return -1;
     }
-    else return(-1);
+    return DATA;
 }
 
 int hv::comLoop(int data1, int data2){
+  try {
     usleep(100000);
     if(getStatus()==0xFFFF&&vLevel(WARNING))cout<<"*  WARNING: Initial status of HV was: error..."<<endl;
     int DATA=0x0001;
-    if(!TestError(writeData(this->add,&DATA),"HV: comLoop, starting communication")){return(-1);}  //Hello  
+    writeData(this->add,&DATA);//Hello  
     DATA=this->hvAdd;
-    if(!TestError(writeData(this->add,&DATA),"HV: comLoop, setting alim address")){return(-1);}   //Alim add
-
+    writeData(this->add,&DATA);//Alim add
     DATA=data1;
-    if(!TestError(writeData(this->add,&DATA),"HV: comLoop, setting first command")){return(-1);}   //Command
+    writeData(this->add,&DATA);//Command
     if (data2>-1){
       DATA=data2;
-      if(!TestError(writeData(this->add,&DATA),"HV: comLoop, setting second command")){return(-1);}  //Value 
+      writeData(this->add,&DATA);//Value 
     }
-    
     DATA=0x0000;
-    if(!TestError(writeData(this->add+0x04,&DATA),"HV: comLoop, ordering to send a command")); //Send command
-    if(getStatus()==0xFFFF){
-      if(vLevel(ERROR))cout<<"** ERROR while sending "<<show_hex(data1,4)<<"&"<<show_hex(data2,4)<<endl;
-      return(-1);
+    writeData(this->add+0x04,&DATA); //Send command
+    } catch (CAENVMEexception &e) {
+      std::cout << "HV: " << e.what() << " while sending "<< std::hex << data1 <<"&"<< data2 << std::dec << std::endl;
+      return -1;
     }
-    return(1);
-    //DATA=getStatus();
-    //if(DATA==0xFFFF){cerr<<"ERROR!!!"<<endl;}
-  
+    if(getStatus()==0xFFFF){
+      if(vLevel(ERROR)) std::cout<<"** ERROR while sending "<< std::hex << data1 <<"&"<< data2 << std::dec << std::endl;
+      return -1;
+    }
+    return 1;
 }
+
 int hv::setChState(bool state, int channel){
   if (channel<0){
     int status=1;
@@ -70,6 +79,7 @@ int hv::setChState(bool state, int channel){
     return(comLoop(channel*256+0x000B-state));
   }
 }
+
 int hv::setChV(int volt, int channel){
   if (channel<0){
     int status=1;
@@ -96,9 +106,7 @@ double ** hv::readValues(double ** val){
   }
   
   if(comLoop(0x01)==-1)return(0);
-//   return(1);
   int DATA=0;
-  //int lBreak=0;
   usleep(100000);
   getStatus();
   readData(add,&DATA);
@@ -107,20 +115,9 @@ double ** hv::readValues(double ** val){
   for(int i=0; i<4; i++){
     for(int j=0; j<4; j++){
       readData(add,&DATA);
-      //cout<<DATA<<endl;
       val[i][j]=DATA;
       }
   }
   if(DATA==0xFFFF){this->reset();}
-
-//   if(TestError(readData(add,&DATA),"HV: reading values")==-1){return(-1);}
-  
-//   if(vLevel(NORMAL)){cout<<show_hex(DATA)<<endl;}
-//   if(vLevel(DEBUG)){cout<<"Data useful:"<<show_hex(getStatus())<<endl;}
-//   if(!(getStatus()==0xFFFF)){return(DATA);}
-//   else return(-1);
-return(val);
+  return(val);
 }
-
-
-

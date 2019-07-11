@@ -1,17 +1,20 @@
 #include "Discri.h"
+#include <iostream>
+#include <cmath>
+using namespace std;
 
-discri::discri(vmeController *controller,int add):vmeBoard(controller,A32_U_DATA,D16){
+discri::discri(vmeController *controller,int add):vmeBoard(controller,cvA32_U_DATA,cvD16){
   this->add=add;
   this->status=0x0000;//All channels off
   int DATA;
-  if(readData(add+0xFE,&DATA)!=0){
-    if (vLevel(ERROR))cerr<<"** ERROR, unable to connect to Discriminator at add="<<add<<endl;
+  try {
+    readData(add+0xFE,&DATA);
+    if(vLevel(NORMAL)) std::cout << "Connexion to discri... ok!" << std::endl;
+  } catch (CAENVMEexception &e) {
+    std::cout << e.what() << " while contacting discriminator at addess " << std::hex << add << std::dec << std::endl;
   }
-  else{if(vLevel(NORMAL))cout<<"Connexion to discri... ok!"<<endl;}
   this->setMultiChannel(this->status);
 }
-
-
 
 int discri::setChannel(int num, bool newState){
   if (num==-1){
@@ -23,22 +26,27 @@ int discri::setChannel(int num, bool newState){
   if(!newState && curState)this->status-=pow(2,num);
   else if (newState && !curState) this->status+=pow(2,num);
   int DATA=status;
-  if(TestError(writeData(this->add+0x4A,&DATA),"Discri: Changing channel status")){
+  try {
+    writeData(this->add+0x4A,&DATA);
     if (vLevel(NORMAL))cout<<"New status for channel "<<num<<": "<<(this->status%(int)pow(2,num+1))/pow(2,num)<<endl;
-    return(1);
+  } catch (CAENVMEexception &e) {
+    std::cout << "Discri: " << e.what() << " while Changing channel status." << std::endl;
+    return -1;
   }
-  else return(-1);
+  return 1;
 }
-
 
 int discri::setMultiChannel(int code){
   this->status=code;
   int DATA=code;
-  if(TestError(writeData(this->add+0x4A,&DATA),"Discri: Changing channel status")){
-    if (vLevel(NORMAL))    cout<<"Channels changed. Code:"<<code<<endl;
-    return(1);
+  try {
+    writeData(this->add+0x4A,&DATA);
+    if (vLevel(NORMAL)) cout<<"Channels changed. Code:"<<code<<endl;
+  } catch (CAENVMEexception &e) {
+    std::cout << "Discri: " << e.what() << " while changing channel status" << std::endl;
+    return -1;
   }
-  return(-1);
+  return 1;
 }
 
 int discri::setMajority(int num){
@@ -46,12 +54,14 @@ int discri::setMajority(int num){
   int round;
   if ((nRound+0.5)>int(nRound)){ round=(int)nRound+1;}
   else{ round=(int)nRound;}
-  
-  if(TestError(writeData(this->add+0x48,&round),"Discri: setting majority")){
+  try {
+    writeData(this->add+0x48,&round);
     if(vLevel(NORMAL))cout<<"Set majority level to "<<num<<"(sent: "<<round<<")"<<endl;
-    return (1);
+  } catch (CAENVMEexception &e) {
+    std::cout << "Discri: " << e.what() << " while setting majority" << std::endl;
+    return -1;
   }
-  return(-1);
+  return 1;
 }
 
 int discri::setTh(int value,int num){
@@ -67,12 +77,15 @@ int discri::setTh(int value,int num){
       return(status);
     }
     else{
-      if(vLevel(DEBUG)) cout<<"Setting threshold to "<<value<<" on channel "<<num<<"...";
-      if(TestError(writeData(add+2*num,&value),"Discri: Setting threshold")){
-	if (vLevel(DEBUG))cout<<" ok!"<<endl;
-	return(1);
+      try {
+        if(vLevel(DEBUG)) cout<<"Setting threshold to "<<value<<" on channel "<<num<<"...";
+        writeData(add+2*num,&value);
+        if (vLevel(DEBUG))cout<<" ok!"<<endl;
+        return 1;
+      } catch (CAENVMEexception &e) {
+        std::cout << "Discri: " << e.what() << " while setting threshold" << std::endl;
+        return -1;
       }
-      else return(-1);
     }
   }
   return(-1); //Never happens, normally.
@@ -86,42 +99,41 @@ int discri::setWidth(int value,int num){
   else{
       int DATA=value;
       if(vLevel(NORMAL)) cout<<"Setting output width to"<<value<<"...";
-      bool state;
-      if (num<8)state=TestError(writeData(this->add+0x40,&DATA),"Discri: Setting width");
-      if (num<0||num>7)state=TestError(writeData(this->add+0x42,&DATA),"Discri: Setting width");
-      if(state && vLevel(NORMAL)){
-	cout<<" ok!"<<endl;
+      try {
+        if (num<8) writeData(this->add+0x40,&DATA);
+        if (num<0||num>7) writeData(this->add+0x42,&DATA);
+        if (vLevel(NORMAL)) cout<<" ok!"<<endl;
+      } catch (CAENVMEexception &e) {
+        std::cout << "Discri: " << e.what() << " while setting width" << std::endl;
+        return -1;
       }
-      if(!state) return(-1);
-      else return(1);
-    }
+      return 1;
+  }
   return(-1); //Never happens, normally.
 }
 
-
-
 int discri::viewStatus(void){
-  if(vLevel(NORMAL))cout<<show_hex(this->status,4)<<endl;
+  if(vLevel(NORMAL)) std::cout<< std::hex << this->status << std::dec <<endl;
   return(this->status);
 }
-
 
 int discri::setDeadTime(int value,int num){
   if(value>255 || value<0){
     if(vLevel(WARNING))cerr<<"*  WARNING: illegal value , command ignored"<<endl;
     return(-1);
   }
-  else{
-      int DATA=value;
-      if(vLevel(NORMAL))cout<<"Setting dead time to "<<value<<"...";
-      bool state;
-      if (num<8)state=TestError(writeData(this->add+0x44,&DATA),"Discri: setting dead time");
-      if (num<0||num>7)state=TestError(writeData(this->add+0x46,&DATA),"Discri: setting dead time");
-      
-      if(state && vLevel(NORMAL))cout<<" ok!"<<endl;
-      if(!state)return(-1);
-      else return(1);
+  else {
+    int DATA=value;
+    if(vLevel(NORMAL))cout<<"Setting dead time to "<<value<<"...";
+    try {
+      if (num<8) writeData(this->add+0x44,&DATA);
+      if (num<0||num>7) writeData(this->add+0x46,&DATA);
+      if (vLevel(NORMAL)) cout<<" ok!"<<endl;
+    } catch (CAENVMEexception &e) {
+      std::cout << "Discri: " << e.what() << " while setting dead time" << std::endl;
+      return -1;
     }
-    return(-1); //Never happens, normally.
+    return 1;
+  }
+  return(-1); //Never happens, normally.
 }
-

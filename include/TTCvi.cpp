@@ -1,6 +1,8 @@
 #include "TTCvi.h"
+#include <iostream>
+using namespace std;
 
-ttcVi::ttcVi(vmeController* controller,int address):vmeBoard(controller,A32_U_DATA,D16){
+ttcVi::ttcVi(vmeController* controller,int address):vmeBoard(controller,cvA32_U_DATA,cvD16){
   this->add=address;
   this->channel=1;
   this->channelFrequency=0;
@@ -53,11 +55,16 @@ void ttcVi::changeChannel(int channel){
     }
   if (DATA>-1){
     DATA+=this->channelFrequency*16*16*16;
-    if(TestError(writeData(this->add+0x80,&DATA),"TTCvi: Writing new mode")&&vLevel(NORMAL))cout<<" ok!"<<endl;
-    if(vLevel(DEBUG))cout<<"Sent: "<<show_hex(DATA,4)<<" to TTCvi (add:"<<show_hex(this->add,6)<<")"<<endl;
+    try {
+      writeData(this->add+0x80,&DATA);
+    } catch (CAENVMEexception &e) {
+      std::cout << "TTCvi: " << e.what() << " while writing new mode." << std::endl;
+      return;
+    }
+    if (vLevel(NORMAL))std::cout <<" ok!" << std::endl;
+    if (vLevel(DEBUG)) std::cout << "Sent: " << std::hex << DATA <<" to TTCvi (add:" << this->add << std::dec <<")" << std::endl;
   }
 }
-
 
 void ttcVi::changeRandomFrequency(int frequencyId){
   this->channelFrequency=frequencyId;
@@ -67,11 +74,11 @@ void ttcVi::changeRandomFrequency(int frequencyId){
   }
 }
 
-
 int ttcVi::viewMode(void){  
   int DATA=0;
-  if(TestError(readData(this->add+0x80,&DATA),"TTCvi: viewMode")){
-  switch(DATA%16){
+  try { 
+    readData(this->add+0x80,&DATA);
+    switch(DATA%16){
     case 0:
       if (vLevel(NORMAL))cout<<"L1A(0)"<<endl;
       break;
@@ -95,9 +102,10 @@ int ttcVi::viewMode(void){
       break;
     default:
       if(vLevel(WARNING))cerr<<"*   WARNING: unknown TTCvi mode."<<endl;
-    
-  }
+    }
     return(16*16*16*(DATA/(16*16*16))+DATA%16);
+  } catch (CAENVMEexception &e) {
+    std::cout << "TTCvi: " << e.what() << " while reading view mode." << std::endl;
   }
-  else return(-1);
+  return -1;
 }

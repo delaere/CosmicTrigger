@@ -2,12 +2,8 @@
 #define __UsbVmeBridge
 
 #include <iostream>
-#include <exception>
 
-#include "CAENVMElib.h"
-#include "CAENVMEoslib.h"
-#include "CAENVMEtypes.h"
-
+#include "CommonDef.h"
 #include "VmeController.h"
 
 /**
@@ -22,7 +18,7 @@
 class V1718Pulser
 {
   public:
-    V1718Pulser(int32_t handle, CVPulserSelect id);
+    V1718Pulser(uint32_t handle, CVPulserSelect id);
     ~V1718Pulser() {}
 
     void setPeriod(unsigned char period) { this->period_ = period; this->configured_ = false; }
@@ -45,7 +41,7 @@ class V1718Pulser
     void stop() const;
 
   private:
-    int32_t BHandle_;
+    uint32_t BHandle_;
     CVPulserSelect pulserId_;
     unsigned char period_;
     unsigned char width_;
@@ -53,13 +49,13 @@ class V1718Pulser
     unsigned char pulseNo_;
     CVIOSources start_;
     CVIOSources reset_;
-    bool configured_;
+    mutable bool configured_;
 };
 
 class V1718Scaler
 {
   public:
-    V1718Scaler(int32_t handle);
+    V1718Scaler(uint32_t handle);
     ~V1718Scaler() {}
   
     void setLimit(short limit) { this->limit_ = limit; this->configured_=false; }
@@ -82,7 +78,7 @@ class V1718Scaler
     unsigned short count() const;
   
   private:
-    int32_t BHandle_;
+    uint32_t BHandle_;
     short limit_;
     short autoReset_;
     CVIOSources hit_;
@@ -90,21 +86,6 @@ class V1718Scaler
     CVIOSources reset_;
     bool configured_;
 };
-
-class CAENVMEexception: public exception
-{
-  public:
-    CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) {}
-    ~CAENVMEexception() {}
-
-    virtual const char* what() const throw()
-    {
-      return CAENVME_DecodeError(errorcode_);
-    }
-  private:
-    CAENVME_API errorcode_;
-};
-
 
 class UsbController: public vmeController{
 public:
@@ -119,17 +100,24 @@ public:
      
      ~UsbController();///< Liberates the USB controller and "BHandle    
      void setMode(const CVAddressModifier AM, const CVDataWidth DW);
-     UsbController* mode(const CVAddressModifier AM, const CVDataWidth DW);
+     const UsbController* mode(const CVAddressModifier AM, const CVDataWidth DW) const;
      CVAddressModifier getAM() const;
      CVDataWidth getDW() const;
      void setAM(CVAddressModifier AM);
      void setDW(CVDataWidth DW);
 
-     int writeData(const long unsigned int address,void* data) const;
-     int readData (const long unsigned int address,void* data) const;
+     void writeData(const long unsigned int address,void* data) const;
+     void readData (const long unsigned int address,void* data) const;
      /* more RW methods here */
      //TODO
-
+     /*
+     void readWriteData(const long unsigned int address,void* data) const;
+     void blockReadData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
+     void MBlockReadData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
+     void blockWriteData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
+     void MBlockWriteData(const long unsigned int address,unsigned char *Buffer, int Size, int *count) const;
+     void ADOCycle(const long unsigned int address) const;
+*/
      /* Pulser */
      V1718Pulser& getPulser(CVPulserSelect); 
      
@@ -159,8 +147,8 @@ private:
   std::string firmwareVersion_;
   CVAddressModifier AM_;
   CVDataWidth DW_;
-  CVAddressModifier AMtmp_;
-  CVDataWidth DWtmp_;
+  mutable CVAddressModifier AMtmp_;
+  mutable CVDataWidth DWtmp_;
   int32_t BHandle_;
   /**<
    * 
@@ -175,9 +163,9 @@ private:
    */
   CVBoardTypes board_;
 
-  V1718Pulser pulserA_;
-  V1718Pulser pulserB_;
-  V1718Scaler scaler_;
+  V1718Pulser* pulserA_;
+  V1718Pulser* pulserB_;
+  V1718Scaler* scaler_;
 };
 
 
