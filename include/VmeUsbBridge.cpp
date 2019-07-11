@@ -121,10 +121,7 @@ void UsbController::pulseOutputRegister(unsigned short mask) const {
 
 CVDisplay UsbController::readDisplay() const {
   CVDisplay value;
-  CAENVME_API status = CAENVME_ReadDisplay(this->BHandle_, &value);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_ReadDisplay(this->BHandle_, &value));
   return value;
 }
 
@@ -189,10 +186,7 @@ bool UsbController::getFIFOMode() const {
 }
 
 void UsbController::systemReset() const {
-  CAENVME_API status = CAENVME_SystemReset(this->BHandle_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_SystemReset(this->BHandle_));
   /* note: we don't update the pulsers and scaler so a simple configure() on the restores the previous settings
   pulserA_.update();
   pulserB_.update();
@@ -201,42 +195,27 @@ void UsbController::systemReset() const {
 }
 
 void UsbController::IRQEnable(uint32_t mask) const {
-  CAENVME_API status = CAENVME_IRQEnable(this->BHandle_,mask);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_IRQEnable(this->BHandle_,mask));
 }
 
 void UsbController::IRQDisable(uint32_t mask) const {
-  CAENVME_API status = CAENVME_IRQDisable(this->BHandle_,mask);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_IRQDisable(this->BHandle_,mask));
 }
 
 void UsbController::IRQWait(uint32_t mask, uint32_t timeout_ms) const {
-  CAENVME_API status = CAENVME_IRQWait(this->BHandle_,mask,timeout_ms);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_IRQWait(this->BHandle_,mask,timeout_ms));
 }
 
 unsigned char UsbController::IRQCheck() const {
   unsigned char output;
-  CAENVME_API status = CAENVME_IRQCheck(this->BHandle_, &output);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_IRQCheck(this->BHandle_, &output));
   return output;
 }
 
 uint16_t UsbController::IACK(CVIRQLevels level) const {
   auto [AM, DW] = useMode();
   uint16_t vector;
-  CAENVME_API status = CAENVME_IACKCycle(this->BHandle_, level, &vector, DW);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_IACKCycle(this->BHandle_, level, &vector, DW));
   return vector;
 }
 
@@ -247,42 +226,30 @@ V1718Pulser::V1718Pulser(uint32_t handle, CVPulserSelect id){
 }
 
 void V1718Pulser::configure() const {
-  CAENVME_API status = CAENVME_SetPulserConf(this->BHandle_, this->pulserId_,
-                                 this->period_,this->width_,
-                                 this->units_,this->pulseNo_,
-                                 this->start_,this->reset_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_SetPulserConf(this->BHandle_, this->pulserId_,
+                                              this->period_,this->width_,
+                                              this->units_,this->pulseNo_,
+                                              this->start_,this->reset_));
   this->configured_ = true;
 }
 
 void V1718Pulser::start() const {
   if (!this->configured_ ) configure();
   if (this->start_ != cvManualSW) throw CAENVMEexception(cvInvalidParam);
-  CAENVME_API status = CAENVME_StartPulser(this->BHandle_, this->pulserId_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_StartPulser(this->BHandle_, this->pulserId_));
 }
 
 void V1718Pulser::stop() const {
   if (!this->configured_ ) configure();
   if (this->reset_ != cvManualSW) throw CAENVMEexception(cvInvalidParam);
-  CAENVME_API status = CAENVME_StopPulser(this->BHandle_, this->pulserId_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_StopPulser(this->BHandle_, this->pulserId_));
 }
 
 void V1718Pulser::update(){
-  CAENVME_API status = CAENVME_GetPulserConf(this->BHandle_, this->pulserId_, 
-                                 &(this->period_),&(this->width_),
-                                 &(this->units_),&(this->pulseNo_),
-                                 &(this->start_),&(this->reset_));
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_GetPulserConf(this->BHandle_, this->pulserId_, 
+                                              &(this->period_),&(this->width_),
+                                              &(this->units_), &(this->pulseNo_),
+                                              &(this->start_), &(this->reset_)));
   this->configured_ = true;
 }
 
@@ -292,59 +259,41 @@ V1718Scaler::V1718Scaler(uint32_t handle){
 }
 
 void V1718Scaler::configure(){
-  CAENVME_API status = CAENVME_SetScalerConf(this->BHandle_, 
-                                 this->limit_,this->autoReset_,
-                                 this->hit_,this->gate_,
-                                 this->reset_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_SetScalerConf(this->BHandle_, 
+                                              this->limit_,this->autoReset_,
+                                              this->hit_,this->gate_,
+                                              this->reset_));
   this->configured_ = true;
 }
 
 void V1718Scaler::update(){
-  CAENVME_API status = CAENVME_GetScalerConf(this->BHandle_,
-                                 &(this->limit_),&(this->autoReset_),
-                                 &(this->hit_),&(this->gate_),
-                                 &(this->reset_));
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_GetScalerConf(this->BHandle_,
+                                              &(this->limit_),&(this->autoReset_),
+                                              &(this->hit_),&(this->gate_),
+                                              &(this->reset_)));
   this->configured_ = true;
 }
 
 void V1718Scaler::resetCount(){
   if (!this->configured_ ) configure();
   if (this->reset_ != cvManualSW) throw CAENVMEexception(cvInvalidParam);
-  CAENVME_API status = CAENVME_ResetScalerCount(this->BHandle_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_ResetScalerCount(this->BHandle_));
 }
 
 void V1718Scaler::enableGate(){
   if (!this->configured_ ) configure();
   if (this->gate_ != cvManualSW) throw CAENVMEexception(cvInvalidParam);
-  CAENVME_API status = CAENVME_EnableScalerGate(this->BHandle_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_EnableScalerGate(this->BHandle_));
 }
 
 void V1718Scaler::disableGate(){
   if (!this->configured_ ) configure();
   if (this->gate_ != cvManualSW) throw CAENVMEexception(cvInvalidParam);
-  CAENVME_API status = CAENVME_DisableScalerGate(this->BHandle_);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_DisableScalerGate(this->BHandle_));
 }
 
 unsigned short V1718Scaler::count() const {
   unsigned int data = 0;
-  CAENVME_API status = CAENVME_ReadRegister(this->BHandle_, cvScaler1, &data);
-  if (status) {
-    throw CAENVMEexception(status);
-  }
+  checkCAENVMEexception(CAENVME_ReadRegister(this->BHandle_, cvScaler1, &data));
   return (data & 1023);
 }
