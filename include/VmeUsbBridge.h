@@ -147,11 +147,11 @@ public:
      void systemReset() const;
      
      /* Interupts */
-     void IRQEnable(uint32_t mask) const;
-     void IRQDisable(uint32_t mask) const;
-     void IRQWait(uint32_t mask, uint32_t timeout_ms) const;
-     unsigned char IRQCheck() const;
-     uint16_t IACK(CVIRQLevels Level) const;
+     void IRQEnable(uint32_t mask) const override;
+     void IRQDisable(uint32_t mask) const override;
+     void IRQWait(uint32_t mask, uint32_t timeout_ms) const override;
+     unsigned char IRQCheck() const override;
+     uint16_t IACK(CVIRQLevels Level) const override;
      
 private:
   std::string firmwareVersion_;

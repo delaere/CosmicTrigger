@@ -32,10 +32,16 @@ class vmeController{
     virtual void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
     virtual void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
     virtual void ADOCycle(const long unsigned int address) const = 0;
+    
+    virtual void IRQEnable(uint32_t mask) const = 0;
+    virtual void IRQDisable(uint32_t mask) const = 0;
+    virtual void IRQWait(uint32_t mask, uint32_t timeout_ms) const = 0;
+    virtual unsigned char IRQCheck() const = 0;
+    virtual uint16_t IACK(CVIRQLevels Level) const = 0;
 
     inline void setVerbosity(int verbose){this->verbose_=verbose;}///< Sets verbosity level
     inline int  verbosity() const { return verbose_; }///<Gets verbosity level
-    inline bool verbosity(coutLevel level) const { return (verbose_ >= (int)level) ; }
+    inline bool verbosity(coutLevel level) const { return (verbose_ >= (int)level) ; } ///<Check verbosity level
 
   protected:
     virtual std::tuple<CVAddressModifier,CVDataWidth> useMode() const;///< more than a getter: it "consumes" the tmp mode.
