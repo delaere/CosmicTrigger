@@ -42,7 +42,7 @@ public:
    * 
    * It has only been tested in trigger mode.
    */
-  void analyseEvent(event myEvent, string filename);
+  void analyseEvent(event myEvent, const char* filename);
   /**
    * \brief writes the fase of the event "myEvent".
    * 
@@ -168,8 +168,6 @@ public:
    */
 
 private:
-
-  int add;//Default:0x00120000;
 
   //REGISTER ADRESSES (must depend on add)
   int Opcode;

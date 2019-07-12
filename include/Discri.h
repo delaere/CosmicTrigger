@@ -85,8 +85,6 @@ public:
    * 
    */
 
-  
-  
   int viewStatus(void);
   /**<
    * 
@@ -108,11 +106,8 @@ public:
    * 
    */
   
-  
 private:  
-  int status;
+  int status_;
 };
-
-
 
 #endif

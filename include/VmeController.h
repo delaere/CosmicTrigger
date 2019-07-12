@@ -34,7 +34,8 @@ class vmeController{
     virtual void ADOCycle(const long unsigned int address) const = 0;
 
     inline void setVerbosity(int verbose){this->verbose_=verbose;}///< Sets verbosity level
-    inline int verbosity() { return verbose_; }///<Gets verbosity level
+    inline int  verbosity() const { return verbose_; }///<Gets verbosity level
+    inline bool verbosity(coutLevel level) const { return (verbose_ >= (int)level) ; }
 
   protected:
     virtual std::tuple<CVAddressModifier,CVDataWidth> useMode() const;///< more than a getter: it "consumes" the tmp mode.

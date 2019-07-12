@@ -56,7 +56,7 @@ class V1718Pulser
 class V1718Scaler
 {
   public:
-    V1718Scaler(uint32_t handle);
+    explicit V1718Scaler(uint32_t handle);
     ~V1718Scaler() {}
   
     void setLimit(short limit) { this->limit_ = limit; this->configured_=false; }
@@ -90,7 +90,7 @@ class V1718Scaler
 
 class UsbController: public vmeController{
 public:
-     UsbController(int verbose=3);
+     explicit UsbController(int verbose=3);
      /**< 
       * \brief Class constructor.
       * 
@@ -98,22 +98,17 @@ public:
       * if the link to the VME is ok.
       * 
       */
-     
+     UsbController(const UsbController& other); ///< copy constructor
+     UsbController& operator=(const UsbController& other); ///< copy operator
      ~UsbController();///< Liberates the USB controller and "BHandle    
-     void setMode(const CVAddressModifier AM, const CVDataWidth DW);
-     const UsbController* mode(const CVAddressModifier AM, const CVDataWidth DW) const;
-     CVAddressModifier getAM() const;
-     CVDataWidth getDW() const;
-     void setAM(CVAddressModifier AM);
-     void setDW(CVDataWidth DW);
 
      /* VME data cycles */
-     void writeData(const long unsigned int address,void* data) const;
-     void readData (const long unsigned int address,void* data) const;
-     void readWriteData(const long unsigned int address,void* data) const;
-     void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const;
-     void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const;
-     void ADOCycle(const long unsigned int address) const;
+     void writeData(const long unsigned int address,void* data) const override;
+     void readData (const long unsigned int address,void* data) const override;
+     void readWriteData(const long unsigned int address,void* data) const override;
+     void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override;
+     void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override;
+     void ADOCycle(const long unsigned int address) const override;
      
      /* Pulser */
      V1718Pulser& getPulser(CVPulserSelect); 

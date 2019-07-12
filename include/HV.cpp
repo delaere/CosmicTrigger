@@ -3,19 +3,14 @@
 #include <unistd.h>
 using namespace std;
 
-hv::hv(vmeController *controller, int bridgeAdd, int hvAdd):vmeBoard(controller,cvA24_S_DATA,cvD16){
-  this->add=bridgeAdd;
-  this->hvAdd=hvAdd;
-  setAM(cvA24_S_DATA);
-  setDW(cvD16);
-}
+hv::hv(vmeController *controller, int bridgeAdd, int hvAdd):vmeBoard(controller, bridgeAdd, cvA24_S_DATA, cvD16, true),hvAdd(hvAdd) { }
 
 int hv::reset(void){
   int DATA=0x0000;
-  if(vLevel(NORMAL))cout<<"Reseting HV...";
+  if(verbosity(NORMAL))cout<<"Reseting HV...";
   try {
-    writeData(add+0x06,&DATA);
-    if (vLevel(NORMAL))cout<<" ok!"<<endl;
+    writeData(baseAddress()+0x06,&DATA);
+    if (verbosity(NORMAL))cout<<" ok!"<<endl;
   } catch (CAENVMEexception &e) {
     std::cout << "HV: " << e.what() << " while resetting." << std::endl;
     return -1;
@@ -25,10 +20,10 @@ int hv::reset(void){
 
 int hv::getStatus(){
     int DATA=0;
-    if(vLevel(DEBUG))cout<<"Getting HV status...";
+    if(verbosity(DEBUG))cout<<"Getting HV status...";
     try {
-      readData(add+0x02,&DATA);
-      if (vLevel(DEBUG))cout<<" ok!"<<endl;
+      readData(baseAddress()+0x02,&DATA);
+      if (verbosity(DEBUG))cout<<" ok!"<<endl;
     } catch (CAENVMEexception &e) {
       std::cout << "HV: " << e.what() << " while getting status." << std::endl;
       return -1;
@@ -39,25 +34,25 @@ int hv::getStatus(){
 int hv::comLoop(int data1, int data2){
   try {
     usleep(100000);
-    if(getStatus()==0xFFFF&&vLevel(WARNING))cout<<"*  WARNING: Initial status of HV was: error..."<<endl;
+    if(getStatus()==0xFFFF&&verbosity(WARNING))cout<<"*  WARNING: Initial status of HV was: error..."<<endl;
     int DATA=0x0001;
-    writeData(this->add,&DATA);//Hello  
+    writeData(baseAddress(),&DATA);//Hello  
     DATA=this->hvAdd;
-    writeData(this->add,&DATA);//Alim add
+    writeData(baseAddress(),&DATA);//Alim add
     DATA=data1;
-    writeData(this->add,&DATA);//Command
+    writeData(baseAddress(),&DATA);//Command
     if (data2>-1){
       DATA=data2;
-      writeData(this->add,&DATA);//Value 
+      writeData(baseAddress(),&DATA);//Value 
     }
     DATA=0x0000;
-    writeData(this->add+0x04,&DATA); //Send command
+    writeData(baseAddress()+0x04,&DATA); //Send command
     } catch (CAENVMEexception &e) {
       std::cout << "HV: " << e.what() << " while sending "<< std::hex << data1 <<"&"<< data2 << std::dec << std::endl;
       return -1;
     }
     if(getStatus()==0xFFFF){
-      if(vLevel(ERROR)) std::cout<<"** ERROR while sending "<< std::hex << data1 <<"&"<< data2 << std::dec << std::endl;
+      if(verbosity(ERROR)) std::cout<<"** ERROR while sending "<< std::hex << data1 <<"&"<< data2 << std::dec << std::endl;
       return -1;
     }
     return 1;
@@ -72,7 +67,7 @@ int hv::setChState(bool state, int channel){
     return(status);
   }
   else if(channel>3){
-    if(vLevel(WARNING)) cerr<<"*   WARNING: invalid parameter: "<<channel<<". Statement ignored"<<endl;
+    if(verbosity(WARNING)) cerr<<"*   WARNING: invalid parameter: "<<channel<<". Statement ignored"<<endl;
     return(-1);
   }
   else{
@@ -89,7 +84,7 @@ int hv::setChV(int volt, int channel){
     return(status);
   }
   else if(channel>3){
-    if(vLevel(WARNING)) cerr<<"*   WARNING: invalid parameter: "<<channel<<". Statement ignored"<<endl;
+    if(verbosity(WARNING)) cerr<<"*   WARNING: invalid parameter: "<<channel<<". Statement ignored"<<endl;
     return(-1);
   }
   else{
@@ -109,12 +104,12 @@ double ** hv::readValues(double ** val){
   int DATA=0;
   usleep(100000);
   getStatus();
-  readData(add,&DATA);
+  readData(baseAddress(),&DATA);
   if(DATA){cout<<"No data..."<<endl; return(0);}
   
   for(int i=0; i<4; i++){
     for(int j=0; j<4; j++){
-      readData(add,&DATA);
+      readData(baseAddress(),&DATA);
       val[i][j]=DATA;
       }
   }

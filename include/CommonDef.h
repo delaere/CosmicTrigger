@@ -19,7 +19,7 @@ typedef enum coutLevel{
 class CAENVMEexception: public std::exception
 {
   public:
-    CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) {}
+    explicit CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) {}
     ~CAENVMEexception() {}
 
     virtual const char* what() const throw()

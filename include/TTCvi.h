@@ -79,7 +79,6 @@ public:
    */
   
 private:
-  int verbose;
   int channel;
   int channelFrequency;
 };

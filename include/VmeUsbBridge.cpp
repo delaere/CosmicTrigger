@@ -29,6 +29,24 @@ UsbController::~UsbController(){
   }
 }
 
+UsbController::UsbController(const UsbController& other):vmeController(other),firmwareVersion_(other.firmwareVersion_),BHandle_(other.BHandle_) {
+  board_ = cvV1718;
+  pulserA_ = new V1718Pulser(*other.pulserA_);
+  pulserB_ = new V1718Pulser(*other.pulserB_);
+  scaler_  = new V1718Scaler(*other.scaler_);
+}
+
+UsbController& UsbController::operator=(const UsbController& other){
+  board_ = cvV1718;
+  firmwareVersion_ = other.firmwareVersion_;
+  BHandle_ = other.BHandle_;
+  pulserA_->operator=(*other.pulserA_);
+  pulserB_->operator=(*other.pulserB_);
+  scaler_->operator=(*other.scaler_);
+  vmeController::operator=(other);
+  return *this;
+}
+
 void UsbController::writeData(long unsigned int address,void* data) const{
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_WriteCycle(this->BHandle_,address,data,AM,DW));
@@ -91,14 +109,14 @@ std::tuple<CVIOPolarity, CVLEDPolarity, CVIOSources> UsbController::outputLineCo
   CVLEDPolarity LEDPol; 
   CVIOSources Source;
   checkCAENVMEexception(CAENVME_GetOutputConf(this->BHandle_, line,&OutPol,&LEDPol, &Source));
-  return std::tie(OutPol,LEDPol,Source);
+  return std::make_tuple(OutPol,LEDPol,Source);
 }
 
 std::tuple<CVIOPolarity, CVLEDPolarity> UsbController::inputLineConfiguration(CVInputSelect line) const {
   CVIOPolarity InPol;
   CVLEDPolarity LEDPol;  
   checkCAENVMEexception(CAENVME_GetInputConf(this->BHandle_, line, &InPol, &LEDPol));
-  return std::tie(InPol,LEDPol);
+  return std::tuple(InPol,LEDPol);
 }
 
 uint32_t UsbController::readRegister(CVRegisters reg) const {
@@ -219,9 +237,7 @@ uint16_t UsbController::IACK(CVIRQLevels level) const {
   return vector;
 }
 
-V1718Pulser::V1718Pulser(uint32_t handle, CVPulserSelect id){
-  this->BHandle_ = handle;
-  this->pulserId_ = id;
+V1718Pulser::V1718Pulser(uint32_t handle, CVPulserSelect id):BHandle_(handle),pulserId_(id) {
   this->update();
 }
 
@@ -253,8 +269,7 @@ void V1718Pulser::update(){
   this->configured_ = true;
 }
 
-V1718Scaler::V1718Scaler(uint32_t handle){
-  this->BHandle_ = handle;
+V1718Scaler::V1718Scaler(uint32_t handle):BHandle_(handle) {
   this->update();
 }
 

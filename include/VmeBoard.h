@@ -9,102 +9,57 @@
    * \brief Mother class for any board type class.
    * 
    * This class should be used to create any daughter board class.
-   * 
    * It is used to store basic communication functions with a virtual vmeController and to store associated default values.
+   * 
+   * In enforced mode, the controller will always operate in the designated AM/DW mode if the proxy read/write functions are used.
    *
-   * A few read/write functions are implemented here in order to simplify communications. Those functions use the virtual read/write functions of the vmeController and the DataWidth/AddressModifier are either specified when calling the function or the default values will be used.
-   * 
-   * 
-   * 
-   * If the default values where not specified when creating the vmeBoard object, A32_U_DATA and D16 will be used.
-   * 
-   * 
    */
 
+  //TODO it makes little sense to catch exceptions in these classes. It should be left to the user to do that. 
+  // it might also be usefull to complement the exception class with a stack trace:
+  // https://www.gnu.org/software/libc/manual/html_node/Backtraces.html
 class vmeBoard{
   
 public:
-  vmeBoard(vmeController* cont,CVAddressModifier AM=cvA32_U_DATA,CVDataWidth DW=cvD16);
-  /**< \brief Constructor
-   * 
-   *  When a daughter card is created, it will call this constructor. The vmeController pointer is always given, and if the card uses special AddressModifier or DataWidth, those argument should be sent then.
-   * 
-   * If, for some reason, those default AM/DW values have to be changed, the functions setDW() or setAM() should be used.
-   * 
-   * 
-   */
+  vmeBoard(vmeController* cont, uint32_t baseAddress, CVAddressModifier AM=cvA32_U_DATA, CVDataWidth DW=cvD16, bool enforceAMDW=false);
+  virtual ~vmeBoard() {}
+  
+  inline void enforceAMDW(bool enforce) { enforceAMDW_ = enforce; }
+  inline bool isAMDWenforced() { return enforceAMDW_; }
   
 protected:
-  vmeController* Controller(void) { return cont; }/**<\brief Allows daughter class to get the controller*/
+  inline const vmeController* controller() const { return (enforceAMDW_ ? cont_->mode(AM_,DW_) : cont_); }
   
-  void writeData(long unsigned int add, void *DATA);
-  /**<\brief Uses default values
-  *
-  *This function will use the virtual controller functions with the stored data in order to communicate with a daughter board.
-  * 
-  *The add parameter is the address of the register (not the board!) to be accessed and *DATA a pointer towards any type and will be used to send the appropriate number of bits to the VME Board.
-  * 
-  * The amount of bits send is stored in DW and can be modified with setDW.
-  *
-  */
-  
-  void readData(long unsigned int add, void *DATA);
-  /**<\brief Uses default values
-  *
-  *This function will use the virtual controller functions with the stored data in order to communicate with a daughter board.
-  * 
-  * The add parameter is the address of the register (not the board!) to be accessed and *DATA a pointer towards any type and will be used to read the appropriate number of bits to the VME Board.
-  * 
-  * The default DW and AM are set when the vmeBoard is created but can be changed with setDW or setAM.
-  *
-  */  
-  
-  void writeData(long unsigned int add, void *DATA,CVAddressModifier tAM, CVDataWidth tDW);
-  /**<\brief Uses temporary values
-   *
-   * This write function will use the virtual controller's write function with the given parameters.
-   *
-   */
-  
-  void readData(long unsigned int add, void *DATA,CVAddressModifier tAM, CVDataWidth tDW);
-    /**<\brief Uses temporary values
-   *
-   * This read function will use the virtual controller's read function with the given parameters.
-   *
-   */
-  
-  void setAM(CVAddressModifier AM);
-  /**< \brief Saves default value
-   *
-   * This function allows the user to change the stored AddressModifier value that will be used to communicate with the Board if no parameter is specified.
-   *
-   */
-  
-  void setDW(CVDataWidth DW);
-  /**< \brief Saves default value
-   *
-   * This function allows the user to change the stored DataWidth value that will be used to communicate with the Board if no parameter is specified.
-   *
-   */
+  inline bool verbosity(coutLevel level) const { return cont_->verbosity(level); }
 
-  bool vLevel(coutLevel level);
-  /**< \brief Checks the verbosity level.
-   * 
-   * This function will access the verbosity level of the vmeController and return 1 if the given level is above the controller's level.
-   * 
-   * It allows the controller to choose what messages should be displayed.
-   * 
-   * The possible values for the level are: SILENT, ERROR, WARNING, NORMAL and DEBUG.
-   * 
-   */
+  inline void setAdd(uint32_t add) { baseAddress_=add; }
+  inline uint32_t baseAddress() const { return baseAddress_; }
   
-  void setAdd(int add){this->add=add;}///<Changes the address of the board.
-  
-  int add;
+  inline void writeData(long unsigned int address,void* data) const { 
+    controller()->writeData(address,data); 
+  }
+  inline void readData (long unsigned int address,void* data) const { 
+    controller()->readData(address,data); 
+  }
+  inline void readWriteData(const long unsigned int address,void* data) const { 
+    controller()->readWriteData(address,data); 
+  }
+  inline void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const { 
+    controller()->blockReadData(address, buffer, size, count, multiplex); 
+  }
+  inline void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const {
+    controller()->blockWriteData(address, buffer, size, count, multiplex); 
+  }
+  inline void ADOCycle(const long unsigned int address) const {
+    controller()->ADOCycle(address);
+  }
+
 private:
-  CVAddressModifier AM; ///< Stored AM value
-  CVDataWidth DW; ///<Stored DW value
-  vmeController *cont; ///<Pointer to the controller. Only this class can access it.
+  vmeController* cont_;  ///< Pointer to the controller
+  CVAddressModifier AM_; ///< Stored AM value
+  CVDataWidth DW_;       ///< Stored DW value
+  bool enforceAMDW_;     ///< Should the mode be enforced ?
+  uint32_t baseAddress_; ///< The base address of the board
 };
 
 #endif

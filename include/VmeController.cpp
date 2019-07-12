@@ -46,5 +46,5 @@ std::tuple<CVAddressModifier,CVDataWidth> vmeController::useMode() const {
   CVDataWidth DW = this->DWtmp_;
   this->AMtmp_ = this->AM_;
   this->DWtmp_ = this->DW_;
-  return std::tie(AM,DW);
+  return std::make_tuple(AM,DW);
 }
