@@ -1,7 +1,6 @@
 #include "include/VmeUsbBridge.h"
 #include "include/TTCvi.h"
 #include "include/Discri.h"
-#include "include/HV.h"
 #include "include/Scaler.h"
 
 
