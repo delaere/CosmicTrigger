@@ -25,15 +25,11 @@ tdc::tdc(vmeController* controller,int address):vmeBoard(controller, address, cv
 int tdc::waitRead(void)
 {
     unsigned int DATA=0;
-    try {
-      while(1){
-        readData(this->MicroHandshake,&DATA);
-        if(DATA%4==3 || DATA%4==2){
-          break;
-        }
+    while(1){
+      readData(this->MicroHandshake,&DATA);
+      if(DATA%4==3 || DATA%4==2){
+        break;
       }
-    } catch (CAENVMEexception &e) {
-      std::cout << "TDC: " << e.what() << " while wait_read." << std::endl;
     }
     return 0;
 }
@@ -41,31 +37,23 @@ int tdc::waitRead(void)
 int tdc::waitWrite(void)
 {
   unsigned int DATA=0;
-  try {
-    while(1){
-      readData(this->MicroHandshake,&DATA);
-      if(DATA%2==1) {
-        break;
-      }
+  while(1){
+    readData(this->MicroHandshake,&DATA);
+    if(DATA%2==1) {
+      break;
     }
-  } catch (CAENVMEexception &e) {
-      std::cout << "TDC: " << e.what() << " while wait_write." << std::endl;
   }
-   return 0;
+  return 0;
 }
 
 int tdc::waitDataReady(void)
 {
   unsigned int DATA=0;
-  try {
-    while(1){
-      readData(this->StatusRegister,&DATA);
-      if(DATA%2==1){
-        break;
-      }
+  while(1){
+    readData(this->StatusRegister,&DATA);
+    if(DATA%2==1){
+      break;
     }
-  } catch (CAENVMEexception &e) {
-      std::cout << "TDC: " << e.what() << " while wait_data." << std::endl;
   }
   return 0;
 }
@@ -75,30 +63,25 @@ int tdc::getEvent(event &myEvent)
     //works only if FIFO enabled !
     this->waitDataReady(); 
     unsigned int DATA=0;
-    try {
-      controller()->mode(cvA32_U_DATA,cvD32)->readData(this->EventFIFO,&DATA);
-      unsigned int eventNumberFIFO=digit(DATA,31,16);
-      unsigned int numberOfWords=digit(DATA,15,0);
-      vector<unsigned int> dataOutputBuffer;
-      for(unsigned int i=numberOfWords; i>0 ;i--) {
-        controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress(),&DATA);
-        dataOutputBuffer.vector::push_back(DATA);
-      }
-      if (!( eventNumberFIFO==digit(dataOutputBuffer[0],26,5) && digit(dataOutputBuffer[0],31,27)==8)) return -1;
-      myEvent.eventNumber=eventNumberFIFO;
-      hit temporaryHit;
-      for(unsigned int i=0; i<numberOfWords-1 ;i++) { // "-1" because last event is TRAILER
-        if (digit(dataOutputBuffer[i],31,27)==0 ) {
-          temporaryHit.time=digit(dataOutputBuffer[i],18,0);
-          temporaryHit.channel=digit(dataOutputBuffer[i],25,19);
-          myEvent.measurements.vector::push_back(temporaryHit);
-        }
-      }
-      time(&myEvent.time);
-    } catch (CAENVMEexception &e) {
-      std::cout << "TDC: " << e.what() << " while reading data." << std::endl;
-      return -1;
+    controller()->mode(cvA32_U_DATA,cvD32)->readData(this->EventFIFO,&DATA);
+    unsigned int eventNumberFIFO=digit(DATA,31,16);
+    unsigned int numberOfWords=digit(DATA,15,0);
+    vector<unsigned int> dataOutputBuffer;
+    for(unsigned int i=numberOfWords; i>0 ;i--) {
+      controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress(),&DATA);
+      dataOutputBuffer.vector::push_back(DATA);
     }
+    if (!( eventNumberFIFO==digit(dataOutputBuffer[0],26,5) && digit(dataOutputBuffer[0],31,27)==8)) return -1;
+    myEvent.eventNumber=eventNumberFIFO;
+    hit temporaryHit;
+    for(unsigned int i=0; i<numberOfWords-1 ;i++) { // "-1" because last event is TRAILER
+      if (digit(dataOutputBuffer[i],31,27)==0 ) {
+        temporaryHit.time=digit(dataOutputBuffer[i],18,0);
+        temporaryHit.channel=digit(dataOutputBuffer[i],25,19);
+        myEvent.measurements.vector::push_back(temporaryHit);
+      }
+    }
+    time(&myEvent.time);
     return 0;
 }
 
@@ -164,11 +147,7 @@ void tdc::coutEvent(event myEvent)
 void tdc::ReadStatus(){
     unsigned int DATA=0;
     waitRead();
-    try { 
-      readData(StatusRegister,&DATA);
-    } catch (CAENVMEexception &e) {
-      std::cout << "TDC: " << e.what() << " while reading status." << std::endl;
-    }
+    readData(StatusRegister,&DATA);
     if (DATA%2 > 0){ if(verbosity(NORMAL))cout << "Event Ready"<<endl;}
     else {if(verbosity(NORMAL))cout<< "No data ready"<<endl;}
     if (DATA%8 >3) { if(verbosity(NORMAL))cout<< " Output Buffer is Full"<< endl;}
@@ -180,14 +159,9 @@ void tdc::ReadStatus(){
 void tdc::Reset(){
     unsigned int DATA=0;
     int ADD = baseAddress() +0x1014;
-    try {
-      for(int k = 0; k<3; k++){
-        ADD+=2;
-        writeData(ADD, &DATA);
-      }
-    } catch (CAENVMEexception &e) {
-      std::cout << "TDC: " << e.what() << " while resetting." << std::endl;
-      return;
+    for(int k = 0; k<3; k++){
+      ADD+=2;
+      writeData(ADD, &DATA);
     }
     if(verbosity(NORMAL))cout<< " Module Reset... " << endl << " Software Clear... " << endl <<  " Software Event Reset... " <<endl;
 }
@@ -290,16 +264,11 @@ void tdc::setChannelNumbers(int clock, int trigger) {
 
 void tdc::enableFIFO() {
   unsigned int DATA;
-  try {
-    readData(ControlRegister, &DATA);
-    if (digit(DATA,8)==0) {
-      DATA+=0x0100;
-    }
-    writeData(ControlRegister, &DATA);
-  } catch (CAENVMEexception &e) {
-    std::cout << "TDC: " << e.what() << " while enabling FIFO." << std::endl;
-    return;
+  readData(ControlRegister, &DATA);
+  if (digit(DATA,8)==0) {
+    DATA+=0x0100;
   }
+  writeData(ControlRegister, &DATA);
   if(verbosity(NORMAL))cout<<"FIFO enabled !"<<endl;
 }
   
@@ -322,19 +291,11 @@ void tdc::readResolution() {
   
 void tdc::writeOpcode(unsigned int &DATA) {
   waitWrite();
-  try {
-    writeData(Opcode,&DATA);
-  } catch (CAENVMEexception &e) {
-    std::cout << "TDC: " << e.what() << " while writing OPCODE." << std::endl;
-  }
+  writeData(Opcode,&DATA);
 }
 
 void tdc::readOpcode(unsigned int &DATA)
 {
   waitRead();
-  try {
-    readData(Opcode,&DATA);
-  } catch (CAENVMEexception &e) {
-    std::cout << "TDC: " << e.what() << " while reading OPCODE." << std::endl;
-  }
+  readData(Opcode,&DATA);
 }

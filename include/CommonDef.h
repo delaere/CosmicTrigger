@@ -4,6 +4,8 @@
 #include <exception>
 #include <utility>
 #include <tuple>
+#include <execinfo.h>
+#include <vector>
 
 #include "CAENVMElib.h"
 #include "CAENVMEoslib.h"
@@ -21,15 +23,36 @@ typedef enum coutLevel{
 class CAENVMEexception: public std::exception
 {
   public:
-    explicit CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) {}
+    explicit CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) {
+        void *array[10];
+        size_t size;
+        char **strings;
+        size_t i;
+
+        size = backtrace (array, 10);
+        strings = backtrace_symbols (array, size);
+
+        for (i = 0; i < size; i++)
+          trace_.push_back(strings[i]);
+
+        free (strings);
+    }
+    
     ~CAENVMEexception() {}
 
     virtual const char* what() const throw()
     {
       return CAENVME_DecodeError(errorcode_);
     }
+    
+    const std::vector<std::string>& trace() const 
+    {
+      return trace_;
+    }
+    
   private:
     CAENVME_API errorcode_;
+    std::vector<std::string> trace_;
 };
 
 #define checkCAENVMEexception(x) {CAENVME_API status = (x); if (status) throw CAENVMEexception(status);}
@@ -37,7 +60,21 @@ class CAENVMEexception: public std::exception
 class CAENETexception: public std::exception
 {
   public:
-    explicit CAENETexception(const uint32_t& errorcode) : errorcode_(errorcode) {}
+    explicit CAENETexception(const uint32_t& errorcode) : errorcode_(errorcode) {
+        void *array[10];
+        size_t size;
+        char **strings;
+        size_t i;
+
+        size = backtrace (array, 10);
+        strings = backtrace_symbols (array, size);
+
+        for (i = 0; i < size; i++)
+          trace_.push_back(strings[i]);
+
+        free (strings);
+    }
+
     ~CAENETexception() {}
 
     virtual const char* what() const throw()
@@ -51,8 +88,15 @@ class CAENETexception: public std::exception
       if(errorcode_==0xFFFF) return "The addressed module does not exist.";
       return "Unknown exception!";
     }
+    
+    const std::vector<std::string>& trace() const 
+    {
+      return trace_;
+    }
+    
   private:
     uint32_t errorcode_;
+    std::vector<std::string> trace_;
 };
 
 #define checkCAENETexception(x) {uint32_t status = (x); if (status) throw CAENETexception(status); }

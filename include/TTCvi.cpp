@@ -54,12 +54,7 @@ void ttcVi::changeChannel(int channel){
     }
   if (DATA>-1){
     DATA+=this->channelFrequency*16*16*16;
-    try {
-      writeData(baseAddress()+0x80,&DATA);
-    } catch (CAENVMEexception &e) {
-      std::cout << "TTCvi: " << e.what() << " while writing new mode." << std::endl;
-      return;
-    }
+    writeData(baseAddress()+0x80,&DATA);
     if (verbosity(NORMAL))std::cout <<" ok!" << std::endl;
     if (verbosity(DEBUG)) std::cout << "Sent: " << std::hex << DATA <<" to TTCvi (add:" << baseAddress() << std::dec <<")" << std::endl;
   }
@@ -75,9 +70,8 @@ void ttcVi::changeRandomFrequency(int frequencyId){
 
 int ttcVi::viewMode(void){  
   int DATA=0;
-  try { 
-    readData(baseAddress()+0x80,&DATA);
-    switch(DATA%16){
+  readData(baseAddress()+0x80,&DATA);
+  switch(DATA%16){
     case 0:
       if (verbosity(NORMAL))cout<<"L1A(0)"<<endl;
       break;
@@ -101,10 +95,6 @@ int ttcVi::viewMode(void){
       break;
     default:
       if(verbosity(WARNING))cerr<<"*   WARNING: unknown TTCvi mode."<<endl;
-    }
-    return(16*16*16*(DATA/(16*16*16))+DATA%16);
-  } catch (CAENVMEexception &e) {
-    std::cout << "TTCvi: " << e.what() << " while reading view mode." << std::endl;
   }
-  return -1;
+  return(16*16*16*(DATA/(16*16*16))+DATA%16);
 }

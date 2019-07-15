@@ -15,9 +15,6 @@
    *
    */
 
-  //TODO it makes little sense to catch exceptions in these classes. It should be left to the user to do that. 
-  // it might also be usefull to complement the exception class with a stack trace:
-  // https://www.gnu.org/software/libc/manual/html_node/Backtraces.html
 class vmeBoard{
   
 public:
