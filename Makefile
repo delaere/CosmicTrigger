@@ -10,39 +10,61 @@
 #                                                                      
 ########################################################################
 
+# location of the Python header files
+PYTHON_VERSION = 2.7
+PYTHON_INCLUDE = /usr/include/python$(PYTHON_VERSION)
+
+# location of the Boost Python include files and library
+BOOST_INC = /usr/include
+BOOST_LIB = /usr/lib
+PYTHION_LIB = /usr/lib/python$(PYTHON_VERSION)/config
+
+PYLIB	=	VMEPythonModule.so
+
 EXE	=	main
 
 CC	=	g++
 
-COPTS	=	-fPIC -DLINUX -Wall -std=c++17
-#COPTS	=	-g -fPIC -DLINUX -Wall 
+COPTS	=	-c -fPIC -g -DLINUX -Wall -std=c++17
+
+LOPTS	=	-Wl,-h -Wl,$(PYLIB) -shared -Wl,-Bstatic  -Wl,-Bdynamic -fPIC -g
 
 FLAGS	=	-Wall -s -std=c++17
-#FLAGS	=	-Wall
 
-DEPLIBS	=       -l CAENVME -l ncurses -lc -lm
+LFLAGS	=	-L$(BOOST_LIB) -L$(PYTHION_LIB)
+
+DEPLIBS	=       -l CAENVME -lc -lm
+
+DEPLIBSP=	-lboost_python27 -ldl -lpthread -lpython2.7 -lutil
 
 LIBS	=	
 
-INCLUDEDIR =	-I.
+INCLUDEDIR =	-I. -I$(PYTHON_INCLUDE)
 
 OBJS	=	main.o include/Discri.o include/TDC.o include/TTCvi.o include/VmeBoard.o include/VmeController.o include/VmeUsbBridge.o include/CommonDef.o include/Scaler.o include/CaenetBridge.o include/HVmodule.o
 
+LOBJS   =       include/PythonModule.o
 
-INCLUDES =	include/CAENVMElib.h include/CAENVMEtypes.h include/CAENVMEoslib.h
+INCLUDES =	include/CAENVMElib.h include/CAENVMEtypes.h include/CAENVMEoslib.h include/Discri.h include/TDC.h include/TTCvi.h include/VmeBoard.h include/VmeController.h include/VmeUsbBridge.h include/CommonDef.h include/Scaler.h include/CaenetBridge.h include/HVmodule.h
 
 #########################################################################
 
-all	:	$(EXE)
+all	:	$(PYLIB) $(EXE)
 
 clean	:
-		/bin/rm -f $(OBJS) $(EXE)
+		/bin/rm -f $(LOBJS) $(OBJS) $(PYLIB) $(EXE)
+
+$(PYLIB):	$(LOBJS) $(OBJS)
+		/bin/rm -f $(PYLIB)
+		$(CC) $(LFLAGS) -o $(PYLIB) $(LOPTS) $(OBJS) $(LOBJS) $(DEPLIBS) $(DEPLIBSP)
 
 $(EXE)	:	$(OBJS)
 		/bin/rm -f $(EXE)
 		$(CC) $(FLAGS) -o $(EXE) $(OBJS) $(DEPLIBS)
 
 $(OBJS)	:	$(INCLUDES) Makefile
+
+$(LOBJS):	$(INCLUDES) Makefile
 
 %.o	:	%.cpp
 		$(CC) $(COPTS) $(INCLUDEDIR) -c -o $@ $<
