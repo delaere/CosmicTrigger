@@ -26,7 +26,7 @@ LIBS	=
 
 INCLUDEDIR =	-I.
 
-OBJS	=	main.o include/Discri.o include/HV.o include/TDC.o include/TTCvi.o include/VmeBoard.o include/VmeController.o include/VmeUsbBridge.o include/CommonDef.o include/Scaler.o include/CaennetBridge.o
+OBJS	=	main.o include/Discri.o include/HV.o include/TDC.o include/TTCvi.o include/VmeBoard.o include/VmeController.o include/VmeUsbBridge.o include/CommonDef.o include/Scaler.o include/CaenetBridge.o include/HVmodule.o
 
 
 INCLUDES =	include/CAENVMElib.h include/CAENVMEtypes.h include/CAENVMEoslib.h
