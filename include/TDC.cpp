@@ -13,7 +13,7 @@ unsigned int digit(unsigned int data, int position) {
     return (data>>position)&1;
 }
 
-Tdc::Tdc(VmeController* controller,int address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true),ClockChannelNumber(0),TriggerChannelNumber(0) {
+Tdc::Tdc(VmeController* controller,int address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true) {
     Opcode=baseAddress()+0x102E;
     StatusRegister=baseAddress()+0x1002;
     MicroHandshake=baseAddress()+0x1030;
@@ -83,52 +83,6 @@ int Tdc::getEvent(event &myEvent)
     }
     time(&myEvent.time);
     return 0;
-}
-
-void Tdc::analyseEvent(event myEvent, const char* filename)
-{
-    //Getting trigger time
-    unsigned int triggerTime=0;
-    for(unsigned int i=0; i<myEvent.measurements.vector::size();i++) {
-        if (myEvent.measurements[i].channel==TriggerChannelNumber) {
-          triggerTime=myEvent.measurements[i].time;
-          break;
-        }
-    }
-    
-    //Getting closest clock
-    unsigned int nextClock=0;
-    for(unsigned int i=0; i<myEvent.measurements.vector::size();i++) {
-      if (myEvent.measurements[i].channel==ClockChannelNumber) {
-        if (myEvent.measurements[i].time>triggerTime){nextClock=myEvent.measurements[i].time;break;}
-      }
-    }
-    
-    float phase=nextClock-triggerTime;
-    
-    //completer ICI !
-    stringstream mystream;
-    mystream<<"echo '"<<asctime(localtime(&myEvent.time))<<" - "<<phase<<"'>> eventsLong.txt"<<endl;
-    system(mystream.str().c_str());
-    mystream.str("");
-    mystream<<"echo '"<<phase<<"'>> eventsShort.txt"<<endl;
-    system(mystream.str().c_str());
-    
-    //Getting all clock ticks
-    unsigned int previousClock=0;
-    for(unsigned int i=0; i<myEvent.measurements.vector::size();i++) {
-      if (myEvent.measurements[i].channel==ClockChannelNumber) {
-        if(previousClock!=0){
-          mystream.str("");
-          mystream<<"echo '"<<myEvent.measurements[i].time-previousClock<<" - Event "<<i<<"'>> clocksLong.txt"<<endl;
-          system(mystream.str().c_str());
-          mystream.str("");
-          mystream<<"echo '"<<myEvent.measurements[i].time-previousClock<<"'>> clocksShort.txt"<<endl;
-          system(mystream.str().c_str());
-        }
-        previousClock=myEvent.measurements[i].time;
-      }
-    }
 }
 
 void Tdc::coutEvent(event myEvent)
@@ -255,11 +209,6 @@ void Tdc::readWindowConfiguration() {
   if(verbosity(NORMAL))cout<<" Reject margin width: "<<digit(DATA,11,0);
   readOpcode(DATA);
   if(verbosity(NORMAL))cout<<" Trigger time substraction : "<<digit(DATA,0);
-}
-
-void Tdc::setChannelNumbers(int clock, int trigger) {
-  ClockChannelNumber=clock;
-  TriggerChannelNumber=trigger;
 }
 
 void Tdc::enableFIFO() {

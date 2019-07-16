@@ -3,6 +3,7 @@
 
 #include "CaenetBridge.h"
 
+// meaning of the status bits
 typedef enum CVStatusWordBit {
   cvONOFF = 0,  /* The channel is ON(1) or OFF(0) */ 
   cvOVC   = 1,  /* The channel is in OVC condition */
@@ -22,13 +23,17 @@ typedef enum CVStatusWordBit {
   cvALARM = 15  /* Module in alarm condition */
 } CVStatusWordBit;
 
+// Simple class to represent the status word.
 class N470StatusWord
 {
 public:
   N470StatusWord(uint16_t status):status_(status) {}
   ~N470StatusWord() {}
   
+  // return the status word
   inline uint16_t status() const { return status_; }
+  
+  // extract a given bit
   inline bool bit(CVStatusWordBit n) const { return ((status_>>n)&1); }
   
 private:
@@ -37,17 +42,21 @@ private:
 
 class HVModule;
 
+// One single HV channel.
 class HVChannel
 {
 public:
   explicit HVChannel(uint32_t address, uint32_t id, CaenetBridge* bridge);
   ~HVChannel() {}
   
+  // the channel id
   inline uint32_t id() const { return id_; }
   
+  // turn on/off
   void on();
   void off();
   
+  // program the channel
   void setV0(uint32_t v0);
   void setV1(uint32_t v1);
   void setI0(uint32_t i0);
@@ -56,8 +65,11 @@ public:
   void setRampdown(uint32_t rampdown);
   void setTrip(uint32_t trip);
   
+  // read all parameters from hardware
   void readOperationalParameters();
   
+  // get cached values (as last programmed, or read back before)
+  // readOperationalParameters should be called first.
   inline uint32_t getVmon() const { return vmon_; }
   inline uint32_t getImon() const { return imon_; }
   inline uint32_t getV0() const { return v0_; }

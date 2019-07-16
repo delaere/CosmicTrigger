@@ -7,15 +7,7 @@
 #include "CommonDef.h"
 #include "VmeController.h"
 
-/**
- * \brief Definition of a USB/VME controller.
- * 
- * This class implements the virtual functions of a VmeController object.
- * 
- * It has been built in order to use a V1718 bridge.
- * 
- */
-
+// the internal pulser of the V1718
 class V1718Pulser
 {
   public:
@@ -53,6 +45,7 @@ class V1718Pulser
     mutable bool configured_;
 };
 
+// the internal scaler of the V1718
 class V1718Scaler
 {
   public:
@@ -88,16 +81,10 @@ class V1718Scaler
     bool configured_;
 };
 
+// V1718 VME USB bridge.
 class VmeUsbBridge: public VmeController{
 public:
      explicit VmeUsbBridge(int verbose=3);
-     /**< 
-      * \brief Class constructor.
-      * 
-      * This constructor will create the object "BHandle" and store it. It also will set a few default modes and check 
-      * if the link to the VME is ok.
-      * 
-      */
      VmeUsbBridge(const VmeUsbBridge& other); ///< copy constructor
      VmeUsbBridge& operator=(const VmeUsbBridge& other); ///< copy operator
      ~VmeUsbBridge();///< Liberates the USB controller and "BHandle    
@@ -162,6 +149,5 @@ private:
   V1718Pulser* pulserB_;
   V1718Scaler* scaler_;
 };
-
 
 #endif

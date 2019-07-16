@@ -5,20 +5,13 @@
 #include "CAENVMEtypes.h"
 #include <tuple>
 
-/**
- * \brief Main controller virtual class.
- * 
- * This virtual class contains the definitions of the basic i/o functions for any VME system.
- * 
- * It has been created in order to be able to control any VME based system and therefore, the functions are pure virtual.
- * 
- */
-
+// Main controller virtual class.
 class VmeController{
   public:
     VmeController(int verbose);
     virtual ~VmeController() {}
     
+    // Address modifier and Data width
     virtual void setMode(const CVAddressModifier AM, const CVDataWidth DW);///<Sets default modes.
     virtual const VmeController* mode(const CVAddressModifier AM, const CVDataWidth DW) const;///<Sets temp mode
     virtual CVAddressModifier getAM() const;///<Gets default mode
@@ -26,6 +19,7 @@ class VmeController{
     virtual void setAM(CVAddressModifier AM);///<Sets default modes.
     virtual void setDW(CVDataWidth DW);///<Sets default modes.
   
+    // VME BUS operations
     virtual void writeData(long unsigned int address,void* data) const = 0;///<Short write data function using default modes.
     virtual void readData (long unsigned int address,void* data) const = 0;///<Short read data function using default modes.
     virtual void readWriteData(const long unsigned int address,void* data) const = 0;
@@ -33,12 +27,14 @@ class VmeController{
     virtual void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
     virtual void ADOCycle(const long unsigned int address) const = 0;
     
+    // IRQ operations
     virtual void IRQEnable(uint32_t mask) const = 0;
     virtual void IRQDisable(uint32_t mask) const = 0;
     virtual void IRQWait(uint32_t mask, uint32_t timeout_ms) const = 0;
     virtual unsigned char IRQCheck() const = 0;
     virtual uint16_t IACK(CVIRQLevels Level) const = 0;
 
+    // control the verbosity
     inline void setVerbosity(int verbose){this->verbose_=verbose;}///< Sets verbosity level
     inline int  verbosity() const { return verbose_; }///<Gets verbosity level
     inline bool verbosity(coutLevel level) const { return (verbose_ >= (int)level) ; } ///<Check verbosity level
@@ -47,7 +43,7 @@ class VmeController{
     virtual std::tuple<CVAddressModifier,CVDataWidth> useMode() const;///< more than a getter: it "consumes" the tmp mode.
     
   private:
-    int verbose_; ///<Defines verbosity level of any board using this controller
+    int verbose_;
     CVAddressModifier AM_;
     CVDataWidth DW_;
     mutable CVAddressModifier AMtmp_;

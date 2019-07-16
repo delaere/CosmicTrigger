@@ -4,18 +4,22 @@
 #include "VmeBoard.h"
 #include <vector>
 
-/// V288 CAEN board
+// V288 CAEN board
 class CaenetBridge:public VmeBoard{
 public:
   CaenetBridge(VmeController *cont, uint32_t bridgeAdd, uint8_t interrupt = 0);
   
-  void reset(); ///< Performs a reset
+  // Performs a reset
+  void reset();
   
-  bool validStatus(); ///< Valid operation? (returns the opposite of the status register LSB)
+  // Check if the last operation was valid (returns the opposite of the status register LSB)
+  bool validStatus();
   
-  void write(const std::vector<uint32_t>& data); ///< send data to caenet
+  // Send data to caenet
+  void write(const std::vector<uint32_t>& data);
   
-  std::tuple<uint32_t, std::vector<uint32_t> > readResponse(); ///< read back the response from the slave
+  // Read back the response from the slave
+  std::tuple<uint32_t, std::vector<uint32_t> > readResponse();
 
 private:
   uint8_t interrupt_;

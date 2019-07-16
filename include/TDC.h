@@ -6,17 +6,6 @@
 #include <sstream>
 #include "time.h"
 
-/**
- * \brief
- *  This class has a few functions encoding the basic functionalities of the TDC.
- * 
- *  You can control a few basic functionalities of the Time to Digital Converter.
- * 
- *  See different functions for detail.
- * 
- * Here is the  <a href="https://dl.dropboxusercontent.com/u/33459975/cosmicTrigger/datasheets/V1190_REV13.pdf">data sheet</a> of the V1190 unit.
- */
-
 struct hit
 {
   unsigned int channel;
@@ -30,155 +19,64 @@ struct event
   std::vector<hit> measurements;
 };
 
-class Tdc:public VmeBoard{
+// V1190 TDC unit
+class Tdc:public VmeBoard
+{
 public:
-  // CONSTRUCTOR
-  Tdc(VmeController* controller,int address=0x00120000);
-  /**<
-  * \brief Constructor
-  * 
-  * Adress must terminate with 0x0000.
-  * 
-  * If address not given, will assume it's 0x00120000.
-  */
 
-  //FUNCTIONS
-  int getEvent(event &myEvent);
-  /**<
-   * \brief gets data from TDC
-   * 
-   * -Waits for "event ready" status from TDC
-   * 
-   * -Writes the event in myEvent
-   * 
-   * This function needs to have FIFO enabled (cf 'enableFIFO()' ). 
-   * 
-   * It has only been tested in trigger mode.
-   */
-  void analyseEvent(event myEvent, const char* filename);
-  /**
-   * \brief writes the fase of the event "myEvent".
-   * 
-   * -Computes the time difference, in units of TDC precision (cf 'readResolution()'), between the first hit in the channel 
-   * 
-   * TriggerChannelNumber inside the search window and the preceding clock cycle in the channel ClockChannelNumber.
-   *
-   * -Writes the phase in 'filename'
-   */
+  Tdc(VmeController* controller,int address=0x00120000);
+
+  // Gets data from TDC
+  int getEvent(event &myEvent); // TODO return event
+  
+  // Print the event content
   void coutEvent(event myEvent);
-  /**
-   * \brief desribes explicitely the content of myEvent in the standard output stream
-   */
+
+  // Print the TDC status
   void ReadStatus();
-  /**
-   * \brief describes the status of the TDC in the stantdard output stream.
-   * 
-   * the status includes :
-   * 
-   * -Event ready/Data not ready
-   * 
-   * -Output buffer is (not) full
-   * 
-   * -Operating mode :trigger/continuous
-   * */
+
+  // Reset the board
   void Reset();
-  /**
-   * \brief resets the board.
-   */
+
+  // Set the acquisition mode : Trigger (1), Continuous (0).
   void setMode(bool Trig = 1);
-  /**
-   * \brief set the acquisition mode : Trigger (1), Continuous (0).
-   */
+
+  // Set the maximum number of hits the TDC should memorise in a window
+  // Possible values are : -0,1,2,4,8,16,32,64,128, -256 for no limit
+  // the TDC sends an errorcode if the number is exceeded, but 'getEvent()' doesn't take account of it.
   void setMaxEvPerHit(int Max_ev_per_hit =256 );
-  /**
-   * \brief sets the maximum number of hits the TDC should memorise in a window
-   * 
-   * Possible values are : 
-   * 
-   * -0,1,2,4,8,16,32,64,128 
-   * 
-   * -256 for no limit
-   * 
-   * the TDC sends an errorcode if the number is exceeded, but 'getEvent()' doesn't take account of it.
-   * */
+
+  // Set the window width in multiples of clockcycle.
   void setWindowWidth(unsigned int WidthSetting);
-  /**
-   * \brief sets the window width in multiples of clockcycle.
-   */
+
+  // Set the difference between the beginning of the window and the external trigger in multiples of clockcycle.
   void setWindowOffset(int OffsetSetting);
-  /**
-   * \brief sets the difference between the beginning of the window and the external trigger in multiples of clockcycle.
-   */
+
+  // Set the extra search margin in units of clock cycle.
   void setExSearchMargin(int ExSearchMrgnSetting );
-  /**
-   * \brief sets the extra search margin in units of clock cycle.
-   */
+
+  // Set the reject margin in units of clock cycle.
   void setRejectMargin(int RejectMrgnSetting);
-  /**
-   * \brief sets the reject margin in units of clock cycle.
-   */
+
+  // Print the current match window settings 
   void readWindowConfiguration();
-  /**
-   * \brief descibes the current match window settings in the standard output stream.
-   * 
-   * includes :
-   * 
-   * -match window width
-   * 
-   * -Window ofset
-   * 
-   * -Extra search window width
-   * 
-   * -Reject margin width
-   * 
-   * -Trigger time substraction
-   */
+
+  // Print the resolution
+  // 0 -> 800ps, 1 -> 200ps, 2 -> 100ps
+  // works only in leading/trailing edge detection mode
   void readResolution();
-  /**
-   * \brief writes the resolution in the standard output stream
-   * 
-   * 0 -> 800ps
-   * 
-   * 1 -> 200ps
-   * 
-   * 2 -> 100ps
-   * 
-   * works only in leading/trailing edge detection mode
-   */
-  
-  void setChannelNumbers(int clock, int trigger);
-  /**
-   * \brief sets the channel number of the clock and the trigger.
-   * 
-   * This channel numbers are needed for 'analyseEvent()'
-   */
-  
+
+  // Enables FIFO  
   void enableFIFO();
-  /**
-   * \brief enables FIFO.
-   * 
-   * This in necessary for 'getEvent()'
-   */
-  
+
+  //  Disable extra information send from the TDC. 
   void disableTDCHeaderAndTrailer();
-  /**
-   * \brief disables extra information send from the TDC. 
-   * 
-   * This information is neglected by 'getEvent()'.
-   */
- 
+
+  // Write  a command line of 16 bit in the Micro Controller register.
   void writeOpcode(unsigned int &data);
-  /**
-   * \brief writes a command line of 16 bit in the Micro Controller register.
-   * 
-   * This command includes a wait time for micro controllers 'writing ready' bit.
-   */
+
+  // Read a 16 bit word in the Micro Controller register.
   void readOpcode(unsigned int &data);
-  /**
-   * \brief reads a 16 bit word in the Micro Controller register.
-   * 
-   * This command includes a wait time for micro controllers 'read ready' bit.
-   */
 
 private:
 
@@ -189,10 +87,6 @@ private:
   int OutputBuffer;
   int EventFIFO;
   int ControlRegister;
-
-  //INTERNAL VARIABLES
-  unsigned int ClockChannelNumber;
-  unsigned int TriggerChannelNumber;
 
   //PRIVATE FUNCTIONS
   int waitWrite(void);

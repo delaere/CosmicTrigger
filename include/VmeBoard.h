@@ -5,32 +5,31 @@
 #include "CAENVMEtypes.h"
 #include "VmeController.h"
 
-  /**
-   * \brief Mother class for any board type class.
-   * 
-   * This class should be used to create any daughter board class.
-   * It is used to store basic communication functions with a virtual VmeController and to store associated default values.
-   * 
-   * In enforced mode, the controller will always operate in the designated AM/DW mode if the proxy read/write functions are used.
-   *
-   */
-
+// a generic VME board
 class VmeBoard{
   
 public:
   VmeBoard(VmeController* cont, uint32_t baseAddress, CVAddressModifier AM=cvA32_U_DATA, CVDataWidth DW=cvD16, bool enforceAMDW=false);
   virtual ~VmeBoard() {}
   
+  // Enforce the AM and DW. 
+  // If set to true, the mode will be enforced for all VME operations, disregarding the VmeController configuration.
   inline void enforceAMDW(bool enforce) { enforceAMDW_ = enforce; }
   inline bool isAMDWenforced() { return enforceAMDW_; }
   
 protected:
+  // access to the VME controller. If AMDW is enforced, the returned object is ready.
   inline const VmeController* controller() const { return (enforceAMDW_ ? cont_->mode(AM_,DW_) : cont_); }
   
+  // check verbosity (proxy for the controller verbosity)
   inline bool verbosity(coutLevel level) const { return cont_->verbosity(level); }
 
-  inline void setAdd(uint32_t add) { baseAddress_=add; }
+  // get/set the module base address
+  inline void setbaseAddress(uint32_t add) { baseAddress_ = add; }
   inline uint32_t baseAddress() const { return baseAddress_; }
+  
+  // proxy for the controller operations.
+  // it automatically uses the proper AM/DW mode if enforced
   
   inline void writeData(long unsigned int address,void* data) const { 
     controller()->writeData(address,data); 
