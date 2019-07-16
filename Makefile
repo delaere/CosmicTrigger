@@ -25,7 +25,7 @@ EXE	=	main
 
 CC	=	g++
 
-COPTS	=	-c -fPIC -g -DLINUX -Wall -std=c++17 -DBOOST_STACKTRACE_LINK
+COPTS	=	-c -fPIC -g -DLINUX -Wall -std=c++17 -DBOOST_STACKTRACE_LINK -DBOOST_LOG_DYN_LINK
 
 LOPTS	=	-Wl,-h -Wl,$(PYLIB) -shared -Wl,-Bstatic  -Wl,-Bdynamic -fPIC -g
 
@@ -33,7 +33,7 @@ FLAGS	=	-Wall -s -std=c++17
 
 LFLAGS	=	-L$(BOOST_LIB) -L$(PYTHION_LIB)
 
-DEPLIBS	=       -l CAENVME -lc -lm -lboost_stacktrace_basic -ldl 
+DEPLIBS	=       -lCAENVME -lc -lm -lboost_stacktrace_basic -ldl -lboost_log_setup -lboost_log -lboost_thread -lpthread
 
 DEPLIBSP=	-lboost_python27 -ldl -lpthread -lpython2.7 -lutil
 
@@ -41,11 +41,11 @@ LIBS	=
 
 INCLUDEDIR =	-I. -I$(PYTHON_INCLUDE)
 
-OBJS	=	main.o include/Discri.o include/TDC.o include/TTCvi.o include/VmeBoard.o include/VmeController.o include/VmeUsbBridge.o include/CommonDef.o include/Scaler.o include/CaenetBridge.o include/HVmodule.o
+OBJS	=	main.o include/Discri.o include/TDC.o include/TTCvi.o include/VmeBoard.o include/VmeController.o include/VmeUsbBridge.o include/CommonDef.o include/Scaler.o include/CaenetBridge.o include/HVmodule.o include/logger.o
 
 LOBJS   =       include/PythonModule.o
 
-INCLUDES =	include/CAENVMElib.h include/CAENVMEtypes.h include/CAENVMEoslib.h include/Discri.h include/TDC.h include/TTCvi.h include/VmeBoard.h include/VmeController.h include/VmeUsbBridge.h include/CommonDef.h include/Scaler.h include/CaenetBridge.h include/HVmodule.h
+INCLUDES =	include/CAENVMElib.h include/CAENVMEtypes.h include/CAENVMEoslib.h include/Discri.h include/TDC.h include/TTCvi.h include/VmeBoard.h include/VmeController.h include/VmeUsbBridge.h include/CommonDef.h include/Scaler.h include/CaenetBridge.h include/HVmodule.h include/logger.h
 
 #########################################################################
 

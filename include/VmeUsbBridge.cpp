@@ -5,18 +5,18 @@ VmeUsbBridge::VmeUsbBridge(int verbose):VmeController(verbose) {
   this->board_ = cvV1718;
   char FWRel[128];
   
+  LOG_DEBUG("calling CAENVME INIT");
   checkCAENVMEexception(CAENVME_Init((CVBoardTypes)(int)board_, 0, 0, &this->BHandle_));
   this->pulserA_ = new V1718Pulser(this->BHandle_,cvPulserA);
   this->pulserB_ = new V1718Pulser(this->BHandle_,cvPulserB);
   this->scaler_  = new V1718Scaler(this->BHandle_);
 
+  LOG_DEBUG("Reading CAENVME BOARD RELEASE");
   checkCAENVMEexception(CAENVME_BoardFWRelease(this->BHandle_,FWRel));
   this->firmwareVersion_ = std::string(FWRel);
   
-  if(verbosity(NORMAL)) {
-    std::cout << "VME USB Init... ok!"<< std::endl;
-    std::cout << "Firmware version: " << this->firmwareVersion_ << std::endl;
-  }
+  LOG_INFO("VME USB Init... ok!");
+  LOG_INFO("Firmware version: " + this->firmwareVersion_ )
 }
 
 VmeUsbBridge::~VmeUsbBridge(){

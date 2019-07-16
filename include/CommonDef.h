@@ -11,6 +11,8 @@
 #include "CAENVMEoslib.h"
 #include "CAENVMEtypes.h"
 
+#include "include/logger.h"
+
 /// Defines coutLevels to manage library output.
 typedef enum coutLevel{
       SILENT = 0,	///<Shows nearly nothing, except fatal errors
