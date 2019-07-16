@@ -20,23 +20,23 @@ typedef enum coutLevel{
       DEBUG = 4		///<Debug, it talks... A LOT
 } coutLevel;
 
+// exception classes
+
+#include <boost/stacktrace.hpp>
+#include <boost/exception/all.hpp>
+
+typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
+
+template <class E>
+void throw_with_trace(const E& e) {
+    throw boost::enable_error_info(e)
+        << traced(boost::stacktrace::stacktrace());
+}
+
 class CAENVMEexception: public std::exception
 {
   public:
-    explicit CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) {
-        void *array[10];
-        size_t size;
-        char **strings;
-        size_t i;
-
-        size = backtrace (array, 10);
-        strings = backtrace_symbols (array, size);
-
-        for (i = 0; i < size; i++)
-          trace_.push_back(strings[i]);
-
-        free (strings);
-    }
+    explicit CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) { }
     
     ~CAENVMEexception() {}
 
@@ -45,35 +45,16 @@ class CAENVMEexception: public std::exception
       return CAENVME_DecodeError(errorcode_);
     }
     
-    const std::vector<std::string>& trace() const 
-    {
-      return trace_;
-    }
-    
   private:
     CAENVME_API errorcode_;
-    std::vector<std::string> trace_;
 };
 
-#define checkCAENVMEexception(x) {CAENVME_API status = (x); if (status) throw CAENVMEexception(status);}
+#define checkCAENVMEexception(x) {CAENVME_API status = (x); if (status) throw_with_trace(CAENVMEexception(status));}
 
 class CAENETexception: public std::exception
 {
   public:
-    explicit CAENETexception(const uint32_t& errorcode) : errorcode_(errorcode) {
-        void *array[10];
-        size_t size;
-        char **strings;
-        size_t i;
-
-        size = backtrace (array, 10);
-        strings = backtrace_symbols (array, size);
-
-        for (i = 0; i < size; i++)
-          trace_.push_back(strings[i]);
-
-        free (strings);
-    }
+    explicit CAENETexception(const uint32_t& errorcode) : errorcode_(errorcode) { }
 
     ~CAENETexception() {}
 
@@ -89,17 +70,11 @@ class CAENETexception: public std::exception
       return "Unknown exception!";
     }
     
-    const std::vector<std::string>& trace() const 
-    {
-      return trace_;
-    }
-    
   private:
     uint32_t errorcode_;
-    std::vector<std::string> trace_;
 };
 
-#define checkCAENETexception(x) {uint32_t status = (x); if (status) throw CAENETexception(status); }
+#define checkCAENETexception(x) {uint32_t status = (x); if (status) throw_with_trace(CAENETexception(status)); }
 
 //utilities
 

@@ -16,7 +16,7 @@ PYTHON_INCLUDE = /usr/include/python$(PYTHON_VERSION)
 
 # location of the Boost Python include files and library
 BOOST_INC = /usr/include
-BOOST_LIB = /usr/lib
+BOOST_LIB = /usr/lib64
 PYTHION_LIB = /usr/lib/python$(PYTHON_VERSION)/config
 
 PYLIB	=	VMEPythonModule.so
@@ -25,7 +25,7 @@ EXE	=	main
 
 CC	=	g++
 
-COPTS	=	-c -fPIC -g -DLINUX -Wall -std=c++17
+COPTS	=	-c -fPIC -g -DLINUX -Wall -std=c++17 -DBOOST_STACKTRACE_LINK
 
 LOPTS	=	-Wl,-h -Wl,$(PYLIB) -shared -Wl,-Bstatic  -Wl,-Bdynamic -fPIC -g
 
@@ -33,7 +33,7 @@ FLAGS	=	-Wall -s -std=c++17
 
 LFLAGS	=	-L$(BOOST_LIB) -L$(PYTHION_LIB)
 
-DEPLIBS	=       -l CAENVME -lc -lm
+DEPLIBS	=       -l CAENVME -lc -lm -lboost_stacktrace_basic -ldl 
 
 DEPLIBSP=	-lboost_python27 -ldl -lpthread -lpython2.7 -lutil
 
