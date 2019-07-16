@@ -6,17 +6,17 @@
 #include <sstream>
 #include "time.h"
 
-struct hit
+struct Hit
 {
   unsigned int channel;
   unsigned int time;
 };
 
-struct event
+struct Event
 {
   unsigned int eventNumber;
   time_t time;
-  std::vector<hit> measurements;
+  std::vector<Hit> measurements;
 };
 
 // V1190 TDC unit
@@ -27,10 +27,10 @@ public:
   Tdc(VmeController* controller,int address=0x00120000);
 
   // Gets data from TDC
-  int getEvent(event &myEvent); // TODO return event
+  Event getEvent();
   
   // Print the event content
-  void coutEvent(event myEvent);
+  void coutEvent(Event myEvent);
 
   // Print the TDC status
   void ReadStatus();
@@ -89,9 +89,9 @@ private:
   int ControlRegister;
 
   //PRIVATE FUNCTIONS
-  int waitWrite(void);
-  int waitRead(void);
-  int waitDataReady(void);
+  void waitWrite();
+  void waitRead();
+  void waitDataReady();
 };
 
 #endif

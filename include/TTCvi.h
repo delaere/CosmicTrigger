@@ -5,8 +5,6 @@ using namespace std;
 
 #include "VmeBoard.h"
 
-//TODO: functions to change variables
-
 // This class has a few functions encoding the basic functionalities of the TTCvi, to be used in conjunction with a TTCvx.
 class TtcVi:public VmeBoard{
   
@@ -37,7 +35,7 @@ public:
 
   // If the verbose level of the VmeController is NORMAL or DEBUG, this function will print the current trigger mode.
   // It also returns the value hex value of the mode.
-  int viewMode(void);
+  int viewMode();
 
 private:
   int channel;

@@ -24,14 +24,13 @@ int Scaler::getInfo(){
   return(DATA);
 }
 
-int Scaler::reset(){
+void Scaler::reset(){
   int DATA=0;
-  if(verbosity(NORMAL))cout<<"Reseting Scaler...";
+  if(verbosity(NORMAL))
+    cout<<"Reseting Scaler...";
   writeData(baseAddress(),&DATA);
-  if(verbosity(NORMAL)){
-  std::cout << " ok!" << std::endl;
-  }
-  return(1);
+  if(verbosity(NORMAL))
+    std::cout << " ok!" << std::endl;
 }
 
 int Scaler::readPresets(int channel){
@@ -41,12 +40,12 @@ int Scaler::readPresets(int channel){
   return(DATA);
 }
 
-int Scaler::setPresets(int channel,int value){
+void Scaler::setPresets(int channel,int value){
   int DATA=value;
-  if(verbosity(NORMAL))cout<<"Setting presets to "<<value<<"...";
+  if(verbosity(NORMAL))
+    cout<<"Setting presets to "<<value<<"...";
   writeData(baseAddress()+0x40+4*(channel-1),&DATA);
   if(verbosity(NORMAL)){
     cout<<" ok!"<<endl;
   }
-  return(1);
 }

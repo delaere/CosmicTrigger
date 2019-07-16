@@ -22,20 +22,17 @@ Tdc::Tdc(VmeController* controller,int address):VmeBoard(controller, address, cv
     ControlRegister=baseAddress()+0x10;
 }
 
-int Tdc::waitRead(void)
-{
-    unsigned int DATA=0;
-    while(1){
-      readData(this->MicroHandshake,&DATA);
-      if(DATA%4==3 || DATA%4==2){
-        break;
-      }
+void Tdc::waitRead(void) {
+  unsigned int DATA=0;
+  while(1){
+    readData(this->MicroHandshake,&DATA);
+    if(DATA%4==3 || DATA%4==2){
+      break;
     }
-    return 0;
+  }
 }
 
-int Tdc::waitWrite(void)
-{
+void Tdc::waitWrite(void) {
   unsigned int DATA=0;
   while(1){
     readData(this->MicroHandshake,&DATA);
@@ -43,11 +40,9 @@ int Tdc::waitWrite(void)
       break;
     }
   }
-  return 0;
 }
 
-int Tdc::waitDataReady(void)
-{
+void Tdc::waitDataReady(void) {
   unsigned int DATA=0;
   while(1){
     readData(this->StatusRegister,&DATA);
@@ -55,11 +50,11 @@ int Tdc::waitDataReady(void)
       break;
     }
   }
-  return 0;
 }
  
-int Tdc::getEvent(event &myEvent)
+Event Tdc::getEvent()
 {
+    Event myEvent;
     //works only if FIFO enabled !
     this->waitDataReady(); 
     unsigned int DATA=0;
@@ -71,9 +66,10 @@ int Tdc::getEvent(event &myEvent)
       controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress(),&DATA);
       dataOutputBuffer.vector::push_back(DATA);
     }
-    if (!( eventNumberFIFO==digit(dataOutputBuffer[0],26,5) && digit(dataOutputBuffer[0],31,27)==8)) return -1;
+    if (!( eventNumberFIFO==digit(dataOutputBuffer[0],26,5) && digit(dataOutputBuffer[0],31,27)==8)) 
+      throw_with_trace(CAENVMEexception(cvGenericError));
     myEvent.eventNumber=eventNumberFIFO;
-    hit temporaryHit;
+    Hit temporaryHit;
     for(unsigned int i=0; i<numberOfWords-1 ;i++) { // "-1" because last event is TRAILER
       if (digit(dataOutputBuffer[i],31,27)==0 ) {
         temporaryHit.time=digit(dataOutputBuffer[i],18,0);
@@ -82,10 +78,10 @@ int Tdc::getEvent(event &myEvent)
       }
     }
     time(&myEvent.time);
-    return 0;
+    return myEvent;
 }
 
-void Tdc::coutEvent(event myEvent)
+void Tdc::coutEvent(Event myEvent)
 {  
   if(verbosity(NORMAL)) { 
     std::cout << "Event number : " << myEvent.eventNumber << std::endl;

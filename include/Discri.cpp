@@ -11,94 +11,72 @@ Discri::Discri(VmeController *controller,int add):VmeBoard(controller, add, cvA3
   this->setMultiChannel(this->status_);
 }
 
-int Discri::setChannel(int num, bool newState){
+void Discri::setChannel(int num, bool newState){
   if (num==-1){
-    if(newState)return(setMultiChannel(0xFFFF));
-    else return(setMultiChannel(0x0000));
+    setMultiChannel( newState ? 0xFFFF : 0x0000);
   }
-  
-  bool curState=(status_%(int)pow(2,num+1))/pow(2,num);  
-  if(!newState && curState)status_-=pow(2,num);
-  else if (newState && !curState) status_+=pow(2,num);
-  int DATA=status_;
+  if (newState != ((status_>>num)&1))
+    status_ ^= (1u << num);
+  // write the result to the proper register
+  int DATA = status_;
   writeData(baseAddress()+0x4A,&DATA);
-  if (verbosity(NORMAL)) cout<<"New status for channel "<<num<<": "<<(status_%(int)pow(2,num+1))/pow(2,num)<<endl;
-  return 1;
+  if (verbosity(NORMAL)) 
+    std::cout << "New status for channel " << num <<": "<< newState << std::endl;
 }
 
-int Discri::setMultiChannel(int code){
+void Discri::setMultiChannel(int code){
   status_=code;
   int DATA=code;
   writeData(baseAddress()+0x4A,&DATA);
-  if (verbosity(NORMAL)) cout<<"Channels changed. Code:"<<code<<endl;
-  return 1;
+  if (verbosity(NORMAL)) 
+    std::cout << "Channels changed. Code:" << code << std::endl;
 }
 
-int Discri::setMajority(int num){
+void Discri::setMajority(int num){
   double nRound=(num*50-25.0)/4.0;
   int round;
   if ((nRound+0.5)>int(nRound)){ round=(int)nRound+1;}
   else{ round=(int)nRound;}
   writeData(baseAddress()+0x48,&round);
-  if(verbosity(NORMAL))cout<<"Set majority level to "<<num<<"(sent: "<<round<<")"<<endl;
-  return 1;
+  if(verbosity(NORMAL))
+    std::cout << "Set majority level to " << num << "(sent: " << round << ")" << std::endl;
 }
 
-int Discri::setTh(int value,int num){
-  if(value>255 || value<0){
-    if(verbosity(WARNING)) cerr<<"*  WARNING: illegal value , command ignored"<<endl;
-    return(-1);
-  }
-  else{
-    if (num==-1){
-      int status=1;
-      if(verbosity(NORMAL))cout<<"Setting all thresholds to "<<value<<endl;
-      for (int i=0; i<16; i++) if(this->setTh(value,i)<0)status=-1;
-      return(status);
-    }
-    else{
-      if(verbosity(DEBUG)) cout<<"Setting threshold to "<<value<<" on channel "<<num<<"...";
+void Discri::setTh(uint8_t value,int num){
+  if (num==-1){
+      if(verbosity(NORMAL))
+        cout<<"Setting all thresholds to "<<value<<endl;
+      for (int i=0; i<16; i++) 
+        this->setTh(value,i);
+  } else{
+      if(verbosity(DEBUG)) 
+        cout<<"Setting threshold to "<<value<<" on channel "<<num<<"...";
       writeData(baseAddress()+2*num,&value);
-      if (verbosity(DEBUG))cout<<" ok!"<<endl;
-      return 1;
-    }
-  }
-  return(-1); //Never happens, normally.
+      if (verbosity(DEBUG))
+        cout<<" ok!"<<endl;
+   }
 }
 
-int Discri::setWidth(int value,int num){
-  if(value>255 || value<1){
-    if(verbosity(WARNING))cerr<<"*  WARNING: illegal value , command ignored"<<endl;
-    return(-1);
-  }
-  else{
-      int DATA=value;
-      if(verbosity(NORMAL)) cout<<"Setting output width to"<<value<<"...";
-      if (num<8) writeData(baseAddress()+0x40,&DATA);
-      if (num<0||num>7) writeData(baseAddress()+0x42,&DATA);
-      if (verbosity(NORMAL)) cout<<" ok!"<<endl;
-      return 1;
-  }
-  return(-1); //Never happens, normally.
+void Discri::setWidth(uint8_t value,int num){
+  int DATA=value;
+  if(verbosity(NORMAL)) 
+    cout<<"Setting output width to"<<value<<"...";
+  if (num<8) 
+    writeData(baseAddress()+0x40,&DATA);
+  if (num<0||num>7) 
+    writeData(baseAddress()+0x42,&DATA);
+  if (verbosity(NORMAL)) 
+    cout<<" ok!"<<endl;
 }
 
-int Discri::viewStatus(void){
-  if(verbosity(NORMAL)) std::cout<< std::hex << status_ << std::dec <<endl;
-  return(status_);
-}
-
-int Discri::setDeadTime(int value,int num){
-  if(value>255 || value<0){
-    if(verbosity(WARNING))cerr<<"*  WARNING: illegal value , command ignored"<<endl;
-    return(-1);
-  }
-  else {
-    int DATA=value;
-    if(verbosity(NORMAL))cout<<"Setting dead time to "<<value<<"...";
-    if (num<8) writeData(baseAddress()+0x44,&DATA);
-    if (num<0||num>7) writeData(baseAddress()+0x46,&DATA);
-    if (verbosity(NORMAL)) cout<<" ok!"<<endl;
-    return 1;
-  }
-  return(-1); //Never happens, normally.
+void Discri::setDeadTime(uint8_t value,int num){
+  int DATA=value;
+  if(verbosity(NORMAL))
+    cout<<"Setting dead time to "<<value<<"...";
+  if (num<8) 
+    writeData(baseAddress()+0x44,&DATA);
+  if (num<0||num>7) 
+    writeData(baseAddress()+0x46,&DATA);
+  if (verbosity(NORMAL)) 
+    cout<<" ok!"<<endl;
 }

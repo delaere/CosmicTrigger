@@ -13,11 +13,11 @@ public:
 
   // Gets module's info.
   // reads the module information register and returns its value. Returns -1 if the communication failled.
-  int getInfo(void);
+  int getInfo();
   
   // Sends a reset signal to the module.
   // returns 1 if communication went ok, -1 if not.
-  int reset(void);
+  void reset();
   
   // Reads channel presets.
   // If this value is not 0, the module will be in countdown mode from this value.
@@ -25,7 +25,7 @@ public:
  
   // Sets the preset for a channel.
   // If this value is not 0, the module will be in countdown mode from this value.
-  int setPresets(int channel,int value);
+  void setPresets(int channel,int value);
 
 };
  

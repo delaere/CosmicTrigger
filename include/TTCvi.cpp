@@ -68,7 +68,7 @@ void TtcVi::changeRandomFrequency(int frequencyId){
   }
 }
 
-int TtcVi::viewMode(void){  
+int TtcVi::viewMode(){  
   int DATA=0;
   readData(baseAddress()+0x80,&DATA);
   switch(DATA%16){
