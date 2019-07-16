@@ -9,36 +9,36 @@ Scaler::Scaler(VmeController* controller,int address):VmeBoard(controller,addres
 }
  
 int Scaler::getCount(int channel){
-  int DATA=0;
+  int data=0;
   int completeAdd=baseAddress()+0x80+4*(channel-1);
-  controller()->mode(cvA24_U_DATA,cvD32)->readData(completeAdd,&DATA);
-  LOG_DEBUG("Count=" + to_string(DATA) + "(" + int_to_hex(DATA) + ") at add:" + int_to_hex(completeAdd));
-  return(DATA);
+  controller()->mode(cvA24_U_DATA,cvD32)->readData(completeAdd,&data);
+  LOG_DEBUG("Count=" + to_string(data) + "(" + int_to_hex(data) + ") at add:" + int_to_hex(completeAdd));
+  return(data);
 }
 
 int Scaler::getInfo(){ 
-  int DATA=0;
+  int data=0;
   LOG_INFO("Getting Scaler information...");
-  readData(baseAddress()+0xFE,&DATA);
-  readData(baseAddress()+0xFE,&DATA);
-  return(DATA);
+  readData(baseAddress()+0xFE,&data);
+  readData(baseAddress()+0xFE,&data);
+  return(data);
 }
 
 void Scaler::reset(){
-  int DATA=0;
+  int data=0;
   LOG_INFO("Reseting Scaler...");
-  writeData(baseAddress(),&DATA);
+  writeData(baseAddress(),&data);
 }
 
 int Scaler::readPresets(int channel){
-  int DATA=0;
-  readData(baseAddress()+0x40+4*(channel-1),&DATA);
-  LOG_INFO("Preset: "+to_string(DATA));
-  return(DATA);
+  int data=0;
+  readData(baseAddress()+0x40+4*(channel-1),&data);
+  LOG_INFO("Preset: "+to_string(data));
+  return(data);
 }
 
 void Scaler::setPresets(int channel,int value){
-  int DATA=value;
+  int data=value;
   LOG_INFO("Setting presets to "+to_string(value)+"...");
-  writeData(baseAddress()+0x40+4*(channel-1),&DATA);
+  writeData(baseAddress()+0x40+4*(channel-1),&data);
 }
