@@ -1,7 +1,7 @@
 #include "VmeUsbBridge.h"
 #include <iostream>
 
-UsbController::UsbController(int verbose):vmeController(verbose) {
+VmeUsbBridge::VmeUsbBridge(int verbose):VmeController(verbose) {
   this->board_ = cvV1718;
   char FWRel[128];
   
@@ -19,7 +19,7 @@ UsbController::UsbController(int verbose):vmeController(verbose) {
   }
 }
 
-UsbController::~UsbController(){
+VmeUsbBridge::~VmeUsbBridge(){
   delete this->pulserA_;
   delete this->pulserB_;
   delete this->scaler_;
@@ -29,40 +29,40 @@ UsbController::~UsbController(){
   }
 }
 
-UsbController::UsbController(const UsbController& other):vmeController(other),firmwareVersion_(other.firmwareVersion_),BHandle_(other.BHandle_) {
+VmeUsbBridge::VmeUsbBridge(const VmeUsbBridge& other):VmeController(other),firmwareVersion_(other.firmwareVersion_),BHandle_(other.BHandle_) {
   board_ = cvV1718;
   pulserA_ = new V1718Pulser(*other.pulserA_);
   pulserB_ = new V1718Pulser(*other.pulserB_);
   scaler_  = new V1718Scaler(*other.scaler_);
 }
 
-UsbController& UsbController::operator=(const UsbController& other){
+VmeUsbBridge& VmeUsbBridge::operator=(const VmeUsbBridge& other){
   board_ = cvV1718;
   firmwareVersion_ = other.firmwareVersion_;
   BHandle_ = other.BHandle_;
   pulserA_->operator=(*other.pulserA_);
   pulserB_->operator=(*other.pulserB_);
   scaler_->operator=(*other.scaler_);
-  vmeController::operator=(other);
+  VmeController::operator=(other);
   return *this;
 }
 
-void UsbController::writeData(long unsigned int address,void* data) const{
+void VmeUsbBridge::writeData(long unsigned int address,void* data) const{
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_WriteCycle(this->BHandle_,address,data,AM,DW));
 }
 
-void UsbController::readData(long unsigned int address,void* data) const {
+void VmeUsbBridge::readData(long unsigned int address,void* data) const {
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_ReadCycle(this->BHandle_,address,data,AM,DW));
 }
 
-void UsbController::readWriteData(const long unsigned int address,void* data) const {
+void VmeUsbBridge::readWriteData(const long unsigned int address,void* data) const {
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_ReadCycle(this->BHandle_,address,data,AM,DW));
 }
 
-void UsbController::blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
+void VmeUsbBridge::blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
   auto [AM, DW] = useMode();
   if (multiplex) {
     checkCAENVMEexception(CAENVME_MBLTReadCycle(this->BHandle_, address, buffer, size, AM, count));
@@ -71,7 +71,7 @@ void UsbController::blockReadData(const long unsigned int address,unsigned char 
   }
 }
 
-void UsbController::blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
+void VmeUsbBridge::blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
   auto [AM, DW] = useMode();
   if (multiplex) {
     checkCAENVMEexception(CAENVME_MBLTWriteCycle(this->BHandle_, address, buffer, size, AM, count));
@@ -80,31 +80,31 @@ void UsbController::blockWriteData(const long unsigned int address,unsigned char
   }
 }
 
-void UsbController::ADOCycle(const long unsigned int address) const {
+void VmeUsbBridge::ADOCycle(const long unsigned int address) const {
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_ADOCycle(this->BHandle_, address, AM));
 }
 
-V1718Pulser& UsbController::getPulser(CVPulserSelect pulser){
+V1718Pulser& VmeUsbBridge::getPulser(CVPulserSelect pulser){
   if(pulser==cvPulserA) 
     return *this->pulserA_;
   else 
     return *this->pulserB_;
 }
 
-V1718Scaler& UsbController::getScaler(){
+V1718Scaler& VmeUsbBridge::getScaler(){
   return *this->scaler_;
 }
 
-void UsbController::configureOutputLine(CVOutputSelect line, CVIOPolarity polarity, CVLEDPolarity LEDpolarity, CVIOSources source) const {
+void VmeUsbBridge::configureOutputLine(CVOutputSelect line, CVIOPolarity polarity, CVLEDPolarity LEDpolarity, CVIOSources source) const {
   checkCAENVMEexception(CAENVME_SetOutputConf(this->BHandle_, line, polarity, LEDpolarity, source));
 }
 
-void UsbController::configureInputLine(CVInputSelect line, CVIOPolarity polarity, CVLEDPolarity LEDpolarity) const {
+void VmeUsbBridge::configureInputLine(CVInputSelect line, CVIOPolarity polarity, CVLEDPolarity LEDpolarity) const {
   checkCAENVMEexception(CAENVME_SetInputConf(this->BHandle_, line, polarity, LEDpolarity));
 }
 
-std::tuple<CVIOPolarity, CVLEDPolarity, CVIOSources> UsbController::outputLineConfiguration(CVOutputSelect line) const {
+std::tuple<CVIOPolarity, CVLEDPolarity, CVIOSources> VmeUsbBridge::outputLineConfiguration(CVOutputSelect line) const {
   CVIOPolarity OutPol;
   CVLEDPolarity LEDPol; 
   CVIOSources Source;
@@ -112,98 +112,98 @@ std::tuple<CVIOPolarity, CVLEDPolarity, CVIOSources> UsbController::outputLineCo
   return std::make_tuple(OutPol,LEDPol,Source);
 }
 
-std::tuple<CVIOPolarity, CVLEDPolarity> UsbController::inputLineConfiguration(CVInputSelect line) const {
+std::tuple<CVIOPolarity, CVLEDPolarity> VmeUsbBridge::inputLineConfiguration(CVInputSelect line) const {
   CVIOPolarity InPol;
   CVLEDPolarity LEDPol;  
   checkCAENVMEexception(CAENVME_GetInputConf(this->BHandle_, line, &InPol, &LEDPol));
   return std::tuple(InPol,LEDPol);
 }
 
-uint32_t UsbController::readRegister(CVRegisters reg) const {
+uint32_t VmeUsbBridge::readRegister(CVRegisters reg) const {
   uint32_t data;
   checkCAENVMEexception(CAENVME_ReadRegister(this->BHandle_, reg, &data));
   return data;
 }
 
-void UsbController::setOutputRegister(unsigned short mask) const {
+void VmeUsbBridge::setOutputRegister(unsigned short mask) const {
   checkCAENVMEexception(CAENVME_SetOutputRegister(this->BHandle_, mask));
 }
 
-void UsbController::clearOutputRegister(unsigned short mask) const {
+void VmeUsbBridge::clearOutputRegister(unsigned short mask) const {
   checkCAENVMEexception(CAENVME_ClearOutputRegister(this->BHandle_, mask));
 }
 
-void UsbController::pulseOutputRegister(unsigned short mask) const {
+void VmeUsbBridge::pulseOutputRegister(unsigned short mask) const {
   checkCAENVMEexception(CAENVME_PulseOutputRegister(this->BHandle_, mask));
 }
 
-CVDisplay UsbController::readDisplay() const {
+CVDisplay VmeUsbBridge::readDisplay() const {
   CVDisplay value;
   checkCAENVMEexception(CAENVME_ReadDisplay(this->BHandle_, &value));
   return value;
 }
 
-void UsbController::setArbiterType(CVArbiterTypes type) const {
+void VmeUsbBridge::setArbiterType(CVArbiterTypes type) const {
   checkCAENVMEexception(CAENVME_SetArbiterType(this->BHandle_, type));
 }
 
-void UsbController::setRequesterType(CVRequesterTypes type) const {
+void VmeUsbBridge::setRequesterType(CVRequesterTypes type) const {
   checkCAENVMEexception(CAENVME_SetRequesterType(this->BHandle_, type));
 }
 
-void UsbController::setReleaseType(CVReleaseTypes type) const {
+void VmeUsbBridge::setReleaseType(CVReleaseTypes type) const {
   checkCAENVMEexception(CAENVME_SetReleaseType(this->BHandle_, type));
 }
 
-void UsbController::setBusReqLevel(CVBusReqLevels level) const {
+void VmeUsbBridge::setBusReqLevel(CVBusReqLevels level) const {
   checkCAENVMEexception(CAENVME_SetBusReqLevel(this->BHandle_,level));
 }
 
-void UsbController::setTimeout(CVVMETimeouts timeout) const {
+void VmeUsbBridge::setTimeout(CVVMETimeouts timeout) const {
   checkCAENVMEexception(CAENVME_SetTimeout(this->BHandle_,timeout));
 }
 
-void UsbController::setFIFOMode(bool mode) const {
+void VmeUsbBridge::setFIFOMode(bool mode) const {
   checkCAENVMEexception(CAENVME_SetFIFOMode(this->BHandle_,(short)mode));
 }
 
-CVArbiterTypes UsbController::getArbiterType() const {
+CVArbiterTypes VmeUsbBridge::getArbiterType() const {
   CVArbiterTypes value;
   checkCAENVMEexception(CAENVME_GetArbiterType(this->BHandle_, &value));
   return value;
 }
 
-CVRequesterTypes UsbController::getRequesterType() const {
+CVRequesterTypes VmeUsbBridge::getRequesterType() const {
   CVRequesterTypes value;
   checkCAENVMEexception(CAENVME_GetRequesterType(this->BHandle_, &value));
   return value;
 }
 
-CVReleaseTypes UsbController::getReleaseType() const {
+CVReleaseTypes VmeUsbBridge::getReleaseType() const {
   CVReleaseTypes value;
   checkCAENVMEexception(CAENVME_GetReleaseType(this->BHandle_, &value));
   return value;
 }
 
-CVBusReqLevels UsbController::getBusReqLevel() const {
+CVBusReqLevels VmeUsbBridge::getBusReqLevel() const {
   CVBusReqLevels value;
   checkCAENVMEexception(CAENVME_GetBusReqLevel(this->BHandle_, &value));
   return value;
 }
 
-CVVMETimeouts UsbController::getTimeout() const {
+CVVMETimeouts VmeUsbBridge::getTimeout() const {
   CVVMETimeouts value;
   checkCAENVMEexception(CAENVME_GetTimeout(this->BHandle_, &value));
   return value;
 }
 
-bool UsbController::getFIFOMode() const {
+bool VmeUsbBridge::getFIFOMode() const {
   short value;
   checkCAENVMEexception(CAENVME_GetFIFOMode(this->BHandle_, &value));
   return value;
 }
 
-void UsbController::systemReset() const {
+void VmeUsbBridge::systemReset() const {
   checkCAENVMEexception(CAENVME_SystemReset(this->BHandle_));
   /* note: we don't update the pulsers and scaler so a simple configure() on the restores the previous settings
   pulserA_.update();
@@ -212,25 +212,25 @@ void UsbController::systemReset() const {
   */
 }
 
-void UsbController::IRQEnable(uint32_t mask) const {
+void VmeUsbBridge::IRQEnable(uint32_t mask) const {
   checkCAENVMEexception(CAENVME_IRQEnable(this->BHandle_,mask));
 }
 
-void UsbController::IRQDisable(uint32_t mask) const {
+void VmeUsbBridge::IRQDisable(uint32_t mask) const {
   checkCAENVMEexception(CAENVME_IRQDisable(this->BHandle_,mask));
 }
 
-void UsbController::IRQWait(uint32_t mask, uint32_t timeout_ms) const {
+void VmeUsbBridge::IRQWait(uint32_t mask, uint32_t timeout_ms) const {
   checkCAENVMEexception(CAENVME_IRQWait(this->BHandle_,mask,timeout_ms));
 }
 
-unsigned char UsbController::IRQCheck() const {
+unsigned char VmeUsbBridge::IRQCheck() const {
   unsigned char output;
   checkCAENVMEexception(CAENVME_IRQCheck(this->BHandle_, &output));
   return output;
 }
 
-uint16_t UsbController::IACK(CVIRQLevels level) const {
+uint16_t VmeUsbBridge::IACK(CVIRQLevels level) const {
   auto [AM, DW] = useMode();
   uint16_t vector;
   checkCAENVMEexception(CAENVME_IACKCycle(this->BHandle_, level, &vector, DW));

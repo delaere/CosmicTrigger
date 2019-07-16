@@ -14,13 +14,13 @@
  * 
  */
 
-class vmeController{
+class VmeController{
   public:
-    vmeController(int verbose);
-    virtual ~vmeController() {}
+    VmeController(int verbose);
+    virtual ~VmeController() {}
     
     virtual void setMode(const CVAddressModifier AM, const CVDataWidth DW);///<Sets default modes.
-    virtual const vmeController* mode(const CVAddressModifier AM, const CVDataWidth DW) const;///<Sets temp mode
+    virtual const VmeController* mode(const CVAddressModifier AM, const CVDataWidth DW) const;///<Sets temp mode
     virtual CVAddressModifier getAM() const;///<Gets default mode
     virtual CVDataWidth getDW() const;///<Gets default mode
     virtual void setAM(CVAddressModifier AM);///<Sets default modes.

@@ -5,9 +5,9 @@
 #include <vector>
 
 /// V288 CAEN board
-class CaenetBridge:public vmeBoard{
+class CaenetBridge:public VmeBoard{
 public:
-  CaenetBridge(vmeController *cont, uint32_t bridgeAdd, uint8_t interrupt = 0);
+  CaenetBridge(VmeController *cont, uint32_t bridgeAdd, uint8_t interrupt = 0);
   
   void reset(); ///< Performs a reset
   

@@ -2,13 +2,13 @@
 #include <iostream>
 using namespace std;
 
-ttcVi::ttcVi(vmeController* controller,int address):vmeBoard(controller, address, cvA32_U_DATA, cvD16, true) {
+TtcVi::TtcVi(VmeController* controller,int address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true) {
   this->channel=1;
   this->channelFrequency=0;
   if(verbosity(NORMAL))cout<<"New TTCvi... ok!"<<endl;
 }
 
-void ttcVi::changeChannel(int channel){
+void TtcVi::changeChannel(int channel){
   this->channel=channel;
   int DATA=-1;
   switch (channel){
@@ -60,7 +60,7 @@ void ttcVi::changeChannel(int channel){
   }
 }
 
-void ttcVi::changeRandomFrequency(int frequencyId){
+void TtcVi::changeRandomFrequency(int frequencyId){
   this->channelFrequency=frequencyId;
   if (channel==-1){
     if(verbosity(NORMAL))cout<<"Sending new frequency to TTCvi"<<endl;
@@ -68,7 +68,7 @@ void ttcVi::changeRandomFrequency(int frequencyId){
   }
 }
 
-int ttcVi::viewMode(void){  
+int TtcVi::viewMode(void){  
   int DATA=0;
   readData(baseAddress()+0x80,&DATA);
   switch(DATA%16){

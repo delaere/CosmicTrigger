@@ -6,15 +6,15 @@
 
 
 int main(){
-  UsbController myCont;
+  VmeUsbBridge myCont;
   hv myHv(&myCont);
-  discri myDiscri(&myCont);
+  Discri myDiscri(&myCont);
   
   myDiscri.setMultiChannel(0x000F);
   myDiscri.setMajority(4);
   myDiscri.setTh(100);
   
-  scaler myScaler(&myCont,0xCCCC00);  
+  Scaler myScaler(&myCont,0xCCCC00);  
   myScaler.reset();
   
   myHv.setChState(1);

@@ -2,7 +2,7 @@
 
 using namespace std;
 
-vmeController::vmeController(int verbose) {
+VmeController::VmeController(int verbose) {
   this->verbose_ = verbose;
   this->AM_=cvA32_S_DATA;
   this->DW_=cvD16;
@@ -10,38 +10,38 @@ vmeController::vmeController(int verbose) {
   this->DWtmp_=cvD16;
 }
 
-void vmeController::setMode(CVAddressModifier AM, CVDataWidth DW){
+void VmeController::setMode(CVAddressModifier AM, CVDataWidth DW){
   this->AM_=AM;
   this->DW_=DW;
   this->AMtmp_=AM;
   this->DWtmp_=DW;
 }
 
-void vmeController::setAM(CVAddressModifier AM){
+void VmeController::setAM(CVAddressModifier AM){
   this->AM_=AM;
   this->AMtmp_=AM;
 }
 
-void vmeController::setDW(CVDataWidth DW){
+void VmeController::setDW(CVDataWidth DW){
   this->DW_=DW;
   this->DWtmp_=DW;
 }
 
-CVAddressModifier vmeController::getAM(void) const {
+CVAddressModifier VmeController::getAM(void) const {
   return(this->AM_);
 }
 
-CVDataWidth vmeController::getDW(void) const {
+CVDataWidth VmeController::getDW(void) const {
   return(this->DW_);
 }
 
-const vmeController* vmeController::mode(const CVAddressModifier AM, const CVDataWidth DW) const {
+const VmeController* VmeController::mode(const CVAddressModifier AM, const CVDataWidth DW) const {
   this->AMtmp_=AM;
   this->DWtmp_=DW;
   return this;
 }
 
-std::tuple<CVAddressModifier,CVDataWidth> vmeController::useMode() const {
+std::tuple<CVAddressModifier,CVDataWidth> VmeController::useMode() const {
   CVAddressModifier AM = this->AMtmp_;
   CVDataWidth DW = this->DWtmp_;
   this->AMtmp_ = this->AM_;

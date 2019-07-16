@@ -18,11 +18,11 @@ using namespace std;
  * Here are the datasheets for <a href="https://dl.dropboxusercontent.com/u/33459975/cosmicTrigger/datasheets/TTCviSpec.pdf">TTCvi unit</a> and the <a href="https://dl.dropboxusercontent.com/u/33459975/cosmicTrigger/datasheets/ttcvx.pdf">TTCvx unit</a>
  */
 
-class ttcVi:public vmeBoard{
+class TtcVi:public VmeBoard{
   
 public:  
   
-  ttcVi(vmeController* controller,int address=0x555500);
+  TtcVi(VmeController* controller,int address=0x555500);
   /**<
    * \brief Constructor.
    * 
@@ -71,9 +71,9 @@ public:
    */
   
   int viewMode(void);
-  /** \brief Shows informations about the ttcVi.
+  /** \brief Shows informations about the TtcVi.
    * 
-   *  If the verbose level of the vmeController is NORMAL or DEBUG, this function will print the current trigger mode.
+   *  If the verbose level of the VmeController is NORMAL or DEBUG, this function will print the current trigger mode.
    * 
    *  It also returns the value hex value of the mode.
    */

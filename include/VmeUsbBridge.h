@@ -88,9 +88,9 @@ class V1718Scaler
     bool configured_;
 };
 
-class UsbController: public vmeController{
+class VmeUsbBridge: public VmeController{
 public:
-     explicit UsbController(int verbose=3);
+     explicit VmeUsbBridge(int verbose=3);
      /**< 
       * \brief Class constructor.
       * 
@@ -98,9 +98,9 @@ public:
       * if the link to the VME is ok.
       * 
       */
-     UsbController(const UsbController& other); ///< copy constructor
-     UsbController& operator=(const UsbController& other); ///< copy operator
-     ~UsbController();///< Liberates the USB controller and "BHandle    
+     VmeUsbBridge(const VmeUsbBridge& other); ///< copy constructor
+     VmeUsbBridge& operator=(const VmeUsbBridge& other); ///< copy operator
+     ~VmeUsbBridge();///< Liberates the USB controller and "BHandle    
 
      /* VME data cycles */
      void writeData(const long unsigned int address,void* data) const override;

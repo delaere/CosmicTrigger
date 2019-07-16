@@ -17,9 +17,9 @@ using namespace std;
  * 
  */
 
-class scaler:public vmeBoard{
+class Scaler:public VmeBoard{
 public:
-  scaler(vmeController* controller,int address=0x0B0000);///<Constructor. Sets up the address and tests communication.
+  Scaler(VmeController* controller,int address=0x0B0000);///<Constructor. Sets up the address and tests communication.
   int getCount(int channel);
   /**<
    * \brief Getting count value.

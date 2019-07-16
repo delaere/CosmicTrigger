@@ -17,10 +17,10 @@ using namespace std;
  * Here is the  <a href="https://dl.dropboxusercontent.com/u/33459975/cosmicTrigger/datasheets/V1190_REV13.pdf">data sheet</a> of the V1190 unit.
  */
 
-class tdc:public vmeBoard{
+class Tdc:public VmeBoard{
 public:
   // CONSTRUCTOR
-  tdc(vmeController* controller,int address=0x00120000);
+  Tdc(VmeController* controller,int address=0x00120000);
   /**<
   * \brief Constructor
   * 

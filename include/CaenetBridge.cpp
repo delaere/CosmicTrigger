@@ -1,6 +1,6 @@
 #include "CaenetBridge.h"
 
-CaenetBridge::CaenetBridge(vmeController *cont, uint32_t bridgeAdd, uint8_t interrupt):vmeBoard(cont,bridgeAdd,cvA24_U_DATA,cvD16,true),interrupt_(interrupt) {}
+CaenetBridge::CaenetBridge(VmeController *cont, uint32_t bridgeAdd, uint8_t interrupt):VmeBoard(cont,bridgeAdd,cvA24_U_DATA,cvD16,true),interrupt_(interrupt) {}
 
 void CaenetBridge::reset() {
   uint16_t data = 0x0000;

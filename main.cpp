@@ -5,9 +5,9 @@
 
 
 int main(){
-  UsbController myCont(DEBUG);
-  discri myDiscri(&myCont);
-  ttcVi myTtc(&myCont);
+  VmeUsbBridge myCont(DEBUG);
+  Discri myDiscri(&myCont);
+  TtcVi myTtc(&myCont);
   
   myTtc.changeChannel(1);
     

@@ -4,7 +4,7 @@
 
 int main(){
   
-  UsbController myCont(NORMAL); //Creates a usb controller with NORMAL verbosity.
+  VmeUsbBridge myCont(NORMAL); //Creates a usb controller with NORMAL verbosity.
   hv myHv(&myCont);	//Creates a high voltage object with the controller.
   
   cout<<"Setting all channels to 1250V...";

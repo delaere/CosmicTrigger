@@ -10,17 +10,17 @@
  *
  * \image html Lib.png
  * 
- * \li vmeController is a virtual class. It has the definition of a few basic i/o functions. It also contains the verbosity level.
+ * \li VmeController is a virtual class. It has the definition of a few basic i/o functions. It also contains the verbosity level.
  * 
- * \li UsbController is the instantiation of vmeController for a CAEN VME Controller.
+ * \li VmeUsbBridge is the instantiation of VmeController for a CAEN VME Controller.
  * 
- * \li vmeBoard is a virtual class containing the definition of a fiew read/write functions. It also contains the module's address and default AM/DW modes.
+ * \li VmeBoard is a virtual class containing the definition of a fiew read/write functions. It also contains the module's address and default AM/DW modes.
  * 
- * \li vmeBoard daughter classes: classes implementing the functions that can be used by the user. Each class is different and has different functionalities depending on the card.
+ * \li VmeBoard daughter classes: classes implementing the functions that can be used by the user. Each class is different and has different functionalities depending on the card.
  * 
  * \li CommonDef is a file containing functions and enum types that can be used by anyone.
  * 
- * To see a complete list of implemented boards, please go to the vmeBoard documention page.
+ * To see a complete list of implemented boards, please go to the VmeBoard documention page.
  * 
  * \section dwl Download
  * 

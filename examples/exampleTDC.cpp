@@ -5,11 +5,11 @@
 #include "../include/TDC.h"
 
 int main(){
-  UsbController myCont;
-  ttcVi myTtc(&myCont);
-  tdc mytdc(&myCont);
+  VmeUsbBridge myCont;
+  TtcVi myTtc(&myCont);
+  Tdc myTdc(&myCont);
   hv myHv(&myCont);
-  discri myDiscri(&myCont);
+  Discri myDiscri(&myCont);
   
   //myHv.setChV(1250);
   //myHv.setChV(1400,3);
@@ -27,24 +27,24 @@ int main(){
   myTtc.viewMode();
   
   cout<<"----------------------------------------------------"<<endl;
-  mytdc.setChannelNumbers(1,23);
-  mytdc.setWindowWidth(50);
-  mytdc.setWindowOffset(-25);
-  mytdc.setExSearchMargin(1);
-  mytdc.setRejectMargin(1);
-  mytdc.readTriggerConfiguration();
-  mytdc.enableFIFO();
-  mytdc.disableTDCHeaderAndTrailer();
-  mytdc.readResolution();
+  myTdc.setChannelNumbers(1,23);
+  myTdc.setWindowWidth(50);
+  myTdc.setWindowOffset(-25);
+  myTdc.setExSearchMargin(1);
+  myTdc.setRejectMargin(1);
+  myTdc.readTriggerConfiguration();
+  myTdc.enableFIFO();
+  myTdc.disableTDCHeaderAndTrailer();
+  myTdc.readResolution();
   
   
 
   for(int i=0;i<5000;i++)
   {
     vector<unsigned int> data;
-    mytdc.getEvent(data);
-    mytdc.coutEvent(data);
-    mytdc.analyseEvent(data,"coucou");
+    myTdc.getEvent(data);
+    myTdc.coutEvent(data);
+    myTdc.analyseEvent(data,"coucou");
     
   }
   

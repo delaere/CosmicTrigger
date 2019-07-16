@@ -13,7 +13,7 @@ unsigned int digit(unsigned int data, int position) {
     return (data>>position)&1;
 }
 
-tdc::tdc(vmeController* controller,int address):vmeBoard(controller, address, cvA32_U_DATA, cvD16, true),ClockChannelNumber(0),TriggerChannelNumber(0) {
+Tdc::Tdc(VmeController* controller,int address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true),ClockChannelNumber(0),TriggerChannelNumber(0) {
     Opcode=baseAddress()+0x102E;
     StatusRegister=baseAddress()+0x1002;
     MicroHandshake=baseAddress()+0x1030;
@@ -22,7 +22,7 @@ tdc::tdc(vmeController* controller,int address):vmeBoard(controller, address, cv
     ControlRegister=baseAddress()+0x10;
 }
 
-int tdc::waitRead(void)
+int Tdc::waitRead(void)
 {
     unsigned int DATA=0;
     while(1){
@@ -34,7 +34,7 @@ int tdc::waitRead(void)
     return 0;
 }
 
-int tdc::waitWrite(void)
+int Tdc::waitWrite(void)
 {
   unsigned int DATA=0;
   while(1){
@@ -46,7 +46,7 @@ int tdc::waitWrite(void)
   return 0;
 }
 
-int tdc::waitDataReady(void)
+int Tdc::waitDataReady(void)
 {
   unsigned int DATA=0;
   while(1){
@@ -58,7 +58,7 @@ int tdc::waitDataReady(void)
   return 0;
 }
  
-int tdc::getEvent(event &myEvent)
+int Tdc::getEvent(event &myEvent)
 {
     //works only if FIFO enabled !
     this->waitDataReady(); 
@@ -85,7 +85,7 @@ int tdc::getEvent(event &myEvent)
     return 0;
 }
 
-void tdc::analyseEvent(event myEvent, const char* filename)
+void Tdc::analyseEvent(event myEvent, const char* filename)
 {
     //Getting trigger time
     unsigned int triggerTime=0;
@@ -131,7 +131,7 @@ void tdc::analyseEvent(event myEvent, const char* filename)
     }
 }
 
-void tdc::coutEvent(event myEvent)
+void Tdc::coutEvent(event myEvent)
 {  
   if(verbosity(NORMAL)) { 
     std::cout << "Event number : " << myEvent.eventNumber << std::endl;
@@ -144,7 +144,7 @@ void tdc::coutEvent(event myEvent)
 }
 
 // Read the status with the
-void tdc::ReadStatus(){
+void Tdc::ReadStatus(){
     unsigned int DATA=0;
     waitRead();
     readData(StatusRegister,&DATA);
@@ -156,7 +156,7 @@ void tdc::ReadStatus(){
     else{ if(verbosity(NORMAL))cout<< "Operating Mode : Continuous"<<endl;}
 }
 
-void tdc::Reset(){
+void Tdc::Reset(){
     unsigned int DATA=0;
     int ADD = baseAddress() +0x1014;
     for(int k = 0; k<3; k++){
@@ -166,7 +166,7 @@ void tdc::Reset(){
     if(verbosity(NORMAL))cout<< " Module Reset... " << endl << " Software Clear... " << endl <<  " Software Event Reset... " <<endl;
 }
 
-void tdc::setMode(bool Trig){
+void Tdc::setMode(bool Trig){
     unsigned int DATA=0;
     if(Trig) DATA = 0x0000;
     else DATA =0x0100;
@@ -174,7 +174,7 @@ void tdc::setMode(bool Trig){
     if(verbosity(DEBUG))cout << "Trigger Mode : " << Trig<< endl;
 }
 
-void tdc::setMaxEvPerHit(int Max_ev_per_hit){
+void Tdc::setMaxEvPerHit(int Max_ev_per_hit){
     for(int k=0; k<8;k++)
     if (Max_ev_per_hit== (2^(k)))
     {
@@ -194,7 +194,7 @@ void tdc::setMaxEvPerHit(int Max_ev_per_hit){
     else if(verbosity(WARNING))cout<< "Not a valid set  ! value of Max number of hits per event must be 0 or a power of 2 (1 2 4 .. 128) or 256 for NO LIMIT";
    }
 
-void tdc::setWindowWidth(unsigned int WidthSetting) {   
+void Tdc::setWindowWidth(unsigned int WidthSetting) {   
   if (WidthSetting > 4095 )
     {if(verbosity(WARNING))cout << "Width Setting must be a integer in the range from 1 to 4095" << endl;}
   else {
@@ -206,7 +206,7 @@ void tdc::setWindowWidth(unsigned int WidthSetting) {
   }
 }
 
-void tdc::setWindowOffset(int OffsetSetting) {   
+void Tdc::setWindowOffset(int OffsetSetting) {   
   if (OffsetSetting > 40 || OffsetSetting < -2048)
     {if(verbosity(WARNING))cout << "Offset Setting must be a integer in the range from -2048 to +40" << endl;}
   else {
@@ -218,7 +218,7 @@ void tdc::setWindowOffset(int OffsetSetting) {
   }
 }
 
-void tdc::setExSearchMargin(int ExSearchMrgnSetting ) {
+void Tdc::setExSearchMargin(int ExSearchMrgnSetting ) {
   if (ExSearchMrgnSetting > 50)
     {if(verbosity(WARNING)) cout << " 50*25ns is the maximal value. Extra Search Margin Setting must be a integer in the range from 0 to 50" << endl;}
   else {
@@ -230,7 +230,7 @@ void tdc::setExSearchMargin(int ExSearchMrgnSetting ) {
   }
 }
 
-void tdc::setRejectMargin(int RejectMrgnSetting) {
+void Tdc::setRejectMargin(int RejectMrgnSetting) {
   if (RejectMrgnSetting > 4095) {
     if(verbosity(WARNING))cout << "Offset Setting must be a integer in the range from -2048 to +40" << endl;}
   else {
@@ -242,7 +242,7 @@ void tdc::setRejectMargin(int RejectMrgnSetting) {
   }
 }
 
-void tdc::readWindowConfiguration() {
+void Tdc::readWindowConfiguration() {
   unsigned int DATA=0x1600;
   writeOpcode(DATA);
   readOpcode(DATA);
@@ -257,12 +257,12 @@ void tdc::readWindowConfiguration() {
   if(verbosity(NORMAL))cout<<" Trigger time substraction : "<<digit(DATA,0);
 }
 
-void tdc::setChannelNumbers(int clock, int trigger) {
+void Tdc::setChannelNumbers(int clock, int trigger) {
   ClockChannelNumber=clock;
   TriggerChannelNumber=trigger;
 }
 
-void tdc::enableFIFO() {
+void Tdc::enableFIFO() {
   unsigned int DATA;
   readData(ControlRegister, &DATA);
   if (digit(DATA,8)==0) {
@@ -272,7 +272,7 @@ void tdc::enableFIFO() {
   if(verbosity(NORMAL))cout<<"FIFO enabled !"<<endl;
 }
   
-void tdc::disableTDCHeaderAndTrailer() {
+void Tdc::disableTDCHeaderAndTrailer() {
   unsigned int DATA = 0x3100;
   writeOpcode(DATA);
   DATA = 0x3200;
@@ -282,19 +282,19 @@ void tdc::disableTDCHeaderAndTrailer() {
   if(verbosity(NORMAL))cout << "TDC Header and Trailer disabled"<< endl;
 }
   
-void tdc::readResolution() {
+void Tdc::readResolution() {
   unsigned int DATA=0x2600;
   writeOpcode(DATA);
   readOpcode(DATA);
   if(verbosity(NORMAL))cout<<" resolution : "<<digit(DATA,1,0)<<endl;;
 }
   
-void tdc::writeOpcode(unsigned int &DATA) {
+void Tdc::writeOpcode(unsigned int &DATA) {
   waitWrite();
   writeData(Opcode,&DATA);
 }
 
-void tdc::readOpcode(unsigned int &DATA)
+void Tdc::readOpcode(unsigned int &DATA)
 {
   waitRead();
   readData(Opcode,&DATA);

@@ -9,23 +9,23 @@
    * \brief Mother class for any board type class.
    * 
    * This class should be used to create any daughter board class.
-   * It is used to store basic communication functions with a virtual vmeController and to store associated default values.
+   * It is used to store basic communication functions with a virtual VmeController and to store associated default values.
    * 
    * In enforced mode, the controller will always operate in the designated AM/DW mode if the proxy read/write functions are used.
    *
    */
 
-class vmeBoard{
+class VmeBoard{
   
 public:
-  vmeBoard(vmeController* cont, uint32_t baseAddress, CVAddressModifier AM=cvA32_U_DATA, CVDataWidth DW=cvD16, bool enforceAMDW=false);
-  virtual ~vmeBoard() {}
+  VmeBoard(VmeController* cont, uint32_t baseAddress, CVAddressModifier AM=cvA32_U_DATA, CVDataWidth DW=cvD16, bool enforceAMDW=false);
+  virtual ~VmeBoard() {}
   
   inline void enforceAMDW(bool enforce) { enforceAMDW_ = enforce; }
   inline bool isAMDWenforced() { return enforceAMDW_; }
   
 protected:
-  inline const vmeController* controller() const { return (enforceAMDW_ ? cont_->mode(AM_,DW_) : cont_); }
+  inline const VmeController* controller() const { return (enforceAMDW_ ? cont_->mode(AM_,DW_) : cont_); }
   
   inline bool verbosity(coutLevel level) const { return cont_->verbosity(level); }
 
@@ -52,7 +52,7 @@ protected:
   }
 
 private:
-  vmeController* cont_;  ///< Pointer to the controller
+  VmeController* cont_;  ///< Pointer to the controller
   CVAddressModifier AM_; ///< Stored AM value
   CVDataWidth DW_;       ///< Stored DW value
   bool enforceAMDW_;     ///< Should the mode be enforced ?

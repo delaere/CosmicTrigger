@@ -7,14 +7,14 @@
  * 
  * \brief Discriminator/Coincidence unit controller.
  * 
- * This class allows the user to control a CAEN V812 discri/coincidence unit.
+ * This class allows the user to control a CAEN V812 Discri/coincidence unit.
  * 
  * The data sheet can be found <a href="https://dl.dropboxusercontent.com/u/33459975/cosmicTrigger/datasheets/v812_rev5.pdf">here</a>.
  * 
  */
-class discri:public vmeBoard{
+class Discri:public VmeBoard{
 public:
-  discri(vmeController *controller,int add=0x070000);///<Constructor.
+  Discri(VmeController *controller,int add=0x070000);///<Constructor.
   
   int setChannel(int num=-1, bool newState=true);
   /**<
@@ -28,7 +28,7 @@ public:
     /**<
    * \brief Sets all the channel at once.
    * 
-   * Sends the given code to the discri unit.
+   * Sends the given code to the Discri unit.
    * 
    * The code should be a 16 bits long number, the LSB setting channel 0 and the MSB setting channel 15.
    * 
@@ -49,7 +49,7 @@ public:
   int setTh(int value,int num=-1);
     /**<
    * 
-   * \brief Sets the threshold for the discriminator
+   * \brief Sets the threshold for the Discriminator
    * 
    * The threshold can be set independently for each channel.
    * 
@@ -65,7 +65,7 @@ public:
   int setWidth(int count,int num=-1);
     /**<
    * 
-   * \brief Sets the width of the discriminated signal
+   * \brief Sets the width of the Discriminated signal
    * 
    * \param count Gives a parameter that will be transformed to a width. The relation between the 2 is not given but can be found in data sheets. For example, 126 is approx 25ns.
    * 
@@ -79,7 +79,7 @@ public:
    * 
    * \brief Sets the dead time for a block of channels.
    * 
-   * \param value : Dead time in ns after a signal was discriminated.
+   * \param value : Dead time in ns after a signal was Discriminated.
    * 
    * \param num Chooses the block of 8 channels to modify. Cannot change the width of a lone channel. The block containing the said channel will have that width. If nothing (or -1) is specified, all channels will be set.   * 
    * 

@@ -3,15 +3,15 @@
 #include <cmath>
 using namespace std;
 
-discri::discri(vmeController *controller,int add):vmeBoard(controller, add, cvA32_U_DATA, cvD16, true) {
+Discri::Discri(VmeController *controller,int add):VmeBoard(controller, add, cvA32_U_DATA, cvD16, true) {
   this->status_=0x0000;//All channels off
   int DATA;
   readData(add+0xFE,&DATA);
-  if(verbosity(NORMAL)) std::cout << "Connexion to discri... ok!" << std::endl;
+  if(verbosity(NORMAL)) std::cout << "Connexion to Discri... ok!" << std::endl;
   this->setMultiChannel(this->status_);
 }
 
-int discri::setChannel(int num, bool newState){
+int Discri::setChannel(int num, bool newState){
   if (num==-1){
     if(newState)return(setMultiChannel(0xFFFF));
     else return(setMultiChannel(0x0000));
@@ -26,7 +26,7 @@ int discri::setChannel(int num, bool newState){
   return 1;
 }
 
-int discri::setMultiChannel(int code){
+int Discri::setMultiChannel(int code){
   status_=code;
   int DATA=code;
   writeData(baseAddress()+0x4A,&DATA);
@@ -34,7 +34,7 @@ int discri::setMultiChannel(int code){
   return 1;
 }
 
-int discri::setMajority(int num){
+int Discri::setMajority(int num){
   double nRound=(num*50-25.0)/4.0;
   int round;
   if ((nRound+0.5)>int(nRound)){ round=(int)nRound+1;}
@@ -44,7 +44,7 @@ int discri::setMajority(int num){
   return 1;
 }
 
-int discri::setTh(int value,int num){
+int Discri::setTh(int value,int num){
   if(value>255 || value<0){
     if(verbosity(WARNING)) cerr<<"*  WARNING: illegal value , command ignored"<<endl;
     return(-1);
@@ -66,7 +66,7 @@ int discri::setTh(int value,int num){
   return(-1); //Never happens, normally.
 }
 
-int discri::setWidth(int value,int num){
+int Discri::setWidth(int value,int num){
   if(value>255 || value<1){
     if(verbosity(WARNING))cerr<<"*  WARNING: illegal value , command ignored"<<endl;
     return(-1);
@@ -82,12 +82,12 @@ int discri::setWidth(int value,int num){
   return(-1); //Never happens, normally.
 }
 
-int discri::viewStatus(void){
+int Discri::viewStatus(void){
   if(verbosity(NORMAL)) std::cout<< std::hex << status_ << std::dec <<endl;
   return(status_);
 }
 
-int discri::setDeadTime(int value,int num){
+int Discri::setDeadTime(int value,int num){
   if(value>255 || value<0){
     if(verbosity(WARNING))cerr<<"*  WARNING: illegal value , command ignored"<<endl;
     return(-1);
