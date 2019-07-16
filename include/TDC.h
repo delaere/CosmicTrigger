@@ -2,10 +2,10 @@
 #define __TDC
 
 #include "VmeBoard.h"
-#include "Event.h"
 #include <vector>
 #include <sstream>
-using namespace std;
+#include "time.h"
+
 /**
  * \brief
  *  This class has a few functions encoding the basic functionalities of the TDC.
@@ -16,6 +16,19 @@ using namespace std;
  * 
  * Here is the  <a href="https://dl.dropboxusercontent.com/u/33459975/cosmicTrigger/datasheets/V1190_REV13.pdf">data sheet</a> of the V1190 unit.
  */
+
+struct hit
+{
+  unsigned int channel;
+  unsigned int time;
+};
+
+struct event
+{
+  unsigned int eventNumber;
+  time_t time;
+  std::vector<hit> measurements;
+};
 
 class Tdc:public VmeBoard{
 public:
@@ -181,14 +194,10 @@ private:
   unsigned int ClockChannelNumber;
   unsigned int TriggerChannelNumber;
 
-
   //PRIVATE FUNCTIONS
   int waitWrite(void);
   int waitRead(void);
   int waitDataReady(void);
-
-
 };
-
 
 #endif
