@@ -7,7 +7,7 @@ Discri::Discri(VmeController *controller,int add):VmeBoard(controller, add, cvA3
   this->status_=0x0000;//All channels off
   int DATA;
   readData(add+0xFE,&DATA);
-  if(verbosity(NORMAL)) std::cout << "Connexion to Discri... ok!" << std::endl;
+  LOG_INFO("Connexion to Discri... ok!");
   this->setMultiChannel(this->status_);
 }
 
@@ -20,16 +20,14 @@ void Discri::setChannel(int num, bool newState){
   // write the result to the proper register
   int DATA = status_;
   writeData(baseAddress()+0x4A,&DATA);
-  if (verbosity(NORMAL)) 
-    std::cout << "New status for channel " << num <<": "<< newState << std::endl;
+  LOG_INFO("New status for channel " + to_string(num) +": "+ to_string(newState));
 }
 
 void Discri::setMultiChannel(int code){
   status_=code;
   int DATA=code;
   writeData(baseAddress()+0x4A,&DATA);
-  if (verbosity(NORMAL)) 
-    std::cout << "Channels changed. Code:" << code << std::endl;
+  LOG_INFO("Channels changed. Code:" + to_string(code));
 }
 
 void Discri::setMajority(int num){
@@ -38,45 +36,34 @@ void Discri::setMajority(int num){
   if ((nRound+0.5)>int(nRound)){ round=(int)nRound+1;}
   else{ round=(int)nRound;}
   writeData(baseAddress()+0x48,&round);
-  if(verbosity(NORMAL))
-    std::cout << "Set majority level to " << num << "(sent: " << round << ")" << std::endl;
+  LOG_INFO("Set majority level to " + to_string(num) + "(sent: " + to_string(round) + ")");
 }
 
 void Discri::setTh(uint8_t value,int num){
   if (num==-1){
-      if(verbosity(NORMAL))
-        cout<<"Setting all thresholds to "<<value<<endl;
-      for (int i=0; i<16; i++) 
-        this->setTh(value,i);
-  } else{
-      if(verbosity(DEBUG)) 
-        cout<<"Setting threshold to "<<value<<" on channel "<<num<<"...";
-      writeData(baseAddress()+2*num,&value);
-      if (verbosity(DEBUG))
-        cout<<" ok!"<<endl;
-   }
+    LOG_INFO("Setting all thresholds to "+to_string(value));
+    for (int i=0; i<16; i++) 
+      this->setTh(value,i);
+  } else {
+    LOG_DEBUG("Setting threshold to " + to_string(value) + " on channel " + to_string(num));
+    writeData(baseAddress()+2*num,&value);
+  }
 }
 
 void Discri::setWidth(uint8_t value,int num){
   int DATA=value;
-  if(verbosity(NORMAL)) 
-    cout<<"Setting output width to"<<value<<"...";
+  LOG_INFO("Setting output width to "+ to_string(value));
   if (num<8) 
     writeData(baseAddress()+0x40,&DATA);
   if (num<0||num>7) 
     writeData(baseAddress()+0x42,&DATA);
-  if (verbosity(NORMAL)) 
-    cout<<" ok!"<<endl;
 }
 
 void Discri::setDeadTime(uint8_t value,int num){
   int DATA=value;
-  if(verbosity(NORMAL))
-    cout<<"Setting dead time to "<<value<<"...";
+  LOG_INFO("Setting dead time to " + to_string(value));
   if (num<8) 
     writeData(baseAddress()+0x44,&DATA);
   if (num<0||num>7) 
     writeData(baseAddress()+0x46,&DATA);
-  if (verbosity(NORMAL)) 
-    cout<<" ok!"<<endl;
 }

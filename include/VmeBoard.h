@@ -20,9 +20,6 @@ public:
 protected:
   // access to the VME controller. If AMDW is enforced, the returned object is ready.
   inline const VmeController* controller() const { return (enforceAMDW_ ? cont_->mode(AM_,DW_) : cont_); }
-  
-  // check verbosity (proxy for the controller verbosity)
-  inline bool verbosity(coutLevel level) const { return cont_->verbosity(level); }
 
   // get/set the module base address
   inline void setbaseAddress(uint32_t add) { baseAddress_ = add; }

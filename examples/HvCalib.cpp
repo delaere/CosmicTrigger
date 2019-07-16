@@ -20,19 +20,16 @@ int main(){
   myHv.setChState(1);
   
   for (int voltage=1250; voltage<1500; voltage+=50){
-   cout<<endl<<endl<<"Voltage set to "<<voltage<<"V"<<endl;
+   LOG_INFO("Voltage set to " + to_string(voltage)+"V");
    myHv.setChV(voltage); 
    system("sleep 10s");
    myScaler.reset();
-   cout<<"Scaler reseted, counting data."<<endl;
+   LOG_INFO("Scaler reseted, counting data.");
    system("sleep 100s");
-   
    for (int channel=11; channel<17; channel++){
      system("sleep 0.1s");
-      ostringstream mystream;
-      mystream<<"echo '"<<voltage<<" - "<<myScaler.getCount(channel)<<"' >> Channel"<<channel<<".txt";
-      system(mystream.str().c_str());// Printing return value of the scaler in the Channelxx.txt file.
+     LOG_DATA_INFO("Channel"+to_string(channel)+" : "+to_string(voltage)+" - "+to_string(myScaler.getCount(channel)));
+     //note: LOG_DATA_INFO uses a trivial logger. We could also specify a dedicated logger with channel as parameter.
    }
-   
   } 
 }

@@ -7,11 +7,9 @@
 
 using namespace boost::python;
 
-int (VmeController::*verbosity)() const = &VmeController::verbosity;
-
 struct VmeControllerWrap : VmeController, wrapper<VmeController>
 {
-  VmeControllerWrap(int verbose):VmeController(verbose),wrapper<VmeController>() {}
+  VmeControllerWrap():VmeController(),wrapper<VmeController>() {}
   
   void writeData(long unsigned int address,void* data) const override {
     this->get_override("writeData")(address,data);
@@ -48,12 +46,12 @@ struct VmeControllerWrap : VmeController, wrapper<VmeController>
   }
 };
 
-BOOST_PYTHON_MODULE(vme)
+BOOST_PYTHON_MODULE(VMEPythonModule)
 {
   //expose the enums (TODO if confirmed that we need it. We can live with integers)
   
   //expose VmeController
-    class_<VmeControllerWrap, boost::noncopyable>("VmeController", init<int>())
+    class_<VmeControllerWrap, boost::noncopyable>("VmeController")
         .def("setMode", &VmeController::setMode)
         .def("mode", &VmeController::mode,return_value_policy<manage_new_object>())
         .add_property("AM",&VmeController::getAM,&VmeController::setAM)
@@ -69,10 +67,9 @@ BOOST_PYTHON_MODULE(vme)
         .def("IRQWait",pure_virtual(&VmeController::IRQWait))
         .def("IRQCheck",pure_virtual(&VmeController::IRQCheck))
         .def("IACK",pure_virtual(&VmeController::IACK))
-        .add_property("verbosity",verbosity,&VmeController::setVerbosity)
     ;
   //expose VmeUsbBridge
-    class_<VmeUsbBridge, bases<VmeController> >("VmeUsbBridge", init<int>())
+    class_<VmeUsbBridge, bases<VmeController> >("VmeUsbBridge")
          .def("configureOutputLine",&VmeUsbBridge::configureOutputLine)
          .def("configureInputLine",&VmeUsbBridge::configureInputLine)
          .def("outputLineConfiguration",&VmeUsbBridge::outputLineConfiguration)

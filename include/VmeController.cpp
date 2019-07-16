@@ -2,8 +2,7 @@
 
 using namespace std;
 
-VmeController::VmeController(int verbose) {
-  this->verbose_ = verbose;
+VmeController::VmeController() {
   this->AM_=cvA32_S_DATA;
   this->DW_=cvD16;
   this->AMtmp_=cvA32_S_DATA;

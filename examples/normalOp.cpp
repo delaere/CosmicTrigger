@@ -6,7 +6,7 @@
 
 int main(){
  
-  VmeUsbBridge myCont(NORMAL);// Creates a USB controller with NORMAL verbosity
+  VmeUsbBridge myCont();// Creates a USB controller
   Discri myDiscri(&myCont); // Creates a Discriminator unit with that controller
   TtcVi myTtc(&myCont);	// Same thing with a TTCvi
   

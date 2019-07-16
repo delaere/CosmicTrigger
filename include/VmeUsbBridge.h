@@ -84,7 +84,7 @@ class V1718Scaler
 // V1718 VME USB bridge.
 class VmeUsbBridge: public VmeController{
 public:
-     explicit VmeUsbBridge(int verbose=3);
+     explicit VmeUsbBridge();
      VmeUsbBridge(const VmeUsbBridge& other); ///< copy constructor
      VmeUsbBridge& operator=(const VmeUsbBridge& other); ///< copy operator
      ~VmeUsbBridge();///< Liberates the USB controller and "BHandle    

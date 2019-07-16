@@ -83,27 +83,38 @@ Event Tdc::getEvent()
 
 void Tdc::coutEvent(Event myEvent)
 {  
-  if(verbosity(NORMAL)) { 
-    std::cout << "Event number : " << myEvent.eventNumber << std::endl;
-    std::cout << "Recorded events :" << std::endl;
-  }
+  std::stringstream stream;
+  stream << "Event number : " << myEvent.eventNumber << std::endl;
+  stream << "Recorded events :" << std::endl; 
   for (unsigned int i=0; i<myEvent.measurements.vector::size(); i++) {
-    if(verbosity(NORMAL))cout<<"Channel : "<<myEvent.measurements[i].channel<<" - Time : "<<myEvent.measurements[i].time<<endl;
+    stream << "Channel : "<<myEvent.measurements[i].channel<<" - Time : "<<myEvent.measurements[i].time<<endl;
   }
-  cout<<endl;
+  stream << endl;
+  LOG_INFO(stream.str());
 }
 
 // Read the status with the
-void Tdc::ReadStatus(){
+unsigned int Tdc::getStatus(){
     unsigned int DATA=0;
     waitRead();
     readData(StatusRegister,&DATA);
-    if (DATA%2 > 0){ if(verbosity(NORMAL))cout << "Event Ready"<<endl;}
-    else {if(verbosity(NORMAL))cout<< "No data ready"<<endl;}
-    if (DATA%8 >3) { if(verbosity(NORMAL))cout<< " Output Buffer is Full"<< endl;}
-    else {if(verbosity(NORMAL))cout<< " Output Buffer is not full"<<endl;}
-    if (DATA%16 >7 ){if(verbosity(NORMAL))cout<< " Operating Mode : Trigger "<<endl;}
-    else{ if(verbosity(NORMAL))cout<< "Operating Mode : Continuous"<<endl;}
+    
+    if (DATA&1) {
+      LOG_DEBUG("Event Ready");
+    } else {
+      LOG_DEBUG("No data ready");
+    }
+    if (DATA&4) {
+      LOG_DEBUG("Output Buffer is Full");
+    } else {
+      LOG_DEBUG("Output Buffer is not full");
+    }
+    if (DATA&8) {
+      LOG_DEBUG("Operating Mode : Trigger");
+    } else {
+      LOG_DEBUG("Operating Mode : Continuous");
+    }
+    return DATA;
 }
 
 void Tdc::Reset(){
@@ -113,98 +124,98 @@ void Tdc::Reset(){
       ADD+=2;
       writeData(ADD, &DATA);
     }
-    if(verbosity(NORMAL))cout<< " Module Reset... " << endl << " Software Clear... " << endl <<  " Software Event Reset... " <<endl;
+    LOG_INFO(" Module Reset, Software Clear, Software Event Reset");
 }
 
-void Tdc::setMode(bool Trig){
+void Tdc::setMode(bool trig){
     unsigned int DATA=0;
-    if(Trig) DATA = 0x0000;
+    if(trig) DATA = 0x0000;
     else DATA =0x0100;
     writeOpcode(DATA);
-    if(verbosity(DEBUG))cout << "Trigger Mode : " << Trig<< endl;
+    LOG_DEBUG("Trigger Mode : " +to_string(trig));
 }
 
 void Tdc::setMaxEvPerHit(int Max_ev_per_hit){
     for(int k=0; k<8;k++)
-    if (Max_ev_per_hit== (2^(k)))
-    {
-        if(verbosity(NORMAL))if (k == 8) cout << "No limit on Maximum number of hits per event";
-        unsigned int DATA=0x3300; // MEPH = maximum events per hits
-        writeOpcode(DATA);
-        DATA = k+1;
-        writeOpcode(DATA);
+    if (Max_ev_per_hit== (2^(k))) {
+      if (k == 8) LOG_INFO("No limit on Maximum number of hits per event");
+      unsigned int DATA=0x3300; // MEPH = maximum events per hits
+      writeOpcode(DATA);
+      DATA = k+1;
+      writeOpcode(DATA);
+    } else if (Max_ev_per_hit==0) {
+      unsigned int DATA=0x3300;
+      writeOpcode(DATA);
+      DATA=0;
+      writeOpcode(DATA);
     }
-    else if (Max_ev_per_hit==0)
-    {
-	unsigned int DATA=0x3300;
-        writeOpcode(DATA);
-	DATA=0;
-        writeOpcode(DATA);
-    }
-    else if(verbosity(WARNING))cout<< "Not a valid set  ! value of Max number of hits per event must be 0 or a power of 2 (1 2 4 .. 128) or 256 for NO LIMIT";
+    else
+      LOG_WARN("Not a valid set  ! value of Max number of hits per event must be 0 or a power of 2 (1 2 4 .. 128) or 256 for NO LIMIT");
    }
 
 void Tdc::setWindowWidth(unsigned int WidthSetting) {   
-  if (WidthSetting > 4095 )
-    {if(verbosity(WARNING))cout << "Width Setting must be a integer in the range from 1 to 4095" << endl;}
-  else {
+  if (WidthSetting > 4095 ) {
+    LOG_WARN("Width Setting must be a integer in the range from 1 to 4095");
+  } else {
     unsigned int DATA=0x1000;
     writeOpcode(DATA);
     DATA = WidthSetting;
     writeOpcode(DATA);
-    cout << "Window Width set to"<< WidthSetting<< endl;
+    LOG_DEBUG("Window Width set to"+to_string(WidthSetting));
   }
 }
 
 void Tdc::setWindowOffset(int OffsetSetting) {   
-  if (OffsetSetting > 40 || OffsetSetting < -2048)
-    {if(verbosity(WARNING))cout << "Offset Setting must be a integer in the range from -2048 to +40" << endl;}
-  else {
+  if (OffsetSetting > 40 || OffsetSetting < -2048) {
+    LOG_WARN("Offset Setting must be a integer in the range from -2048 to +40");
+  } else {
     unsigned int DATA = 0x1100;
     writeOpcode(DATA);
     DATA = OffsetSetting;
     writeOpcode(DATA);
-    cout << "Window Width set to"<< OffsetSetting<< endl;
+    LOG_DEBUG("Window Width set to" + to_string(OffsetSetting));
   }
 }
 
 void Tdc::setExSearchMargin(int ExSearchMrgnSetting ) {
-  if (ExSearchMrgnSetting > 50)
-    {if(verbosity(WARNING)) cout << " 50*25ns is the maximal value. Extra Search Margin Setting must be a integer in the range from 0 to 50" << endl;}
-  else {
+  if (ExSearchMrgnSetting > 50) {
+    LOG_WARN("50*25ns is the maximal value. Extra Search Margin Setting must be a integer in the range from 0 to 50");
+  } else {
     unsigned int DATA = 0x1200;
     writeOpcode(DATA);
     DATA = ExSearchMrgnSetting;
     writeOpcode(DATA);
-    if(verbosity(NORMAL))cout << "Extra Search Margin Width set to"<< ExSearchMrgnSetting<< endl;
+    LOG_DEBUG("Extra Search Margin Width set to"+to_string(ExSearchMrgnSetting));
   }
 }
 
 void Tdc::setRejectMargin(int RejectMrgnSetting) {
   if (RejectMrgnSetting > 4095) {
-    if(verbosity(WARNING))cout << "Offset Setting must be a integer in the range from -2048 to +40" << endl;}
-  else {
+    LOG_WARN("Offset Setting must be a integer in the range from -2048 to +40");
+  } else {
     unsigned int DATA = 0x1300;
     writeOpcode(DATA);
     DATA = RejectMrgnSetting;
     writeOpcode(DATA);
-    if(verbosity(NORMAL))cout << "Reject Margin set to"<< RejectMrgnSetting<< endl;
+    LOG_DEBUG("Reject Margin set to"+to_string(RejectMrgnSetting));
   }
 }
 
 void Tdc::readWindowConfiguration() {
+  std::stringstream stream;
   unsigned int DATA=0x1600;
   writeOpcode(DATA);
   readOpcode(DATA);
-  if(verbosity(NORMAL))cout<<" Match window width : "<<digit(DATA,11,0);
+  stream <<" Match window width : "<<digit(DATA,11,0);
   readOpcode(DATA);
-  if(verbosity(NORMAL))cout<<" Window ofset : "<<digit(DATA,11,0)-4096;
+  stream << " Window ofset : "<<digit(DATA,11,0)-4096;
   readOpcode(DATA);
-  if(verbosity(NORMAL))cout<<" Extra search window width: "<<digit(DATA,11,0);
+  stream << " Extra search window width: "<<digit(DATA,11,0);  
   readOpcode(DATA);
-  if(verbosity(NORMAL))cout<<" Reject margin width: "<<digit(DATA,11,0);
+  stream <<" Reject margin width: "<<digit(DATA,11,0);
   readOpcode(DATA);
-  if(verbosity(NORMAL))cout<<" Trigger time substraction : "<<digit(DATA,0);
+  stream << " Trigger time substraction : "<<digit(DATA,0) << std::endl;
+  LOG_INFO(stream.str());
 }
 
 void Tdc::enableFIFO() {
@@ -214,7 +225,7 @@ void Tdc::enableFIFO() {
     DATA+=0x0100;
   }
   writeData(ControlRegister, &DATA);
-  if(verbosity(NORMAL))cout<<"FIFO enabled !"<<endl;
+  LOG_INFO("FIFO enabled !");
 }
   
 void Tdc::disableTDCHeaderAndTrailer() {
@@ -223,15 +234,14 @@ void Tdc::disableTDCHeaderAndTrailer() {
   DATA = 0x3200;
   writeOpcode(DATA);
   readOpcode(DATA);
-  if (DATA%2==0)
-  if(verbosity(NORMAL))cout << "TDC Header and Trailer disabled"<< endl;
+  if (DATA%2==0) LOG_INFO("TDC Header and Trailer disabled");
 }
   
 void Tdc::readResolution() {
   unsigned int DATA=0x2600;
   writeOpcode(DATA);
   readOpcode(DATA);
-  if(verbosity(NORMAL))cout<<" resolution : "<<digit(DATA,1,0)<<endl;;
+  LOG_INFO("Resolution : " + to_string(digit(DATA,1,0)));
 }
   
 void Tdc::writeOpcode(unsigned int &DATA) {

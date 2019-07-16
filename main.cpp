@@ -19,7 +19,7 @@ int main(int argc, char* argv[]){
   try {
     LOG_DEBUG("Start of configuratio");
     LOG_TRACE("Instantiating the controller");
-    VmeUsbBridge myCont(DEBUG);
+    VmeUsbBridge myCont;
     LOG_TRACE("Instantiating the discri");
     Discri myDiscri(&myCont);
     LOG_TRACE("Instantiating the TTCvi");

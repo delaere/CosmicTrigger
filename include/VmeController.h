@@ -8,7 +8,7 @@
 // Main controller virtual class.
 class VmeController{
   public:
-    VmeController(int verbose);
+    VmeController();
     virtual ~VmeController() {}
     
     // Address modifier and Data width
@@ -34,16 +34,10 @@ class VmeController{
     virtual unsigned char IRQCheck() const = 0;
     virtual uint16_t IACK(CVIRQLevels Level) const = 0;
 
-    // control the verbosity
-    inline void setVerbosity(int verbose){this->verbose_=verbose;}///< Sets verbosity level
-    inline int  verbosity() const { return verbose_; }///<Gets verbosity level
-    inline bool verbosity(coutLevel level) const { return (verbose_ >= (int)level) ; } ///<Check verbosity level
-
   protected:
     virtual std::tuple<CVAddressModifier,CVDataWidth> useMode() const;///< more than a getter: it "consumes" the tmp mode.
     
   private:
-    int verbose_;
     CVAddressModifier AM_;
     CVDataWidth DW_;
     mutable CVAddressModifier AMtmp_;

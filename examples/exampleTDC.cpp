@@ -10,23 +10,18 @@ int main(){
   Tdc myTdc(&myCont);
   hv myHv(&myCont);
   Discri myDiscri(&myCont);
-  
-  //myHv.setChV(1250);
-  //myHv.setChV(1400,3);
-  //myHv.setChState(1);
-  
+ 
   myDiscri.setMajority(4);
   myDiscri.setMultiChannel(0x008F);
   myDiscri.setTh(100);
   myDiscri.setWidth(255);
   myDiscri.setDeadTime(0);
   
-  
   myTtc.changeChannel(2);
   myTtc.changeRandomFrequency(4);
   myTtc.viewMode();
   
-  cout<<"----------------------------------------------------"<<endl;
+  LOG_INFO("----------------------------------------------------");
   myTdc.setChannelNumbers(1,23);
   myTdc.setWindowWidth(50);
   myTdc.setWindowOffset(-25);
@@ -37,17 +32,9 @@ int main(){
   myTdc.disableTDCHeaderAndTrailer();
   myTdc.readResolution();
   
-  
-
-  for(int i=0;i<5000;i++)
-  {
+  for(int i=0;i<5000;i++) {
     vector<unsigned int> data;
     myTdc.getEvent(data);
-    myTdc.coutEvent(data);
-    myTdc.analyseEvent(data,"coucou");
-    
+    myTdc.coutEvent(data);  
   }
-  
-
-  
 }

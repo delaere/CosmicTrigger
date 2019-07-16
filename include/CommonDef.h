@@ -11,16 +11,9 @@
 #include "CAENVMEoslib.h"
 #include "CAENVMEtypes.h"
 
-#include "include/logger.h"
+// logger
 
-/// Defines coutLevels to manage library output.
-typedef enum coutLevel{
-      SILENT = 0,	///<Shows nearly nothing, except fatal errors
-      ERROR  =  1,	///<Shows errors
-      WARNING = 2,	///<Shows warning (usually bad parameters)
-      NORMAL = 3,	///<Normal level, explains what it's doing
-      DEBUG = 4		///<Debug, it talks... A LOT
-} coutLevel;
+#include "include/logger.h"
 
 // exception classes
 
@@ -88,6 +81,16 @@ auto gen_tuple_impl(V vec, std::index_sequence<Is...> ) {
 template <size_t N, typename V>
 auto gen_tuple(V vec) {
     return gen_tuple_impl(vec, std::make_index_sequence<N>{} );
+}
+
+template< typename T >
+std::string int_to_hex( T i )
+{
+  std::stringstream stream;
+  stream << "0x" 
+         << std::setfill ('0') << std::setw(sizeof(T)*2) 
+         << std::hex << i;
+  return stream.str();
 }
 
 #endif

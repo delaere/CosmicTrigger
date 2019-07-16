@@ -1,7 +1,7 @@
 #include "VmeUsbBridge.h"
 #include <iostream>
 
-VmeUsbBridge::VmeUsbBridge(int verbose):VmeController(verbose) {
+VmeUsbBridge::VmeUsbBridge():VmeController() {
   this->board_ = cvV1718;
   char FWRel[128];
   
@@ -24,9 +24,7 @@ VmeUsbBridge::~VmeUsbBridge(){
   delete this->pulserB_;
   delete this->scaler_;
   CAENVME_End(this->BHandle_);
-  if(verbosity(NORMAL)) {
-    std::cout << "Disconnected from USB controler." << std::endl; 
-  }
+  LOG_INFO("Disconnected from USB controler.");
 }
 
 VmeUsbBridge::VmeUsbBridge(const VmeUsbBridge& other):VmeController(other),firmwareVersion_(other.firmwareVersion_),BHandle_(other.BHandle_) {

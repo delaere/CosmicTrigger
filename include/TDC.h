@@ -30,10 +30,10 @@ public:
   Event getEvent();
   
   // Print the event content
-  void coutEvent(Event myEvent);
+  static void coutEvent(Event myEvent);
 
-  // Print the TDC status
-  void ReadStatus();
+  // Get the TDC status
+  unsigned int getStatus();
 
   // Reset the board
   void Reset();
@@ -58,7 +58,7 @@ public:
   // Set the reject margin in units of clock cycle.
   void setRejectMargin(int RejectMrgnSetting);
 
-  // Print the current match window settings 
+  // Get the current match window settings 
   void readWindowConfiguration();
 
   // Print the resolution
