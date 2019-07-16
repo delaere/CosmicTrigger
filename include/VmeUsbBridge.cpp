@@ -13,7 +13,7 @@ VmeUsbBridge::VmeUsbBridge(int verbose):VmeController(verbose) {
   checkCAENVMEexception(CAENVME_BoardFWRelease(this->BHandle_,FWRel));
   this->firmwareVersion_ = std::string(FWRel);
   
-  if(verbosity()>=3) {
+  if(verbosity(NORMAL)) {
     std::cout << "VME USB Init... ok!"<< std::endl;
     std::cout << "Firmware version: " << this->firmwareVersion_ << std::endl;
   }
@@ -24,7 +24,7 @@ VmeUsbBridge::~VmeUsbBridge(){
   delete this->pulserB_;
   delete this->scaler_;
   CAENVME_End(this->BHandle_);
-  if(verbosity()>=3) {
+  if(verbosity(NORMAL)) {
     std::cout << "Disconnected from USB controler." << std::endl; 
   }
 }
