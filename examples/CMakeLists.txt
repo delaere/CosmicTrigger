@@ -1,6 +1,6 @@
 # test executables
 
-link_libraries(VMEPythonModule)
+link_libraries(VeheMencE)
 
 include_directories(${CMAKE_SOURCE_DIR} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 

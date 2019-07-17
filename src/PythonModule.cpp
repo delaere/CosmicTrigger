@@ -46,7 +46,7 @@ struct VmeControllerWrap : VmeController, wrapper<VmeController>
   }
 };
 
-BOOST_PYTHON_MODULE(VMEPythonModule)
+BOOST_PYTHON_MODULE(VeheMencE)
 {
   //expose the enums (TODO if confirmed that we need it. We can live with integers)
   
