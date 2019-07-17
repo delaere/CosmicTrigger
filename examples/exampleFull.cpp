@@ -1,7 +1,7 @@
-#include "include/VmeUsbBridge.h"
-#include "include/TTCvi.h"
-#include "include/Discri.h"
-#include "include/Scaler.h"
+#include "VmeUsbBridge.h"
+#include "TTCvi.h"
+#include "Discri.h"
+#include "Scaler.h"
 
 #include "include/logger.h"
 #include <iostream>

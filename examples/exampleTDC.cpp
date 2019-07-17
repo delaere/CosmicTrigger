@@ -1,14 +1,12 @@
-#include "../include/VmeUsbBridge.h"
-#include "../include/TTCvi.h"
-#include "../include/Discri.h"
-#include "../include/HV.h"
-#include "../include/TDC.h"
+#include "VmeUsbBridge.h"
+#include "TTCvi.h"
+#include "Discri.h"
+#include "TDC.h"
 
 int main(){
   VmeUsbBridge myCont;
   TtcVi myTtc(&myCont);
   Tdc myTdc(&myCont);
-  hv myHv(&myCont);
   Discri myDiscri(&myCont);
  
   myDiscri.setMajority(4);
@@ -22,19 +20,15 @@ int main(){
   myTtc.viewMode();
   
   LOG_INFO("----------------------------------------------------");
-  myTdc.setChannelNumbers(1,23);
   myTdc.setWindowWidth(50);
   myTdc.setWindowOffset(-25);
   myTdc.setExSearchMargin(1);
   myTdc.setRejectMargin(1);
-  myTdc.readTriggerConfiguration();
   myTdc.enableFIFO();
   myTdc.disableTDCHeaderAndTrailer();
   myTdc.readResolution();
   
   for(int i=0;i<5000;i++) {
-    vector<unsigned int> data;
-    myTdc.getEvent(data);
-    myTdc.coutEvent(data);  
+    myTdc.coutEvent(myTdc.getEvent());
   }
 }
