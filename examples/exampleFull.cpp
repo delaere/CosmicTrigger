@@ -2,8 +2,7 @@
 #include "TTCvi.h"
 #include "Discri.h"
 #include "Scaler.h"
-
-#include "include/logger.h"
+#include "logger.h"
 #include <iostream>
 #include <exception>
 
