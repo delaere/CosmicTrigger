@@ -56,6 +56,8 @@ set(VEHEMENCE_SOURCES
      "src/VmeController.cpp"
      "src/CommonDef.cpp"
      "src/HVmodule.cpp"
+     "src/N470HVmodule.cpp"
+     "src/SY527PowerSystem.cpp"
      "src/PythonModule.cpp"
      "src/TDC.cpp"
      "src/VmeBoard.cpp"

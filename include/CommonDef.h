@@ -59,6 +59,7 @@ class CAENETexception: public std::exception
       if(errorcode_==0xFF00) return "BUSY module (it has tried to effect an operation while the module is still busy registering previous data inside the EEPROM).";
       if(errorcode_==0xFF01) return "Code not recognised or message incorrect.";
       if(errorcode_==0xFF02) return "Incorrect set value.";
+      if(errorcode_==0xFF03) return "Channel or Board not present";
       if(errorcode_==0xFFFD) return "No data to be transmitted.";
       if(errorcode_==0xFFFE) return "The H.C. Controller identifier is incorrect.";
       if(errorcode_==0xFFFF) return "The addressed module does not exist.";

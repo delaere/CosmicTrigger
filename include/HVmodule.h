@@ -1,77 +1,46 @@
 #ifndef __HVMODULE
 #define __HVMODULE
 
-#include "CaenetBridge.h"
+#include "CommonDef.h"
 
-// meaning of the status bits
-typedef enum CVStatusWordBit {
-  cvONOFF = 0,  /* The channel is ON(1) or OFF(0) */ 
-  cvOVC   = 1,  /* The channel is in OVC condition */
-  cvOVV   = 2,  /* The channel is in OVV condition */
-  cvUNV   = 3,  /* The channel is in UNV condition */
-  cvTRIP  = 4,  /* The channel has been switched OFF for TRIP condition */
-  cvRUP   = 5,  /* The channel is ramping up */
-  cvRDW   = 6,  /* The channel is ramping down */
-  cvMAXV  = 7,  /* The channel has reached the preset MAXV */
-  cvPOL   = 8,  /* Positive channel(0) or Negative channel(1) */
-  cvVSEL  = 9,  /* Vset = V0 or Vset = V1 */
-  cvISEL  = 10, /* Iset = I0 or Iset = I1 */
-  cvKILL  = 11, /* Module KILLed by external pulse still active */
-  cvHVEN  = 12, /* Module enabled to supply HV by the front panel switch */
-  cvNIMTTL= 13, /* NIM(0) or TTL(1) standard selected */
-  cvOUTCAL= 14, /* Non calibrated module  */
-  cvALARM = 15  /* Module in alarm condition */
-} CVStatusWordBit;
-
-// Simple class to represent the status word.
-class N470StatusWord
-{
-public:
-  N470StatusWord(uint16_t status):status_(status) {}
-  ~N470StatusWord() {}
-  
-  // return the status word
-  inline uint16_t status() const { return status_; }
-  
-  // extract a given bit
-  inline bool bit(CVStatusWordBit n) const { return ((status_>>n)&1); }
-  
-private:
-  uint16_t status_;
-};
+class CaenetBridge;
 
 class HVModule;
+class HVBoard;
+class HVChannel;
 
 // One single HV channel.
 class HVChannel
 {
 public:
-  explicit HVChannel(uint32_t address, uint32_t id, CaenetBridge* bridge);
-  ~HVChannel() {}
+  explicit HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge);
+  virtual ~HVChannel() {}
   
   // the channel id
+  inline uint32_t board() const; 
   inline uint32_t id() const { return id_; }
   
   // turn on/off
-  void on();
-  void off();
+  void virtual on() = 0 ;
+  void virtual off() = 0 ;
   
   // program the channel
-  void setV0(uint32_t v0);
-  void setV1(uint32_t v1);
-  void setI0(uint32_t i0);
-  void setI1(uint32_t i1);
-  void setRampup(uint32_t rampup);
-  void setRampdown(uint32_t rampdown);
-  void setTrip(uint32_t trip);
+  void virtual setV0(uint32_t v0) = 0;
+  void virtual setV1(uint32_t v1) = 0;
+  void virtual setI0(uint32_t i0) = 0;
+  void virtual setI1(uint32_t i1) = 0;
+  void virtual setRampup(uint32_t rampup) = 0;
+  void virtual setRampdown(uint32_t rampdown) = 0;
+  void virtual setTrip(uint32_t trip) = 0;
+  void virtual setSoftMaxV(uint32_t maxv) = 0;
   
   // read all parameters from hardware
-  void readOperationalParameters();
+  void virtual readOperationalParameters() = 0;
   
   // get cached values (as last programmed, or read back before)
   // readOperationalParameters should be called first.
-  inline uint32_t getVmon() const { return vmon_; }
-  inline uint32_t getImon() const { return imon_; }
+  inline float getVmon() const { return vmon_; }
+  inline float getImon() const { return imon_; }
   inline uint32_t getV0() const { return v0_; }
   inline uint32_t getV1() const { return v1_; }
   inline uint32_t getI0() const { return i0_; }
@@ -80,55 +49,150 @@ public:
   inline uint32_t getRampdown() const { return rampdown_; }
   inline uint32_t getTrip() const { return trip_; }
   inline uint32_t getmaxV() const { return maxV_; }
-  inline N470StatusWord getStatus() const { return status_; }
+  inline uint32_t getStatus() const { return status_; }
+  inline uint32_t getSoftMaxV() const { return softmaxV_; }
   
 protected:
-  void setStatus(std::vector<uint32_t>::const_iterator data);
+  void virtual setStatus(std::vector<uint32_t>::const_iterator data) = 0; //TODO see later if this is that universal.
   
-private:
+  void attach(HVBoard &board);
+  void attachWithoutReciprocating(HVBoard &board);
+  
   CaenetBridge* bridge_;
+  HVBoard* board_;
   uint32_t address_;
   uint32_t id_;
-  uint32_t vmon_;
-  uint32_t imon_;
+  float vmon_;
+  float imon_;
   uint32_t v0_;
   uint32_t v1_;
   uint32_t i0_;
   uint32_t i1_;
   uint32_t maxV_;
+  uint32_t softmaxV_;
   uint32_t status_;
   uint32_t rampup_;
   uint32_t rampdown_;
   uint32_t trip_;
   
   friend class HVModule;
+  friend class HVBoard;
 };
 
+// One board, containing several similar channels
+class HVBoard{
+public:
+  HVBoard(uint32_t slot,
+          std::string name,
+          uint8_t current_unit,
+          uint32_t serial_number,
+          uint32_t software_version,
+          uint32_t nChannels,
+          uint32_t vmax,
+          uint32_t imax,
+          uint32_t rampmin,
+          uint32_t rampmax,
+          uint32_t vres,
+          uint32_t ires,
+          uint32_t vdec,
+          uint32_t idec );
+  HVBoard():slot_(0),name_(""),current_unit_(0),serial_number_(0),
+            software_version_(0),nChannels_(0),vmax_(0),imax_(0),
+            rampmin_(0),rampmax_(0),vres_(0),ires_(0),vdec_(0),idec_(0) {}
+  virtual ~HVBoard() {};
+
+  inline std::vector<HVChannel*> getChannels() { return channels_; }
+  inline uint32_t getSlot() const { return slot_; }
+  inline std::string getName() const { return name_; }
+  inline uint8_t getCurrentUnit() const { return current_unit_; }
+  inline uint32_t getSerialNumber() const { return serial_number_; }
+  inline uint32_t getSoftwareVersion() const { return software_version_; }
+  inline uint32_t getNChannels() const { return nChannels_; }
+  inline uint32_t getVMax() const { return vmax_; }
+  inline uint32_t getIMax() const { return imax_; }
+  inline uint32_t getRampMin() const { return rampmin_; }
+  inline uint32_t getRampMax() const { return rampmax_; }
+  inline uint32_t getVResolution() const { return vres_; }
+  inline uint32_t getIResolution() const { return ires_; }
+  inline uint32_t getVDecimals() const { return vdec_; }
+  inline uint32_t getIDecimals() const { return idec_; }
+  
+protected:
+  void attach(HVChannel &channel) {
+    channels_.push_back(&channel);
+    channel.attachWithoutReciprocating(*this);
+  }
+
+  void attachWithoutReciprocating(HVChannel &channel) {
+    channels_.push_back(&channel);
+  }
+  
+private:
+  uint32_t slot_;
+  std::vector<HVChannel*> channels_;
+  std::string name_;
+  // TODO adjust types
+  uint8_t current_unit_; // 0:A, 1:mA, 2:uA, 3:nA
+  uint32_t serial_number_;
+  uint32_t software_version_;
+  uint32_t nChannels_;
+  uint32_t vmax_;
+  uint32_t imax_;
+  uint32_t rampmin_;
+  uint32_t rampmax_;
+  uint32_t vres_;
+  uint32_t ires_;
+  uint32_t vdec_;
+  uint32_t idec_;
+  
+  friend class HVModule;
+  friend class HVChannel;
+
+};
+
+// One HV module or crate
 class HVModule{
 public:
   explicit HVModule(uint32_t address, CaenetBridge* bridge);
-  ~HVModule() {}
   
+  virtual ~HVModule() {
+    for( auto [key,channel] : channels_) {
+      delete channel;
+    }
+  }
+  
+  // returns the identification string
   inline std::string identification() const { return identification_; } 
+
+  // static method that instantiates the proper derived class, according to the identification string
+  static HVModule* HVModuleFactory(uint32_t address, CaenetBridge* bridge);
   
-  void updateStatus();
+  // returns one channel
+  inline HVChannel& channel(uint32_t board, uint32_t channel) { return *channels_.at(std::make_pair(board,channel)); }
   
-  void kill();
-  void clearAlarm();
-  void enableKeyboard(bool enable);
-  void setTTL();
-  void setNIM();
+  // returns one board
+  inline HVBoard& board(uint32_t slot) { return boards_.at(slot); }
   
-  inline HVChannel& channel(uint32_t id) { return channels_.at(id); }
+  // returns all channels
+  inline std::map<std::pair<uint32_t,uint32_t>, HVChannel*>& getChannels() { return channels_; }
   
-  inline uint32_t getStatus() const { return status_; }
+  // returns all boards
+  inline std::map<uint32_t, HVBoard>& getBoards() { return boards_; }
+
+protected:
+  // method to be implemented to build the channel map. It populates the boards map
+  virtual void discoverBoards() = 0;
   
-private:
+  // method to be implemented to check that the returned identity is ok for this class
+  virtual void assertIdentity() const = 0;
+  
   CaenetBridge* bridge_;
   uint32_t address_;
-  std::vector<HVChannel> channels_;
+    
+private:
+  std::map<std::pair<uint32_t,uint32_t>, HVChannel*> channels_; 
+  std::map<uint32_t, HVBoard> boards_;
   std::string identification_;
-  uint32_t status_; //TODO this might not exist...
 };
 
 #endif

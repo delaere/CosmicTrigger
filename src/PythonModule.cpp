@@ -4,6 +4,7 @@
 #include "VmeBoard.h"
 #include "CaenetBridge.h"
 #include "HVmodule.h"
+#include "N470HVmodule.h"
 
 using namespace boost::python;
 
