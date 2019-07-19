@@ -47,6 +47,72 @@ struct VmeControllerWrap : VmeController, wrapper<VmeController>
   }
 };
 
+struct HVChannelWrap : HVChannel, wrapper<HVChannel>
+{
+  HVChannelWrap(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address, board, id, bridge), wrapper<HVChannel>() {} 
+  
+  void on() override {
+    this->get_override("on")();
+  }
+  
+  void off() override {
+    this->get_override("off")();
+  }
+  
+  void setV0(uint32_t v0) override {
+    this->get_override("setV0")(v0);
+  }
+  
+  void setV1(uint32_t v1) override {
+    this->get_override("setV1")(v1);
+  }
+  
+  void setI0(uint32_t i0) override {
+    this->get_override("setI0")(i0);
+  }
+  
+  void setI1(uint32_t i1) override {
+    this->get_override("setI1")(i1);
+  }
+  
+  void setRampup(uint32_t rampup) override {
+    this->get_override("setRampup")(rampup);
+  }
+  
+  void setRampdown(uint32_t rampdown) override {
+    this->get_override("setRampdown")(rampdown);
+  }
+  
+  void setTrip(uint32_t trip) override {
+    this->get_override("setTrip")(trip);
+  }
+  
+  void setSoftMaxV(uint32_t maxv) override {
+    this->get_override("setSoftMaxV")(maxv);
+  }
+  
+  void readOperationalParameters() override {
+    this->get_override("readOperationalParameters")();
+  }
+  
+  void setStatus(std::vector<uint32_t>::const_iterator data) override {
+    this->get_override("setStatus")(data);
+  }
+};
+
+struct HVModuleWrap : HVModule, wrapper<HVModule>
+{
+  HVModuleWrap(uint32_t address, CaenetBridge* bridge):HVModule(address, bridge), wrapper<HVModule>() {}
+  
+  void discoverBoards() override {
+    this->get_override("discoverBoards")();
+  }
+  
+  void assertIdentity() const override {
+    this->get_override("assertIdentity")();
+  }
+};
+
 BOOST_PYTHON_MODULE(VeheMencE)
 {
   //expose the enums (TODO if confirmed that we need it. We can live with integers)
@@ -126,11 +192,7 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("readResponse",&CaenetBridge::readResponse)
     ;
     // expose HVmodule
-    class_<N470StatusWord>("N470StatusWord",init<uint16_t>())
-         .def("status",&N470StatusWord::status)
-         .def("bit",&N470StatusWord::bit)
-    ;
-    class_<HVChannel>("HVChannel",init<uint32_t, uint32_t, CaenetBridge*>())
+    class_<HVChannelWrap, boost::noncopyable>("HVChannel", init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
          .add_property("id",&HVChannel::id)
          .add_property("V0",&HVChannel::getV0,&HVChannel::setV0)
          .add_property("V1",&HVChannel::getV1,&HVChannel::setV1)
@@ -147,15 +209,46 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("off",&HVChannel::off)
          .def("readOperationalParameters",&HVChannel::readOperationalParameters)
     ;
-    class_<HVModule>("HVModule",init<uint32_t,CaenetBridge*>())
+    class_<HVBoard>("HVBoard",init<uint32_t, std::string, uint8_t,uint16_t, uint16_t, uint8_t, uint32_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t>())
+         .def("getChannels",&HVBoard::getChannels)
+         .def("getSlot",&HVBoard::getSlot)
+         .def("getName",&HVBoard::getName)
+         .def("getCurrentUnit",&HVBoard::getCurrentUnit)
+         .def("getSerialNumber",&HVBoard::getSerialNumber)
+         .def("getSoftwareVersion",&HVBoard::getSoftwareVersion)
+         .def("getNChannels",&HVBoard::getNChannels)
+         .def("getVMax",&HVBoard::getVMax)
+         .def("getIMax",&HVBoard::getIMax)
+         .def("getRampMin",&HVBoard::getRampMin)
+         .def("getRampMax",&HVBoard::getRampMax)
+         .def("getVResolution",&HVBoard::getVResolution)
+         .def("getIResolution",&HVBoard::getIResolution)
+         .def("getVDecimals",&HVBoard::getVDecimals)
+         .def("getIDecimals",&HVBoard::getIDecimals)
+    ;
+    class_<HVModuleWrap, boost::noncopyable>("HVModule", init<uint32_t, CaenetBridge*>())
          .add_property("identification",&HVModule::identification)
-         .add_property("status",&HVModule::getStatus)
-         .def("updateStatus",&HVModule::updateStatus)
-         .def("kill",&HVModule::kill)
-         .def("clearAlarm",&HVModule::clearAlarm)
-         .def("enableKeyboard",&HVModule::enableKeyboard)
-         .def("setTTL",&HVModule::setTTL)
-         .def("setNIM",&HVModule::setNIM)
+         .def("HVModuleFactory",&HVModule::HVModuleFactory,return_value_policy<manage_new_object>())
          .def("channel",&HVModule::channel,return_value_policy<copy_non_const_reference>())
+         .def("board",&HVModule::board,return_value_policy<copy_non_const_reference>())
+         .def("getChannels",&HVModule::getChannels,return_value_policy<copy_non_const_reference>())
+         .def("getBoards",&HVModule::getBoards,return_value_policy<copy_non_const_reference>())
+    ;
+    // expose N470HVmodule
+    class_<N470StatusWord>("N470StatusWord",init<uint16_t>())
+         .def("status",&N470StatusWord::status)
+         .def("bit",&N470StatusWord::bit)
+    ;
+    class_<N470HVChannel>("N470HVChannel",init<uint32_t,HVBoard&,uint32_t,CaenetBridge*>())
+         .def("getStatus",&N470HVChannel::getStatus)
+    ;
+    class_<N470HVModule>("N470HVModule",init<uint32_t,CaenetBridge*>())
+         .add_property("status",&N470HVModule::getStatus)
+         .def("updateStatus",&N470HVModule::updateStatus)
+         .def("kill",&N470HVModule::kill)
+         .def("clearAlarm",&N470HVModule::clearAlarm)
+         .def("enableKeyboard",&N470HVModule::enableKeyboard)
+         .def("setTTL",&N470HVModule::setTTL)
+         .def("setNIM",&N470HVModule::setNIM)
     ;
 }

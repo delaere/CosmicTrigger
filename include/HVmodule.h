@@ -85,17 +85,17 @@ public:
   HVBoard(uint32_t slot,
           std::string name,
           uint8_t current_unit,
-          uint32_t serial_number,
-          uint32_t software_version,
-          uint32_t nChannels,
+          uint16_t serial_number,
+          uint16_t software_version,
+          uint8_t nChannels,
           uint32_t vmax,
-          uint32_t imax,
-          uint32_t rampmin,
-          uint32_t rampmax,
-          uint32_t vres,
-          uint32_t ires,
-          uint32_t vdec,
-          uint32_t idec );
+          uint16_t imax,
+          uint16_t rampmin,
+          uint16_t rampmax,
+          uint16_t vres,
+          uint16_t ires,
+          uint16_t vdec,
+          uint16_t idec );
   HVBoard():slot_(0),name_(""),current_unit_(0),serial_number_(0),
             software_version_(0),nChannels_(0),vmax_(0),imax_(0),
             rampmin_(0),rampmax_(0),vres_(0),ires_(0),vdec_(0),idec_(0) {}
@@ -105,17 +105,17 @@ public:
   inline uint32_t getSlot() const { return slot_; }
   inline std::string getName() const { return name_; }
   inline uint8_t getCurrentUnit() const { return current_unit_; }
-  inline uint32_t getSerialNumber() const { return serial_number_; }
-  inline uint32_t getSoftwareVersion() const { return software_version_; }
-  inline uint32_t getNChannels() const { return nChannels_; }
+  inline uint16_t getSerialNumber() const { return serial_number_; }
+  inline uint16_t getSoftwareVersion() const { return software_version_; }
+  inline uint8_t getNChannels() const { return nChannels_; }
   inline uint32_t getVMax() const { return vmax_; }
-  inline uint32_t getIMax() const { return imax_; }
-  inline uint32_t getRampMin() const { return rampmin_; }
-  inline uint32_t getRampMax() const { return rampmax_; }
-  inline uint32_t getVResolution() const { return vres_; }
-  inline uint32_t getIResolution() const { return ires_; }
-  inline uint32_t getVDecimals() const { return vdec_; }
-  inline uint32_t getIDecimals() const { return idec_; }
+  inline uint16_t getIMax() const { return imax_; }
+  inline uint16_t getRampMin() const { return rampmin_; }
+  inline uint16_t getRampMax() const { return rampmax_; }
+  inline uint16_t getVResolution() const { return vres_; }
+  inline uint16_t getIResolution() const { return ires_; }
+  inline uint16_t getVDecimals() const { return vdec_; }
+  inline uint16_t getIDecimals() const { return idec_; }
   
 protected:
   void attach(HVChannel &channel) {
@@ -133,17 +133,17 @@ private:
   std::string name_;
   // TODO adjust types
   uint8_t current_unit_; // 0:A, 1:mA, 2:uA, 3:nA
-  uint32_t serial_number_;
-  uint32_t software_version_;
-  uint32_t nChannels_;
+  uint16_t serial_number_;
+  uint16_t software_version_;
+  uint8_t nChannels_;
   uint32_t vmax_;
-  uint32_t imax_;
-  uint32_t rampmin_;
-  uint32_t rampmax_;
-  uint32_t vres_;
-  uint32_t ires_;
-  uint32_t vdec_;
-  uint32_t idec_;
+  uint16_t imax_;
+  uint16_t rampmin_;
+  uint16_t rampmax_;
+  uint16_t vres_;
+  uint16_t ires_;
+  uint16_t vdec_;
+  uint16_t idec_;
   
   friend class HVModule;
   friend class HVChannel;

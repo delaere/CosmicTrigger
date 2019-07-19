@@ -5,9 +5,9 @@
 #include "N470HVmodule.h"
 #include "SY527PowerSystem.h"
 
-HVBoard::HVBoard(uint32_t slot, std::string name, uint8_t current_unit, uint32_t serial_number,
-                 uint32_t software_version, uint32_t nChannels, uint32_t vmax, uint32_t imax,
-                 uint32_t rampmin, uint32_t rampmax, uint32_t vres, uint32_t ires, uint32_t vdec, uint32_t idec):
+HVBoard::HVBoard(uint32_t slot, std::string name, uint8_t current_unit, uint16_t serial_number,
+                 uint16_t software_version, uint8_t nChannels, uint32_t vmax, uint16_t imax,
+                 uint16_t rampmin, uint16_t rampmax, uint16_t vres, uint16_t ires, uint16_t vdec, uint16_t idec):
                  slot_(slot),name_(name),current_unit_(current_unit),serial_number_(serial_number),
                  software_version_(software_version),nChannels_(nChannels),vmax_(vmax),imax_(imax),
                  rampmin_(rampmin),rampmax_(rampmax),vres_(vres),ires_(ires),vdec_(vdec),idec_(idec) {}
