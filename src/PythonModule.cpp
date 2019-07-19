@@ -5,6 +5,7 @@
 #include "CaenetBridge.h"
 #include "HVmodule.h"
 #include "N470HVmodule.h"
+#include "SY527PowerSystem.h"
 
 using namespace boost::python;
 
@@ -249,4 +250,18 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("setNIM",&N470HVModule::setNIM)
     ;
     // expose SY527PowerSystem
+    class_<SY527StatusWord>("SY527StatusWord",init<uint16_t>())
+         .def("status",&SY527StatusWord::status)
+         .def("bit",&SY527StatusWord::bit)
+    ;
+    class_<SY527HVChannel, bases<HVChannel> >("SY527HVChannel",init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
+         .def("setPasswordFlag",&SY527HVChannel::setPasswordFlag)
+         .def("setOnOffFlag",&SY527HVChannel::setOnOffFlag)
+         .def("setPoweronFlag",&SY527HVChannel::setPoweronFlag)
+         .def("getName",&SY527HVChannel::getName)
+         .def("getStatus",&SY527HVChannel::getStatus)
+    ;
+    class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
+         .def("updateStatus",&SY527PowerSystem::updateStatus)
+    ;
 }
