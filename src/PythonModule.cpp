@@ -6,116 +6,18 @@
 #include "HVmodule.h"
 #include "N470HVmodule.h"
 #include "SY527PowerSystem.h"
+#define __PYTHONMODULECONFIGURATION
 
 using namespace boost::python;
 
-struct VmeControllerWrap : VmeController, wrapper<VmeController>
-{
-  VmeControllerWrap():VmeController(),wrapper<VmeController>() {}
-  
-  void writeData(long unsigned int address,void* data) const override {
-    this->get_override("writeData")(address,data);
-  }
-  void readData(long unsigned int address,void* data) const override {
-    this->get_override("readData")(address,data);
-  }
-  void readWriteData(const long unsigned int address,void* data) const override {
-    this->get_override("readWriteData")(address,data);
-  }
-  void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
-    this->get_override("blockReadData")(address,buffer,size,count,multiplex);
-  }
-  void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
-    this->get_override("blockWriteData")(address,buffer,size,count,multiplex);
-  }
-  void ADOCycle(const long unsigned int address) const override {
-    this->get_override("ADOCycle")(address);
-  }
-  void IRQEnable(uint32_t mask) const override {
-    this->get_override("IRQEnable")(mask);
-  }
-  void IRQDisable(uint32_t mask) const override {
-    this->get_override("IRQDisable")(mask);
-  }
-  void IRQWait(uint32_t mask, uint32_t timeout_ms) const override {
-    this->get_override("IRQWait")(mask,timeout_ms);
-  }
-  unsigned char IRQCheck() const override {
-    return this->get_override("IRQCheck")();
-  }
-  uint16_t IACK(CVIRQLevels Level) const override {
-    return this->get_override("IACK")(Level);
-  }
-};
-
-struct HVChannelWrap : HVChannel, wrapper<HVChannel>
-{
-  HVChannelWrap(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address, board, id, bridge), wrapper<HVChannel>() {} 
-  
-  void on() override {
-    this->get_override("on")();
-  }
-  
-  void off() override {
-    this->get_override("off")();
-  }
-  
-  void setV0(uint32_t v0) override {
-    this->get_override("setV0")(v0);
-  }
-  
-  void setV1(uint32_t v1) override {
-    this->get_override("setV1")(v1);
-  }
-  
-  void setI0(uint32_t i0) override {
-    this->get_override("setI0")(i0);
-  }
-  
-  void setI1(uint32_t i1) override {
-    this->get_override("setI1")(i1);
-  }
-  
-  void setRampup(uint32_t rampup) override {
-    this->get_override("setRampup")(rampup);
-  }
-  
-  void setRampdown(uint32_t rampdown) override {
-    this->get_override("setRampdown")(rampdown);
-  }
-  
-  void setTrip(uint32_t trip) override {
-    this->get_override("setTrip")(trip);
-  }
-  
-  void setSoftMaxV(uint32_t maxv) override {
-    this->get_override("setSoftMaxV")(maxv);
-  }
-  
-  void readOperationalParameters() override {
-    this->get_override("readOperationalParameters")();
-  }
-
-};
-
-struct HVModuleWrap : HVModule, wrapper<HVModule>
-{
-  HVModuleWrap(uint32_t address, CaenetBridge* bridge):HVModule(address, bridge), wrapper<HVModule>() {}
-  
-  void discoverBoards() override {
-    this->get_override("discoverBoards")();
-  }
-  
-  void assertIdentity() const override {
-    this->get_override("assertIdentity")();
-  }
-};
+#include "PythonModule.h"
 
 BOOST_PYTHON_MODULE(VeheMencE)
 {
-  //expose the enums (TODO if confirmed that we need it. We can live with integers)
-  
-  //expose VmeController
+    //expose the CAENVMEtypes enums
+#include "PythonCaenVmeTypes.h"
+
+    //expose VmeController
     class_<VmeControllerWrap, boost::noncopyable>("VmeController")
         .def("setMode", &VmeController::setMode)
         .def("mode", &VmeController::mode,return_value_policy<manage_new_object>())
@@ -133,7 +35,7 @@ BOOST_PYTHON_MODULE(VeheMencE)
         .def("IRQCheck",pure_virtual(&VmeController::IRQCheck))
         .def("IACK",pure_virtual(&VmeController::IACK))
     ;
-  //expose VmeUsbBridge
+    //expose VmeUsbBridge
     class_<VmeUsbBridge, bases<VmeController> >("VmeUsbBridge")
          .def("configureOutputLine",&VmeUsbBridge::configureOutputLine)
          .def("configureInputLine",&VmeUsbBridge::configureInputLine)
@@ -233,10 +135,32 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("getBoards",&HVModule::getBoards,return_value_policy<copy_non_const_reference>())
     ;
     // expose N470HVmodule
-    class_<N470StatusWord>("N470StatusWord",init<uint16_t>())
-         .def("status",&N470StatusWord::status)
-         .def("bit",&N470StatusWord::bit)
-    ;
+    {
+      scope in_N470StatusWord = class_<N470StatusWord>("N470StatusWord",init<uint16_t>())
+           .def("status",&N470StatusWord::status)
+           .def("bit",&N470StatusWord::bit)
+      ;
+
+      enum_<N470StatusWord::CVStatusWordBit>("CVStatusWordBit")
+          .value("cvONOFF", N470StatusWord::cvONOFF)
+          .value("cvOVC", N470StatusWord::cvOVC)
+          .value("cvOVV", N470StatusWord::cvOVV)
+          .value("cvUNV", N470StatusWord::cvUNV)
+          .value("cvTRIP", N470StatusWord::cvTRIP)
+          .value("cvRUP", N470StatusWord::cvRUP)
+          .value("cvRDW", N470StatusWord::cvRDW)
+          .value("cvMAXV", N470StatusWord::cvMAXV)
+          .value("cvPOL", N470StatusWord::cvPOL)
+          .value("cvVSEL", N470StatusWord::cvVSEL)
+          .value("cvISEL", N470StatusWord::cvISEL)
+          .value("cvKILL", N470StatusWord::cvKILL)
+          .value("cvHVEN", N470StatusWord::cvHVEN)
+          .value("cvNIMTTL", N470StatusWord::cvNIMTTL)
+          .value("cvOUTCAL", N470StatusWord::cvOUTCAL)
+          .value("cvALARM", N470StatusWord::cvALARM)
+      ;
+    }
+       
     class_<N470HVChannel>("N470HVChannel",init<uint32_t,HVBoard&,uint32_t,CaenetBridge*>())
          .def("getStatus",&N470HVChannel::getStatus)
     ;
@@ -250,10 +174,31 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("setNIM",&N470HVModule::setNIM)
     ;
     // expose SY527PowerSystem
-    class_<SY527StatusWord>("SY527StatusWord",init<uint16_t>())
-         .def("status",&SY527StatusWord::status)
-         .def("bit",&SY527StatusWord::bit)
-    ;
+    {
+      scope in_SY527StatusWord = class_<SY527StatusWord>("SY527StatusWord",init<uint16_t>())
+           .def("status",&SY527StatusWord::status)
+           .def("bit",&SY527StatusWord::bit)
+      ;
+
+      enum_<SY527StatusWord::CVStatusWordBit>("CVStatusWordBit")
+          .value("cvPRESENT", SY527StatusWord::cvPRESENT)
+          .value("cvINTRIP", SY527StatusWord::cvINTRIP)
+          .value("cvKILL", SY527StatusWord::cvKILL)
+          .value("cvMAXV", SY527StatusWord::cvMAXV)
+          .value("cvEXTRIP", SY527StatusWord::cvEXTRIP)
+          .value("cvOVV", SY527StatusWord::cvOVV)
+          .value("cvUNV", SY527StatusWord::cvUNV)
+          .value("cvOVC", SY527StatusWord::cvOVC)
+          .value("cvRDW", SY527StatusWord::cvRDW)
+          .value("cvRUP", SY527StatusWord::cvRUP)
+          .value("cvONOFF", SY527StatusWord::cvONOFF)
+          .value("cvEXTRIPEN", SY527StatusWord::cvEXTRIPEN)
+          .value("cvPWDREQ", SY527StatusWord::cvPWDREQ)
+          .value("cvPOWDOWN", SY527StatusWord::cvPOWDOWN)
+          .value("cvOOEN", SY527StatusWord::cvOOEN)
+          .value("cvPOWON", SY527StatusWord::cvPOWON)
+      ;
+    }
     class_<SY527HVChannel, bases<HVChannel> >("SY527HVChannel",init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
          .def("setPasswordFlag",&SY527HVChannel::setPasswordFlag)
          .def("setOnOffFlag",&SY527HVChannel::setOnOffFlag)

@@ -9,24 +9,23 @@ class SY527StatusWord
 public:
   
   // meaning of the status bits
-  //TODO adapt this typedef
   typedef enum CVStatusWordBit {
-    cvONOFF = 0,  /* The channel is ON(1) or OFF(0) */ 
-    cvOVC   = 1,  /* The channel is in OVC condition */
-    cvOVV   = 2,  /* The channel is in OVV condition */
-    cvUNV   = 3,  /* The channel is in UNV condition */
-    cvTRIP  = 4,  /* The channel has been switched OFF for TRIP condition */
-    cvRUP   = 5,  /* The channel is ramping up */ 
-    cvRDW   = 6,  /* The channel is ramping down */
-    cvMAXV  = 7,  /* The channel has reached the preset MAXV */
-    cvPOL   = 8,  /* Positive channel(0) or Negative channel(1) */
-    cvVSEL  = 9,  /* Vset = V0 or Vset = V1 */
-    cvISEL  = 10, /* Iset = I0 or Iset = I1 */
-    cvKILL  = 11, /* Module KILLed by external pulse still active */
-    cvHVEN  = 12, /* Module enabled to supply HV by the front panel switch */
-    cvNIMTTL= 13, /* NIM(0) or TTL(1) standard selected */
-    cvOUTCAL= 14, /* Non calibrated module  */
-    cvALARM = 15  /* Module in alarm condition */
+    cvPRESENT = 0, /* The channel is present or not */
+    cvINTRIP  = 5, /* The channel has been switched OFF for internal TRIP condition */
+    cvKILL    = 6, /* Module KILLed by external pulse still active */
+    cvMAXV    = 8, /* The channel has reached the preset MAXV */
+    cvEXTRIP  = 9, /* The channel has been switched OFF for external TRIP */
+    cvOVV     = 10,/* The channel is in OVV condition */
+    cvUNV     = 11,/* The channel is in UNV condition */
+    cvOVC     = 12,/* The channel is in OVC condition */
+    cvRDW     = 13,/* The channel is ramping down */
+    cvRUP     = 14,/* The channel is ramping up */ 
+    cvONOFF   = 15,/* The channel is ON(1) or OFF(0) */ 
+    cvEXTRIPEN= 25,/* The external trip feature is enabled */
+    cvPWDREQ  = 28,/* Password required for console operations */
+    cvPOWDOWN = 29,/* Power down behavior: Kill(0) or RDW(1) */
+    cvOOEN    = 30,/* On/Off enabled from console */
+    cvPOWON   = 31,/* Power-on behavior: off(0) or on(1) */
   } CVStatusWordBit;
   
   SY527StatusWord(uint16_t status):status_(status) {}
