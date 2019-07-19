@@ -53,7 +53,6 @@ public:
   inline uint32_t getSoftMaxV() const { return softmaxV_; }
   
 protected:
-  void virtual setStatus(std::vector<uint32_t>::const_iterator data) = 0; //TODO see later if this is that universal.
   
   void attach(HVBoard &board);
   void attachWithoutReciprocating(HVBoard &board);
@@ -131,7 +130,6 @@ private:
   uint32_t slot_;
   std::vector<HVChannel*> channels_;
   std::string name_;
-  // TODO adjust types
   uint8_t current_unit_; // 0:A, 1:mA, 2:uA, 3:nA
   uint16_t serial_number_;
   uint16_t software_version_;

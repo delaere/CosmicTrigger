@@ -70,7 +70,7 @@ public:
   inline N470StatusWord getStatus() const { return status_; }
   
 protected:
-  void setStatus(std::vector<uint32_t>::const_iterator data) override;
+  void setStatus(std::vector<uint32_t>::const_iterator data);
   
 private:
   uint32_t status_;

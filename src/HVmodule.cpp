@@ -44,9 +44,9 @@ HVModule::HVModule(uint32_t address, CaenetBridge* bridge):bridge_(bridge),addre
   discoverBoards();
 
   // instantiate the channels
-  for( auto const& [slot, board] : boards_ ) {
+  for( auto & [slot, board] : getBoards() ) {
     for(int i=0;i<board.getNChannels();i++) {
-      channels_[std::pair(board.getSlot(),i)] = HVChannel(address,board,i,bridge); 
+      getChannels()[std::pair(board.getSlot(),i)] = new HVChannel(address,board,i,bridge); 
     }
   }
   */

@@ -3,32 +3,31 @@
 
 #include "HVmodule.h"
 
-//TODO implement... this is just a copy of N470 for now.
-
-// meaning of the status bits
-//typedef enum CVSY527StatusWordBit {
-//  cvONOFF = 0,  /* The channel is ON(1) or OFF(0) */ 
-//  cvOVC   = 1,  /* The channel is in OVC condition */
-//  cvOVV   = 2,  /* The channel is in OVV condition */
-//  cvUNV   = 3,  /* The channel is in UNV condition */
-//  cvTRIP  = 4,  /* The channel has been switched OFF for TRIP condition */
-//  cvRUP   = 5,  /* The channel is ramping up */
-//  cvRDW   = 6,  /* The channel is ramping down */
-//  cvMAXV  = 7,  /* The channel has reached the preset MAXV */
-//  cvPOL   = 8,  /* Positive channel(0) or Negative channel(1) */
-//  cvVSEL  = 9,  /* Vset = V0 or Vset = V1 */
-//  cvISEL  = 10, /* Iset = I0 or Iset = I1 */
-//  cvKILL  = 11, /* Module KILLed by external pulse still active */
-//  cvHVEN  = 12, /* Module enabled to supply HV by the front panel switch */
-//  cvNIMTTL= 13, /* NIM(0) or TTL(1) standard selected */
-//  cvOUTCAL= 14, /* Non calibrated module  */
-//  cvALARM = 15  /* Module in alarm condition */
-//} CVSY527StatusWordBit;
-
 // Simple class to represent the status word.
 class SY527StatusWord
 {
 public:
+  
+  // meaning of the status bits
+  typedef enum CVStatusWordBit {
+    cvONOFF = 0,  /* The channel is ON(1) or OFF(0) */ 
+    cvOVC   = 1,  /* The channel is in OVC condition */
+    cvOVV   = 2,  /* The channel is in OVV condition */
+    cvUNV   = 3,  /* The channel is in UNV condition */
+    cvTRIP  = 4,  /* The channel has been switched OFF for TRIP condition */
+    cvRUP   = 5,  /* The channel is ramping up */ 
+    cvRDW   = 6,  /* The channel is ramping down */
+    cvMAXV  = 7,  /* The channel has reached the preset MAXV */
+    cvPOL   = 8,  /* Positive channel(0) or Negative channel(1) */
+    cvVSEL  = 9,  /* Vset = V0 or Vset = V1 */
+    cvISEL  = 10, /* Iset = I0 or Iset = I1 */
+    cvKILL  = 11, /* Module KILLed by external pulse still active */
+    cvHVEN  = 12, /* Module enabled to supply HV by the front panel switch */
+    cvNIMTTL= 13, /* NIM(0) or TTL(1) standard selected */
+    cvOUTCAL= 14, /* Non calibrated module  */
+    cvALARM = 15  /* Module in alarm condition */
+  } CVStatusWordBit;
+  
   SY527StatusWord(uint16_t status):status_(status) {}
   ~SY527StatusWord() {}
   
@@ -36,7 +35,7 @@ public:
   inline uint16_t status() const { return status_; }
   
   // extract a given bit
-  //inline bool bit(CVStatusWordBit n) const { return ((status_>>n)&1); }
+  inline bool bit(SY527StatusWord::CVStatusWordBit n) const { return ((status_>>n)&1); }
   
 private:
   uint16_t status_;
@@ -64,18 +63,24 @@ public:
   void setRampdown(uint32_t rampdown) override;
   void setTrip(uint32_t trip) override;
   void setSoftMaxV(uint32_t maxv) override;
+  void setPasswordFlag(bool flag);
+  void setOnOffFlag(bool flag);
+  void setPoweronFlag(bool flag);
   
   // read all parameters from hardware
   void readOperationalParameters() override;
   
+  // get the channel name (call readOperationalParameters first)
+  inline std::string getName() const { return name_; }
+  
   // readOperationalParameters should be called first.
   inline SY527StatusWord getStatus() const { return status_; }
-  
-protected:
-  void setStatus(std::vector<uint32_t>::const_iterator data) override;
-  
+
 private:
-  uint32_t status_;
+  uint32_t status_; 
+  std::string name_;
+  
+  inline uint16_t chAddress() const { return ((board_->getSlot()<<8) + id_); }
   
   friend class SY527PowerSystem;
 };
@@ -87,23 +92,14 @@ public:
   ~SY527PowerSystem() {}
   
   void updateStatus();
-  inline uint32_t getStatus() const { return status_; }
-  
-  void kill();
-  void clearAlarm();
-  void enableKeyboard(bool enable);
-  void setTTL();
-  void setNIM();
-  
+
 protected:
   // method to populate the boards map
   virtual void discoverBoards() override;
   
   // method to check that the returned identity is ok for this class
   virtual void assertIdentity() const override;
-  
-private:
-  uint32_t status_; //TODO this might not exist...
+
 };
 
 #endif //SY527PowerSystem

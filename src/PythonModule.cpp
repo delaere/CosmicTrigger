@@ -94,10 +94,7 @@ struct HVChannelWrap : HVChannel, wrapper<HVChannel>
   void readOperationalParameters() override {
     this->get_override("readOperationalParameters")();
   }
-  
-  void setStatus(std::vector<uint32_t>::const_iterator data) override {
-    this->get_override("setStatus")(data);
-  }
+
 };
 
 struct HVModuleWrap : HVModule, wrapper<HVModule>
