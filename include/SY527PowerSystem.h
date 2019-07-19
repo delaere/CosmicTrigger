@@ -9,6 +9,7 @@ class SY527StatusWord
 public:
   
   // meaning of the status bits
+  //TODO adapt this typedef
   typedef enum CVStatusWordBit {
     cvONOFF = 0,  /* The channel is ON(1) or OFF(0) */ 
     cvOVC   = 1,  /* The channel is in OVC condition */

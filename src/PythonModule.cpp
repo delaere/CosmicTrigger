@@ -248,4 +248,5 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("setTTL",&N470HVModule::setTTL)
          .def("setNIM",&N470HVModule::setNIM)
     ;
+    // expose SY527PowerSystem
 }
