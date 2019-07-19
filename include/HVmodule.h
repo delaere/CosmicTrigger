@@ -17,8 +17,8 @@ public:
   virtual ~HVChannel() {}
   
   // the channel id
-  inline uint32_t board() const; 
-  inline uint32_t id() const { return id_; }
+  uint32_t board() const; 
+  uint32_t id() const { return id_; }
   
   // turn on/off
   void virtual on() = 0 ;

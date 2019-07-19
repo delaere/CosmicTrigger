@@ -20,9 +20,13 @@ VmeUsbBridge::VmeUsbBridge():VmeController() {
 }
 
 VmeUsbBridge::~VmeUsbBridge(){
+  LOG_TRACE("about to delete pulser A");
   delete this->pulserA_;
+  LOG_TRACE("about to delete pulser B");
   delete this->pulserB_;
+  LOG_TRACE("about to delete scaler");
   delete this->scaler_;
+  LOG_TRACE("calling CAENVME_End");
   CAENVME_End(this->BHandle_);
   LOG_INFO("Disconnected from USB controler.");
 }

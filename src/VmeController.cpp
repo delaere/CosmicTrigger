@@ -37,6 +37,7 @@ CVDataWidth VmeController::getDW(void) const {
 const VmeController* VmeController::mode(const CVAddressModifier AM, const CVDataWidth DW) const {
   this->AMtmp_=AM;
   this->DWtmp_=DW;
+  LOG_DATA_TRACE("Using the controller in mode" + to_string(AM) + " " + to_string(DW));
   return this;
 }
 

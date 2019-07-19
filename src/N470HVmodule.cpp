@@ -1,6 +1,8 @@
 #include "N470HVmodule.h"
 #include "CaenetBridge.h"
 
+using namespace std;
+
 //TODO check what is returned by the methods "set". If this is the status, it can be saved in status_
 
 N470HVChannel::N470HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge),status_(0) {}
@@ -11,6 +13,7 @@ void N470HVChannel::on() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // system status is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + " turned ON.");
 }
 
 void N470HVChannel::off() {
@@ -19,6 +22,7 @@ void N470HVChannel::off() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // system status is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + " turned OFF.");
 }
 
 void N470HVChannel::setV0(uint32_t v0) {
@@ -28,6 +32,7 @@ void N470HVChannel::setV0(uint32_t v0) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": V0 set to " + to_string(v0));
 }
 
 void N470HVChannel::setV1(uint32_t v1) {
@@ -37,6 +42,7 @@ void N470HVChannel::setV1(uint32_t v1) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": V1 set to " + to_string(v1));
 }
 
 void N470HVChannel::setI0(uint32_t i0) {
@@ -46,6 +52,7 @@ void N470HVChannel::setI0(uint32_t i0) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": I0 set to " + to_string(i0));
 }
 
 void N470HVChannel::setI1(uint32_t i1) {
@@ -55,6 +62,7 @@ void N470HVChannel::setI1(uint32_t i1) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": I1 set to " + to_string(i1));
 }
 
 void N470HVChannel::setRampup(uint32_t rampup) {
@@ -64,6 +72,7 @@ void N470HVChannel::setRampup(uint32_t rampup) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": Ramp UP set to " + to_string(rampup));
 }
 
 void N470HVChannel::setRampdown(uint32_t rampdown) {
@@ -73,6 +82,7 @@ void N470HVChannel::setRampdown(uint32_t rampdown) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": Ramp DOWN set to " + to_string(rampdown));
 }
 
 void N470HVChannel::setTrip(uint32_t trip) {
@@ -82,6 +92,7 @@ void N470HVChannel::setTrip(uint32_t trip) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": TRIP set to " + to_string(trip));
 }
 
 void N470HVChannel::setSoftMaxV(uint32_t) {
@@ -94,6 +105,7 @@ void N470HVChannel::readOperationalParameters() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   std::tie(status_, vmon_, imon_, v0_, i0_, v1_, i1_, trip_, rampup_, rampdown_, maxV_) = gen_tuple<11>(data);
+  LOG_DEBUG("Operation parameters of channel " + to_string(board()) + "." + to_string(id()) + " updated.");
 }
 
 void N470HVChannel::setStatus(std::vector<uint32_t>::const_iterator data) {
@@ -101,17 +113,21 @@ void N470HVChannel::setStatus(std::vector<uint32_t>::const_iterator data) {
   imon_   = *data++;
   maxV_   = *data++;
   status_ = *data++;
+  LOG_DEBUG("vmon,imon,maxV,status = " + to_string(vmon_) + ", " + to_string(imon_) + ", " + to_string(maxV_) + ", " + int_to_hex(status_));
 }
 
 N470HVModule::N470HVModule(uint32_t address, CaenetBridge* bridge):HVModule(address,bridge),status_(0) { 
   // check that the idendity is as expected in the derived class
   assertIdentity();
+  LOG_INFO("New N470HVModule with identification string: "+ identification());
 
   // discover boards
   discoverBoards();
+  LOG_INFO("Has "+to_string(getBoards().size())+ " boards.");
 
   // instantiate the channels
   for( auto & [slot, board] : getBoards() ) {
+    LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(board.getNChannels()) + " channels.");
     for(int i=0;i<board.getNChannels();i++) {
       getChannels()[std::pair(board.getSlot(),i)] = new N470HVChannel(address,board,i,bridge); 
     }
@@ -135,6 +151,7 @@ void N470HVModule::updateStatus() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   for(auto [key,channel] : getChannels()) {
+    LOG_DEBUG("set status of channel " + to_string(key.first) + "." + to_string(key.second));
     static_cast<N470HVChannel*>(channel)->setStatus(data.begin()+(channel->id()*4));
   }
 }
@@ -145,6 +162,7 @@ void N470HVModule::kill() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
+  LOG_DEBUG("Module killed");
 }
 
 void N470HVModule::clearAlarm() {
@@ -153,6 +171,7 @@ void N470HVModule::clearAlarm() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
+  LOG_DEBUG("Alarm cleared");
 }
 
 void N470HVModule::enableKeyboard(bool enable) {
@@ -162,6 +181,7 @@ void N470HVModule::enableKeyboard(bool enable) {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
+  LOG_DEBUG("Keyboard enabled:" + to_string(enable));
 }
 
 void N470HVModule::setTTL() {
@@ -170,6 +190,7 @@ void N470HVModule::setTTL() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
+  LOG_DEBUG("Input set to TTL");
 }
 
 void N470HVModule::setNIM() {
@@ -178,4 +199,5 @@ void N470HVModule::setNIM() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
+  LOG_DEBUG("Input set to NIM");
 }

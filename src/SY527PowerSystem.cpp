@@ -1,6 +1,8 @@
 #include "SY527PowerSystem.h"
 #include "CaenetBridge.h"
 
+using namespace std;
+
 SY527HVChannel::SY527HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge),status_(0),name_("") {}
 
 void SY527HVChannel::on() {
@@ -8,6 +10,7 @@ void SY527HVChannel::on() {
   bridge_->write({0x0,address_,0x18,chAddress(),0x0808});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + " turned ON.");
 }
 
 void SY527HVChannel::off() {
@@ -15,6 +18,7 @@ void SY527HVChannel::off() {
   bridge_->write({0x0,address_,0x18,chAddress(),0x0800});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + " turned OFF.");
 }
 
 void SY527HVChannel::setV0(uint32_t v0) {
@@ -23,6 +27,7 @@ void SY527HVChannel::setV0(uint32_t v0) {
   bridge_->write({0x0,address_,0x10,chAddress(),v0});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": V0 set to " + to_string(v0));
 }
 
 void SY527HVChannel::setV1(uint32_t v1) {
@@ -31,6 +36,7 @@ void SY527HVChannel::setV1(uint32_t v1) {
   bridge_->write({0x0,address_,0x11,chAddress(),v1});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": V1 set to " + to_string(v1));
 }
 
 void SY527HVChannel::setI0(uint32_t i0) {
@@ -39,6 +45,7 @@ void SY527HVChannel::setI0(uint32_t i0) {
   bridge_->write({0x0,address_,0x12,chAddress(),i0});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": I0 set to " + to_string(i0));
 }
 
 void SY527HVChannel::setI1(uint32_t i1) {
@@ -47,6 +54,7 @@ void SY527HVChannel::setI1(uint32_t i1) {
   bridge_->write({0x0,address_,0x13,chAddress(),i1});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": I1 set to " + to_string(i1));
 }
 
 void SY527HVChannel::setRampup(uint32_t rampup) {
@@ -55,6 +63,7 @@ void SY527HVChannel::setRampup(uint32_t rampup) {
   bridge_->write({0x0,address_,0x15,chAddress(),rampup});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": Ramp UP set to " + to_string(rampup));
 }
 
 void SY527HVChannel::setRampdown(uint32_t rampdown) {
@@ -63,6 +72,7 @@ void SY527HVChannel::setRampdown(uint32_t rampdown) {
   bridge_->write({0x0,address_,0x16,chAddress(),rampdown});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": Ramp DOWN set to " + to_string(rampdown));
 }
 
 void SY527HVChannel::setTrip(uint32_t trip) {
@@ -71,6 +81,7 @@ void SY527HVChannel::setTrip(uint32_t trip) {
   bridge_->write({0x0,address_,0x17,chAddress(),trip});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": TRIP set to " + to_string(trip));
 }
 
 void SY527HVChannel::setSoftMaxV(uint32_t softmaxV) {
@@ -79,6 +90,7 @@ void SY527HVChannel::setSoftMaxV(uint32_t softmaxV) {
   bridge_->write({0x0,address_,0x14,chAddress(),softmaxV});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": Soft MAXV set to " + to_string(softmaxV));
 }
 
 void SY527HVChannel::setPasswordFlag(bool flag) {
@@ -86,6 +98,7 @@ void SY527HVChannel::setPasswordFlag(bool flag) {
   bridge_->write({0x0,address_,0x18,chAddress(),(uint32_t)(flag? 0x1010 : 0x1000)});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": password flag set to " + to_string(flag));
 }
 
 void SY527HVChannel::setOnOffFlag(bool flag) {
@@ -93,6 +106,7 @@ void SY527HVChannel::setOnOffFlag(bool flag) {
   bridge_->write({0x0,address_,0x18,chAddress(),(uint32_t)(flag? 0x4040 : 0x4000)});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": On/Off flag set to " + to_string(flag));
 }
 
 void SY527HVChannel::setPoweronFlag(bool flag) {
@@ -100,6 +114,7 @@ void SY527HVChannel::setPoweronFlag(bool flag) {
   bridge_->write({0x0,address_,0x18,chAddress(),(uint32_t)(flag? 0x8080 : 0x8000)});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": PowerOn flag set to " + to_string(flag));
 }
 
 void SY527HVChannel::readOperationalParameters() {
@@ -134,17 +149,21 @@ void SY527HVChannel::readOperationalParameters() {
   rampdown_ = parameters[14];
   trip_ = parameters[15];
   status_ += parameters[16]<<16;
+  LOG_DEBUG("Operation parameters of channel " + to_string(board()) + "." + to_string(id()) + " updated.");
 }
 
 SY527PowerSystem::SY527PowerSystem(uint32_t address, CaenetBridge* bridge):HVModule(address,bridge) { 
   // check that the idendity is as expected in the derived class
   assertIdentity();
+  LOG_INFO("New SY527PowerSystem with identification string: "+ identification());
 
   // discover boards
   discoverBoards();
+  LOG_INFO("Has "+to_string(getBoards().size())+ " boards.");
 
   // instantiate the channels
   for( auto & [slot, board] : getBoards() ) {
+    LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(board.getNChannels()) + " channels.");
     for(int i=0;i<board.getNChannels();i++) {
       getChannels()[std::pair(board.getSlot(),i)] = new SY527HVChannel(address,board,i,bridge); 
     }
