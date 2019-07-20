@@ -1,7 +1,23 @@
-//  logger.hxx
+/*
+ *  VeheMencE: a simple library for VME access
+ *  Copyright (C) 2019 Universite catholique de Louvain (UCLouvain), Belgium
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
-#ifndef LOG_LOGGER_HXX
-#define LOG_LOGGER_HXX
+#ifndef LOG_LOGGER_H
+#define LOG_LOGGER_H
 #pragma once
 
 #include <boost/log/trivial.hpp>
@@ -57,4 +73,4 @@ public:
 #define LOG_DATA_ERROR(ARG) BOOST_LOG_SEV(dataLogger::get(), boost::log::trivial::error) << ARG
 #define LOG_DATA_FATAL(ARG) BOOST_LOG_SEV(dataLogger::get(), boost::log::trivial::fatal) << ARG
 
-#endif /* LOG_LOGGER_HXX */
+#endif /* LOG_LOGGER_H */
