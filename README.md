@@ -1,5 +1,59 @@
 ## What is this?
 
-This is a library developped in order to simplify the control of a VME system used in CP3 at UCLouvain
+This is a library developped in order to simplify the control of a VME system used in CP3 at UCLouvain. It is developped in C++ but comes with Python bindings.
 
-![VeheMencE Logo](images/Logo.png)
+![VeheMencE Logo](images/Logo.png | width=250)
+
+This project is mostly a rewrite of the code developped in 2014 for the test of CMS tracker modules for the HL-LHC upgrade.
+
+Status of the supported boards:
+
+| Board     |  Purpose       | Implementaton   |  Tested       |
+|-----------|----------------|-----------------|---------------|
+| V1718     | USB VME bridge | Full   | Part (previous release) |
+| SY527     | CAEN Power system | Full (initial fw)| No            |
+| N470      | CAEN NIM HV module | Full             | Part (previous release) |
+| V288      | CAENET bridge  | Full             | Part (previous release) |
+| V812      | COINC / DISCRI | Part   | Part (previous release) |
+|           | TDC            | Part   | Part (previous release) |
+|           | Scaler         | Part   | Part (previous release) |
+| TTCvi     | TTC controler  | Part   | Part (previous release) |
+
+## Installation
+
+The project is built through cmake:
+```
+cd build
+cmake ..
+make
+[make install]
+```
+
+## usage
+
+Examples of the use of the library in C++ are provided in the example directory. The typical usage consists in:
+ - the instantiation of a VmeUsbBridge
+ - the instantiation of the class corrresponding to the desired module, passing a pointer to the VME controller.
+ - in the case of CAEN HV modules, instantiate first the CAENET bridge, and then the HV module class, either directly (SY527PowerSystem or N470HVModule) or through HVModule::HVModuleFactory.
+ 
+ Python bindings are also provided so all the steps above can be done either interactively or through a script in Python.
+ 
+ In C++, a logging infrastructure is provided to help debugging the code. It uses the BOOST logging infrastructure and can be configured through a text file. ExampleFull.cpp shows how to configure the logger module. The following macros are provided:
+ | macro | debug level | purpose |
+ | ----- | ----------- | ------- |
+ |LOG_TRACE(ARG) | TRACE | code |
+ |LOG_DEBUG(ARG) | DEBUG | code | 
+ |LOG_INFO(ARG)  | INFO  | code |
+ |LOG_WARN(ARG)  | WARNING | code |
+ |LOG_ERROR(ARG) | ERROR   | code |
+ |LOG_FATAL(ARG) | FATAL ERROR | code |
+ |LOG_DATA_TRACE(ARG) | TRACE | user data |
+ |LOG_DATA_DEBUG(ARG) | DEBUG | user data |
+ |LOG_DATA_INFO(ARG)  | INFO  | user data |
+ |LOG_DATA_WARN(ARG)  | WARNING | user data |
+ |LOG_DATA_ERROR(ARG) | ERROR   | user data |
+ |LOG_DATA_FATAL(ARG) | FATAL ERROR | user data |
+
+## contributing
+
+You are welcome to provide patches and fixes through github. New modules implementation is especially welcome, but we require it to be tested with hardware first.
