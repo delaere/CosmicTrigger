@@ -2,7 +2,8 @@
 
 This is a library developped in order to simplify the control of a VME system used in CP3 at UCLouvain. It is developped in C++ but comes with Python bindings.
 
-![VeheMencE Logo](images/Logo.png|width=250)
+<img src="https://github.com/delaere/VeheMencE/blob/master/images/Logo.png" width="250">
+
 
 This project is mostly a rewrite of the code developped in 2014 for the test of CMS tracker modules for the HL-LHC upgrade.
 
