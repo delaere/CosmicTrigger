@@ -40,8 +40,9 @@ Examples of the use of the library in C++ are provided in the example directory.
  Python bindings are also provided so all the steps above can be done either interactively or through a script in Python.
  
  In C++, a logging infrastructure is provided to help debugging the code. It uses the BOOST logging infrastructure and can be configured through a text file. ExampleFull.cpp shows how to configure the logger module. The following macros are provided:
+ 
  | macro | debug level | purpose |
- | ----- | ----------- | ------- |
+ |-------|-------------|---------|
  |LOG_TRACE(ARG) | TRACE | code |
  |LOG_DEBUG(ARG) | DEBUG | code | 
  |LOG_INFO(ARG)  | INFO  | code |
