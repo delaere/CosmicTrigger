@@ -16,6 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// this code is by Kevin Heifner, OCI Principal Software Engineer
+// https://objectcomputing.com/resources/publications/sett/may-2016-boostlog-library
+// https://github.com/oci-labs/BoostLog
+
+
 #ifndef LOG_LOGGER_H
 #define LOG_LOGGER_H
 #pragma once
