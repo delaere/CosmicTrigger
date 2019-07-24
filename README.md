@@ -2,8 +2,13 @@
 
 This is a library developped in order to simplify the control of a VME system used in CP3 at UCLouvain. It is developped in C++ but comes with Python bindings.
 
-<img src="https://github.com/delaere/VeheMencE/blob/master/images/Logo.png" width="250">
 
+<table style="width:100%" align="center">
+ <tr><td>
+  <img src="https://github.com/delaere/VeheMencE/blob/master/images/Logo.png" width="250"></td><td>
+  <h2>A simple library for VME access</h2></td>
+ </tr>
+</table>
 
 This project is mostly a rewrite of the code developped in 2014 for the test of CMS tracker modules for the HL-LHC upgrade.
 
@@ -16,7 +21,7 @@ Status of the supported boards:
 | N470      | CAEN NIM HV module | Full             | Part (previous release) |
 | V288      | CAENET bridge  | Full             | Part (previous release) |
 | V812      | COINC / DISCRI | Part   | Part (previous release) |
-|           | TDC            | Part   | Part (previous release) |
+| V1190     | TDC            | Part   | Part (previous release) |
 |           | Scaler         | Part   | Part (previous release) |
 | TTCvi     | TTC controler  | Part   | Part (previous release) |
 
@@ -30,7 +35,7 @@ make
 [make install]
 ```
 
-## usage
+## Usage
 
 Examples of the use of the library in C++ are provided in the example directory. The typical usage consists in:
  - the instantiation of a VmeUsbBridge
@@ -56,6 +61,6 @@ Examples of the use of the library in C++ are provided in the example directory.
  |LOG_DATA_ERROR(ARG) | ERROR   | user data |
  |LOG_DATA_FATAL(ARG) | FATAL ERROR | user data |
 
-## contributing
+## Contributing
 
 You are welcome to provide patches and fixes through github. New modules implementation is especially welcome, but we require it to be tested with hardware first.
