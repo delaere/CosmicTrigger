@@ -15,8 +15,8 @@ int main(){
   myDiscri.setWidth(255);
   myDiscri.setDeadTime(0);
   
-  myTtc.changeChannel(2);
-  myTtc.changeRandomFrequency(4);
+  myTtc.changeChannel(TtcVi::cvRandom);
+  myTtc.changeRandomFrequency(TtcVi::cv10kHz);
   myTtc.viewMode();
   
   LOG_INFO("----------------------------------------------------");
@@ -29,6 +29,6 @@ int main(){
   myTdc.readResolution();
   
   for(int i=0;i<5000;i++) {
-    myTdc.coutEvent(myTdc.getEvent());
+    myTdc.getEvent().print();
   }
 }

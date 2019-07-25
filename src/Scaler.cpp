@@ -23,6 +23,7 @@ using namespace std;
 
 Scaler::Scaler(VmeController* controller,int address):VmeBoard(controller,address,cvA24_U_DATA,cvD16,true){
   LOG_DEBUG("Address" + int_to_hex(baseAddress()));
+  // call getInfo to check the connection...
   getInfo();
 }
  
@@ -31,7 +32,7 @@ int Scaler::getCount(int channel){
   int completeAdd=baseAddress()+0x80+4*(channel-1);
   controller()->mode(cvA24_U_DATA,cvD32)->readData(completeAdd,&data);
   LOG_DEBUG("Count=" + to_string(data) + "(" + int_to_hex(data) + ") at add:" + int_to_hex(completeAdd));
-  return(data);
+  return data;
 }
 
 int Scaler::getInfo(){ 
@@ -39,7 +40,7 @@ int Scaler::getInfo(){
   LOG_INFO("Getting Scaler information...");
   readData(baseAddress()+0xFE,&data);
   readData(baseAddress()+0xFE,&data);
-  return(data);
+  return data;
 }
 
 void Scaler::reset(){
@@ -52,7 +53,7 @@ int Scaler::readPresets(int channel){
   int data=0;
   readData(baseAddress()+0x40+4*(channel-1),&data);
   LOG_INFO("Preset: "+to_string(data));
-  return(data);
+  return data ;
 }
 
 void Scaler::setPresets(int channel,int value){

@@ -79,7 +79,7 @@ void VmeUsbBridge::readData(long unsigned int address,void* data) const {
 
 void VmeUsbBridge::readWriteData(const long unsigned int address,void* data) const {
   auto [AM, DW] = useMode();
-  checkCAENVMEexception(CAENVME_ReadCycle(this->BHandle_,address,data,AM,DW));
+  checkCAENVMEexception(CAENVME_RMWCycle(this->BHandle_,address,data,AM,DW));
 }
 
 void VmeUsbBridge::blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {

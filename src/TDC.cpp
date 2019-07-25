@@ -22,6 +22,19 @@
 #include <iostream>
 using namespace std;
 
+
+void TDCEvent::print() const {
+  std::stringstream stream;
+  stream << "Event number : " << eventNumber() << std::endl;
+  stream << "Recorded events :" << std::endl; 
+  for (auto measurement : measurements_) {
+    stream << "Channel : " << measurement.first << " - Time : " << measurement.second << endl;
+  }
+  stream << endl;
+  LOG_DATA_INFO(stream.str());
+}
+
+
 unsigned int digit(unsigned int data, int begin, int end) {
     if (begin<end){return -1;}
     else return (((1<<(begin+1))-1)&data)>>end;
@@ -70,45 +83,30 @@ void Tdc::waitDataReady(void) {
   }
 }
  
-Event Tdc::getEvent()
+TDCEvent Tdc::getEvent()
 {
-    Event myEvent;
+    TDCEvent myEvent;
     //works only if FIFO enabled !
     this->waitDataReady(); 
     unsigned int data=0;
     controller()->mode(cvA32_U_DATA,cvD32)->readData(this->EventFIFO,&data);
     unsigned int eventNumberFIFO=digit(data,31,16);
     unsigned int numberOfWords=digit(data,15,0);
-    vector<unsigned int> dataOutputBuffer;
+    std::vector<unsigned int> dataOutputBuffer;
     for(unsigned int i=numberOfWords; i>0 ;i--) {
       controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress(),&data);
-      dataOutputBuffer.vector::push_back(data);
+      dataOutputBuffer.push_back(data);
     }
     if (!( eventNumberFIFO==digit(dataOutputBuffer[0],26,5) && digit(dataOutputBuffer[0],31,27)==8)) 
       throw_with_trace(CAENVMEexception(cvGenericError));
-    myEvent.eventNumber=eventNumberFIFO;
-    Hit temporaryHit;
+    myEvent.setEventNumber(eventNumberFIFO);
     for(unsigned int i=0; i<numberOfWords-1 ;i++) { // "-1" because last event is TRAILER
       if (digit(dataOutputBuffer[i],31,27)==0 ) {
-        temporaryHit.time=digit(dataOutputBuffer[i],18,0);
-        temporaryHit.channel=digit(dataOutputBuffer[i],25,19);
-        myEvent.measurements.vector::push_back(temporaryHit);
+        myEvent.addMeasurement({ digit(dataOutputBuffer[i],18,0) , digit(dataOutputBuffer[i],25,19) });
       }
     }
-    time(&myEvent.time);
+    myEvent.setTime(time(nullptr));
     return myEvent;
-}
-
-void Tdc::coutEvent(Event myEvent)
-{  
-  std::stringstream stream;
-  stream << "Event number : " << myEvent.eventNumber << std::endl;
-  stream << "Recorded events :" << std::endl; 
-  for (unsigned int i=0; i<myEvent.measurements.vector::size(); i++) {
-    stream << "Channel : "<<myEvent.measurements[i].channel<<" - Time : "<<myEvent.measurements[i].time<<endl;
-  }
-  stream << endl;
-  LOG_INFO(stream.str());
 }
 
 // Read the status with the

@@ -30,11 +30,10 @@ public:
   int getCount(int channel);
 
   // Gets module's info.
-  // reads the module information register and returns its value. Returns -1 if the communication failled.
+  // reads the module information register and returns its value.
   int getInfo();
   
   // Sends a reset signal to the module.
-  // returns 1 if communication went ok, -1 if not.
   void reset();
   
   // Reads channel presets.

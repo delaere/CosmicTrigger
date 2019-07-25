@@ -24,17 +24,30 @@
 #include <sstream>
 #include "time.h"
 
-struct Hit
-{
-  unsigned int channel;
-  unsigned int time;
-};
+typedef std::pair<uint32_t,uint32_t> TDCHit;
 
-struct Event
+class TDCEvent
 {
-  unsigned int eventNumber;
-  time_t time;
-  std::vector<Hit> measurements;
+public:
+  TDCEvent() {}
+  ~TDCEvent() {}
+  
+  void setTime(time_t t) { time_ = t; }
+  time_t getTime() const { return time_; }
+  void setEventNumber(uint32_t n) { eventNumber_ = n; }
+  uint32_t eventNumber() const { return eventNumber_; }
+  
+  void addMeasurement(TDCHit hit) { measurements_.push_back(hit); }
+  void setMeasurements(const std::vector<TDCHit>& hits) { measurements_.clear(); std::copy(hits.begin(),hits.end(),measurements_.begin()); }
+  auto getMeasurements() const { return measurements_; }
+  uint32_t getNmeasurements() const { return measurements_.size(); }
+  
+  void print() const;
+  
+private:
+  uint32_t eventNumber_;
+  time_t time_;
+  std::vector<TDCHit> measurements_;
 };
 
 // V1190 TDC unit
@@ -45,10 +58,7 @@ public:
   Tdc(VmeController* controller,int address=0x00120000);
 
   // Gets data from TDC
-  Event getEvent();
-  
-  // Print the event content
-  static void coutEvent(Event myEvent);
+  TDCEvent getEvent();
 
   // Get the TDC status
   unsigned int getStatus();

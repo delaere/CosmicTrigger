@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
     TtcVi myTtc(&myCont);
     
     LOG_DEBUG("Setting TTC");
-    myTtc.changeChannel(1);
+    myTtc.changeChannel(TtcVi::cvL1A1);
       
     LOG_DEBUG("Setting Discri");
     myDiscri.setMultiChannel(0x000F);

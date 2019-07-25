@@ -10,7 +10,7 @@ int main(){
   Discri myDiscri(&myCont); // Creates a Discriminator unit with that controller
   TtcVi myTtc(&myCont);	// Same thing with a TTCvi
   
-  myTtc.changeChannel(1); //Chooses the trigger on channel 1 
+  myTtc.changeChannel(TtcVi::cvL1A1); //Chooses the trigger on channel 1 
   
   myDiscri.setMultiChannel(0x000F); //Enables 4 first channels on Discriminator
   myDiscri.setMajority(4);	// Asks for a coincidence of 4 units
