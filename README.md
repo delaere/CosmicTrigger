@@ -1,14 +1,13 @@
-## What is this?
-
-This is a library developped in order to simplify the control of a VME system used in CP3 at UCLouvain. It is developped in C++ but comes with Python bindings.
-
-
 <table style="width:100%" align="center">
  <tr><td>
   <img src="https://github.com/delaere/VeheMencE/blob/master/images/Logo.png" width="250"></td><td>
   <h2>A simple library for VME access</h2></td>
  </tr>
 </table>
+
+## What is this?
+
+This is a library developped in order to simplify the control of a VME system used in CP3 at UCLouvain. It is developped in C++ but comes with Python bindings.
 
 This project is mostly a rewrite of the code developped in 2014 for the test of CMS tracker modules for the HL-LHC upgrade.
 
