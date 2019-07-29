@@ -50,7 +50,7 @@ int main(int argc, char* argv[]){
       doneramping = true;
       for (auto& [id,channel] : powersupply->getChannels()) {
         channel->readOperationalParameters();
-        LOG_INFO("channel " + to_string(id.first) + "." + to_string(id.second) + " : " + to_string(channel->getVmon()) + " V");
+        LOG_DATA_INFO("channel " + to_string(id.first) + "." + to_string(id.second) + " : " + to_string(channel->getVmon()) + " V");
         if(isN470) {
           doneramping &= ! N470StatusWord(channel->getStatus()).bit(N470StatusWord::cvRUP);
         } else if(isSY527) {
