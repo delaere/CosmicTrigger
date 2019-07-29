@@ -29,7 +29,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="275.41842"
+     inkscape:cx="373.40322"
      inkscape:cy="260.42053"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -47,7 +47,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -65,7 +65,7 @@
        y="148.93268" />
     <path
        sodipodi:type="star"
-       style="fill:#aaccff;stroke-width:0.26458332"
+       style="fill:#bb1542;stroke-width:0.26458332;fill-opacity:1"
        id="path3739"
        sodipodi:sides="6"
        sodipodi:cx="104.23512"
@@ -97,10 +97,10 @@
        d="m 104.23512,284.19522 -52.887462,-91.60377 105.774932,-1e-5 z"
        inkscape:transform-center-x="1.0135197e-06"
        inkscape:transform-center-y="15.267296"
-       style="fill:#d40000;stroke-width:0.26458332" />
+       style="fill:#eb5f5d;stroke-width:0.26458332;fill-opacity:1" />
     <path
        sodipodi:type="star"
-       style="fill:#de8787;stroke-width:0.26458332"
+       style="fill:#fabc74;stroke-width:0.26458332;fill-opacity:1"
        id="path3735"
        sodipodi:sides="3"
        sodipodi:cx="104.13123"
@@ -127,9 +127,17 @@
            x="77.14286"
            y="157.94148"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:96px;font-family:'Latin Modern Mono Caps';-inkscape-font-specification:'Latin Modern Mono Caps, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start" /></flowRegion><flowPara
-         id="flowPara3725">V<flowSpan
-   style="fill:#000055"
-   id="flowSpan3745">ehe</flowSpan>M<flowSpan
-   style="fill:#000055"
-   id="flowSpan3757">enc</flowSpan>E</flowPara></flowRoot>  </g>
+         id="flowPara3725"><flowSpan
+           style="fill:#bb1542;fill-opacity:1"
+           id="flowSpan4551">V</flowSpan><flowSpan
+           style="fill:#0a2e2b;fill-opacity:1"
+           id="flowSpan3745">e</flowSpan><flowSpan
+           id="flowSpan21"
+           style="fill:#239f95;fill-opacity:1">he</flowSpan><flowSpan
+           style="fill:#bb1542;fill-opacity:1"
+           id="flowSpan4553">M</flowSpan><flowSpan
+           style="fill:#0a2e2b;fill-opacity:1"
+           id="flowSpan3757">enc</flowSpan><flowSpan
+           style="fill:#bb1542;fill-opacity:1"
+           id="flowSpan4555">E</flowSpan></flowPara></flowRoot>  </g>
 </svg>
