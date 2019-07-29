@@ -112,6 +112,8 @@ BOOST_PYTHON_MODULE(VeheMencE)
     // expose HVmodule
     class_<HVChannelWrap, boost::noncopyable>("HVChannel", init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
          .add_property("id",&HVChannel::id)
+         .add_property("board",&HVChannel::board)
+         .def("getBoard",&HVChannel::getBoard, return_value_policy<reference_existing_object>())
          .add_property("V0",&HVChannel::getV0,&HVChannel::setV0)
          .add_property("V1",&HVChannel::getV1,&HVChannel::setV1)
          .add_property("I0",&HVChannel::getI0,&HVChannel::setI0)

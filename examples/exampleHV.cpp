@@ -33,12 +33,16 @@ int main(int argc, char* argv[]){
     
     
     for (auto& [id,channel] : powersupply->getChannels()) {
-      channel->setV0(100);
-      channel->setRampup(10);
+      int vset = channel->getBoard()->getVMax()>200 ? 200 : channel->getBoard()->getVMax();
+      uint16_t ramp = 10;
+      ramp = ramp>channel->getBoard()->getRampMax() ? channel->getBoard()->getRampMax() : ramp;
+      ramp = ramp<channel->getBoard()->getRampMin() ? channel->getBoard()->getRampMin() : ramp;
+      channel->setV0(vset);
+      channel->setRampup(ramp);
       channel->on();
     }
     
-    LOG_INFO("Turned all channels on at 100V.");
+    LOG_INFO("Turned all channels on at 200V (if possible, otherwise maxV).");
     
     LOG_INFO("Monitoring ramp up...");
     bool doneramping = false;

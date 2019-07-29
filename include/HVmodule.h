@@ -38,6 +38,9 @@ public:
   uint32_t board() const; 
   uint32_t id() const { return id_; }
   
+  // the board properties
+  const HVBoard* getBoard() const { return board_; }
+  
   // turn on/off
   void virtual on() = 0 ;
   void virtual off() = 0 ;
