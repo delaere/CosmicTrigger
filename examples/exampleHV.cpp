@@ -35,6 +35,7 @@ int main(int argc, char* argv[]){
     VmeUsbBridge vme;
     LOG_TRACE("Instantiating the CAENET bridge");
     CaenetBridge caenet(&vme, 0xF0000);
+    caenet.reset();
     LOG_TRACE("Instantiating the HV module");
     auto powersupply = HVModule::HVModuleFactory(0x02, &caenet);
     LOG_INFO(powersupply->identification() + " READY.");
