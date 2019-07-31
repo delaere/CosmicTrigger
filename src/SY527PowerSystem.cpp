@@ -156,8 +156,11 @@ void SY527HVChannel::readOperationalParameters() {
                       char(parameters[4]>>8), char(parameters[4]&0xFF),
                       char(parameters[5]>>8), char(parameters[5]&0xFF) };
   name_ = "";
-  int i = 0;
-  while(characters[i]) { name_ += characters[i]; };
+  for(auto character = characters.begin(); character<characters.end() && (*character); character++) {
+    name_ += *character;
+  }
+  //int i = 0;
+  //while(characters[i]) { name_ += characters[i++]; };
   v0_ = parameters[7] + (parameters[6]<<16);
   v1_ = parameters[9] + (parameters[8]<<16);
   i0_ = parameters[10];
