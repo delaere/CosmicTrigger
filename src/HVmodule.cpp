@@ -67,7 +67,7 @@ void HVChannel::attachWithoutReciprocating(HVBoard &board) {
   
 HVModule::HVModule(uint32_t address, CaenetBridge* bridge):bridge_(bridge),address_(address) {
   // read identification string
-  bridge_->write({0x0,address_,0});
+  bridge_->write({0x1,address_,0});
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   identification_=std::string(data.begin(),data.end());
 
@@ -90,9 +90,10 @@ HVModule::HVModule(uint32_t address, CaenetBridge* bridge):bridge_(bridge),addre
 
 HVModule* HVModule::HVModuleFactory(uint32_t address, CaenetBridge* bridge) {
   // get the identification string
-  bridge->write({0x0,address,0});
+  bridge->write({0x1,address,0});
   auto [ status, data ] = bridge->readResponse(); checkCAENETexception(status);
   auto id = std::string(data.begin(),data.end());
+  LOG_TRACE(id);
   
   // instantiate the proper class
   if(id.find("N470") != std::string::npos) {

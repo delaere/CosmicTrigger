@@ -187,7 +187,7 @@ public:
   static HVModule* HVModuleFactory(uint32_t address, CaenetBridge* bridge);
   
   // returns one channel
-  inline HVChannel& channel(uint32_t board, uint32_t channel) { return *channels_.at(std::make_pair(board,channel)); }
+  inline HVChannel* channel(uint32_t board, uint32_t channel) { return channels_.at(std::make_pair(board,channel)); }
   
   // returns one board
   inline HVBoard& board(uint32_t slot) { return boards_.at(slot); }
@@ -207,10 +207,11 @@ protected:
   
   CaenetBridge* bridge_;
   uint32_t address_;
-    
-private:
+
   std::map<std::pair<uint32_t,uint32_t>, HVChannel*> channels_; 
+
   std::map<uint32_t, HVBoard> boards_;
+
   std::string identification_;
 };
 

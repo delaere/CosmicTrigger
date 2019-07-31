@@ -27,7 +27,7 @@ N470HVChannel::N470HVChannel(uint32_t address, HVBoard& board, uint32_t id, Caen
 
 void N470HVChannel::on() {
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0xA});
+  bridge_->write({0x1,address_,(id_<<8)+0xA});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // system status is ignored
@@ -36,7 +36,7 @@ void N470HVChannel::on() {
 
 void N470HVChannel::off() {
   // send command
-  bridge_->write( {0x0,address_,(id_<<8)+0xB});
+  bridge_->write( {0x1,address_,(id_<<8)+0xB});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // system status is ignored
@@ -46,7 +46,7 @@ void N470HVChannel::off() {
 void N470HVChannel::setV0(uint32_t v0) {
   v0_ = v0;
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x3,v0});
+  bridge_->write({0x1,address_,(id_<<8)+0x3,v0});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
@@ -56,7 +56,7 @@ void N470HVChannel::setV0(uint32_t v0) {
 void N470HVChannel::setV1(uint32_t v1) {
   v1_ = v1;
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x5,v1});
+  bridge_->write({0x1,address_,(id_<<8)+0x5,v1});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
@@ -66,7 +66,7 @@ void N470HVChannel::setV1(uint32_t v1) {
 void N470HVChannel::setI0(uint32_t i0) {
   i0_ = i0;
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x4,i0});
+  bridge_->write({0x1,address_,(id_<<8)+0x4,i0});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
@@ -76,7 +76,7 @@ void N470HVChannel::setI0(uint32_t i0) {
 void N470HVChannel::setI1(uint32_t i1) {
   i1_ = i1;
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x6,i1});
+  bridge_->write({0x1,address_,(id_<<8)+0x6,i1});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
@@ -86,7 +86,7 @@ void N470HVChannel::setI1(uint32_t i1) {
 void N470HVChannel::setRampup(uint32_t rampup) {
   rampup_ = rampup;
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x8,rampup});
+  bridge_->write({0x1,address_,(id_<<8)+0x8,rampup});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
@@ -96,7 +96,7 @@ void N470HVChannel::setRampup(uint32_t rampup) {
 void N470HVChannel::setRampdown(uint32_t rampdown) {
   rampdown_ = rampdown;
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x9,rampdown});
+  bridge_->write({0x1,address_,(id_<<8)+0x9,rampdown});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
@@ -106,7 +106,7 @@ void N470HVChannel::setRampdown(uint32_t rampdown) {
 void N470HVChannel::setTrip(uint32_t trip) {
   trip_ = trip;
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x7,trip});
+  bridge_->write({0x1,address_,(id_<<8)+0x7,trip});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   // data is ignored
@@ -119,7 +119,7 @@ void N470HVChannel::setSoftMaxV(uint32_t) {
 
 void N470HVChannel::readOperationalParameters() {
   // send command
-  bridge_->write({0x0,address_,(id_<<8)+0x2});
+  bridge_->write({0x1,address_,(id_<<8)+0x2});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   std::tie(status_, vmon_, imon_, v0_, i0_, v1_, i1_, trip_, rampup_, rampdown_, maxV_) = gen_tuple<11>(data);
@@ -147,15 +147,14 @@ N470HVModule::N470HVModule(uint32_t address, CaenetBridge* bridge):HVModule(addr
   for( auto & [slot, board] : getBoards() ) {
     LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(board.getNChannels()) + " channels.");
     for(int i=0;i<board.getNChannels();i++) {
-      getChannels()[std::pair(board.getSlot(),i)] = new N470HVChannel(address,board,i,bridge); 
+      channels_[std::pair(board.getSlot(),i)] = new N470HVChannel(address,board,i,bridge); 
     }
   }
 }
 
 void N470HVModule::discoverBoards() {
-  auto boards = getBoards();
   // only one board in that module. Cannot be dynamically discovered.
-  boards[0] = HVBoard(0,"N470", 2, 0, 0, 4, 8000, 3000, 0, 500, 500, 1000, 0, 0);
+  boards_[0] = HVBoard(0,"N470", 2, 0, 0, 4, 8000, 3000, 0, 500, 500, 1000, 0, 0);
 }
   
 void N470HVModule::assertIdentity() const {
@@ -165,7 +164,7 @@ void N470HVModule::assertIdentity() const {
 
 void N470HVModule::updateStatus() {
   // send command
-  bridge_->write({0x0,address_,1});
+  bridge_->write({0x1,address_,1});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   for(auto [key,channel] : getChannels()) {
@@ -176,7 +175,7 @@ void N470HVModule::updateStatus() {
 
 void N470HVModule::kill() {
   // send command
-  bridge_->write({0x0,address_,12});
+  bridge_->write({0x1,address_,12});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
@@ -185,7 +184,7 @@ void N470HVModule::kill() {
 
 void N470HVModule::clearAlarm() {
   // send command
-  bridge_->write({0x0,address_,13});
+  bridge_->write({0x1,address_,13});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
@@ -195,7 +194,7 @@ void N470HVModule::clearAlarm() {
 void N470HVModule::enableKeyboard(bool enable) {
   uint8_t opcode = enable ? 14 : 15;
   // send command
-  bridge_->write({0x0,address_,opcode});
+  bridge_->write({0x1,address_,opcode});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
@@ -204,7 +203,7 @@ void N470HVModule::enableKeyboard(bool enable) {
 
 void N470HVModule::setTTL() {
   // send command
-  bridge_->write({0x0,address_,16});
+  bridge_->write({0x1,address_,16});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
@@ -213,7 +212,7 @@ void N470HVModule::setTTL() {
 
 void N470HVModule::setNIM() {
   // send command
-  bridge_->write({0x0,address_,17});
+  bridge_->write({0x1,address_,17});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   //TODO handle data
