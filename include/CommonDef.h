@@ -62,7 +62,7 @@ class CAENVMEexception: public std::exception
     CAENVME_API errorcode_;
 };
 
-#define checkCAENVMEexception(x) {CAENVME_API status = (x); if (status) throw_with_trace(CAENVMEexception(status));}
+#define checkCAENVMEexception(x) {CAENVME_API status_cve = (x); if (status_cve) throw_with_trace(CAENVMEexception(status_cve));}
 
 class CAENETexception: public std::exception
 {
@@ -81,14 +81,16 @@ class CAENETexception: public std::exception
       if(errorcode_==0xFFFD) return "No data to be transmitted.";
       if(errorcode_==0xFFFE) return "The H.C. Controller identifier is incorrect.";
       if(errorcode_==0xFFFF) return "The addressed module does not exist.";
-      return "Unknown exception!";
+      char* message = new char[32];
+      sprintf(message, "Unknown exception %lx !", errorcode_);
+      return message;
     }
     
   private:
     uint32_t errorcode_;
 };
 
-#define checkCAENETexception(x) {uint32_t status = (x); if (status) throw_with_trace(CAENETexception(status)); }
+#define checkCAENETexception(x) {uint32_t status_cce = (x); if (status_cce) throw_with_trace(CAENETexception(status_cce)); }
 
 //utilities
 
