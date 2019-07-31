@@ -63,8 +63,7 @@ std::pair<uint32_t, std::vector<uint32_t> > CaenetBridge::readResponse() {
     usleep(10000); // wait 10ms 
     readData(baseAddress(),&errorCode);
   } while (!validStatus());
-  LOG_TRACE("valid data received. Will be returned as error code.");
-  LOG_TRACE("received data: " + int_to_hex(tmp));
+  LOG_TRACE("received first data word: " + int_to_hex(tmp));
   // then read data
   while (validStatus()) {
     readData(baseAddress(),&tmp);
