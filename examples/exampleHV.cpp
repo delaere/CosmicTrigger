@@ -10,6 +10,16 @@
 
 using namespace std;
 
+int quick_pow10(int n)
+{
+    static int pow10[10] = {
+        1, 10, 100, 1000, 10000, 
+        100000, 1000000, 10000000, 100000000, 1000000000
+    };
+
+    return pow10[n]; 
+}
+
 int main(int argc, char* argv[]){
 
   if (argc > 1) {
@@ -33,7 +43,9 @@ int main(int argc, char* argv[]){
     
     
     for (auto& [id,channel] : powersupply->getChannels()) {
-      int vset = channel->getBoard()->getVMax()>200 ? 200 : channel->getBoard()->getVMax();
+      int vmax = channel->getBoard()->getVMax(); // in volts
+      int vdec = channel->getBoard()->getVDecimals();
+      int vset = vmax>200 ? 200*quick_pow10(vdec) : vmax*quick_pow10(vdec);
       uint16_t ramp = 10;
       ramp = ramp>channel->getBoard()->getRampMax() ? channel->getBoard()->getRampMax() : ramp;
       ramp = ramp<channel->getBoard()->getRampMin() ? channel->getBoard()->getRampMin() : ramp;
