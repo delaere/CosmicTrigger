@@ -68,6 +68,12 @@ int main(int argc, char* argv[]){
 	if (st) {
       std::cerr << *st << '\n'; /*<-*/ return 0; /*->*/
     } /*<-*/ return 3; /*->*/
+  } catch (const CAENETexception& e) {
+	std::cerr << e.what() << '\n';
+	const boost::stacktrace::stacktrace* st = boost::get_error_info<traced>(e);
+	if (st) {
+      std::cerr << *st << '\n'; /*<-*/ return 0; /*->*/
+    } /*<-*/ return 3; /*->*/
   }
   return 5;
 }
