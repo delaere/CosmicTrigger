@@ -37,7 +37,7 @@ public:
   void write(const std::vector<uint32_t>& data);
   
   // Read back the response from the slave
-  std::tuple<uint32_t, std::vector<uint32_t> > readResponse();
+  std::pair<uint32_t, std::vector<uint32_t> > readResponse();
 
 private:
   uint8_t interrupt_;

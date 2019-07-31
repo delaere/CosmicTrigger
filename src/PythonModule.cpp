@@ -17,6 +17,7 @@
 */
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "VmeController.h"
 #include "VmeUsbBridge.h"
 #include "VmeBoard.h"
@@ -70,7 +71,7 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .add_property("busReqLevel",&VmeUsbBridge::getBusReqLevel,&VmeUsbBridge::setBusReqLevel)
          .add_property("timeout",&VmeUsbBridge::getTimeout,&VmeUsbBridge::setTimeout)
          .add_property("FIFOmode",&VmeUsbBridge::getFIFOMode,&VmeUsbBridge::setFIFOMode)
-         .def("systemReset",&VmeUsbBridge::systemReset);
+         .def("systemReset",&VmeUsbBridge::systemReset)
          .def("getPulser",&VmeUsbBridge::getPulser,return_value_policy<copy_non_const_reference>())
          .def("getScaler",&VmeUsbBridge::getScaler,return_value_policy<copy_non_const_reference>())
     ;
@@ -109,6 +110,14 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("validStatus",&CaenetBridge::validStatus)
          .def("write",&CaenetBridge::write)
          .def("readResponse",&CaenetBridge::readResponse)
+    ;
+    class_<std::vector<uint32_t> >("vec_int")
+         .def(vector_indexing_suite<std::vector<uint32_t> >())
+         .def("__iter__", iterator<std::vector<uint32_t> >())
+    ;
+    class_<std::pair<uint32_t, std::vector<uint32_t> > >("CaenetResponse")
+         .def_readwrite("errorCode", &std::pair<uint32_t, std::vector<uint32_t> >::first)
+         .def_readwrite("data",&std::pair<uint32_t, std::vector<uint32_t> >::second)
     ;
     // expose HVmodule
     class_<HVChannelWrap, boost::noncopyable>("HVChannel", init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())

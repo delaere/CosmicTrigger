@@ -17,6 +17,7 @@
 */
 
 #include "CaenetBridge.h"
+#include <unistd.h>
 
 CaenetBridge::CaenetBridge(VmeController *cont, uint32_t bridgeAdd, uint8_t interrupt):VmeBoard(cont,bridgeAdd,cvA24_S_DATA,cvD16,true),interrupt_(interrupt) {}
 
@@ -47,7 +48,7 @@ void CaenetBridge::write(const std::vector<uint32_t>& data) {
   if (!validStatus()) throw CAENETexception(0XFFF0);
 }
 
-std::tuple<uint32_t, std::vector<uint32_t> > CaenetBridge::readResponse() {
+std::pair<uint32_t, std::vector<uint32_t> > CaenetBridge::readResponse() {
   uint32_t errorCode = 0;
   std::vector<uint32_t> data;
   uint32_t tmp = 0;
@@ -59,9 +60,11 @@ std::tuple<uint32_t, std::vector<uint32_t> > CaenetBridge::readResponse() {
   }
   // polling. First word read is the error code (0 for success)
   do {
+    usleep(10000); // wait 10ms 
     readData(baseAddress(),&errorCode);
   } while (!validStatus());
   LOG_TRACE("valid data received. Will be returned as error code.");
+  LOG_TRACE("received data: " + int_to_hex(tmp));
   // then read data
   while (validStatus()) {
     readData(baseAddress(),&tmp);
@@ -70,5 +73,5 @@ std::tuple<uint32_t, std::vector<uint32_t> > CaenetBridge::readResponse() {
   }
   // last word was garbage
   data.pop_back();
-  return make_tuple(errorCode,data);
+  return make_pair(errorCode,data);
 }
