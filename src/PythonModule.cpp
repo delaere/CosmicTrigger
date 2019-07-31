@@ -54,6 +54,9 @@ BOOST_PYTHON_MODULE(VeheMencE)
         .def("IRQCheck",pure_virtual(&VmeController::IRQCheck))
         .def("IACK",pure_virtual(&VmeController::IACK))
     ;
+    
+    def("vmeRead",&vmeRead);
+    def("vmeWrite",&vmeWrite);
     //expose VmeUsbBridge
     class_<VmeUsbBridge, bases<VmeController> >("VmeUsbBridge")
          .def("configureOutputLine",&VmeUsbBridge::configureOutputLine)

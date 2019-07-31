@@ -120,4 +120,16 @@ struct HVModuleWrap : HVModule, wrapper<HVModule>
   }
 };
 
+// utilities to debug simple VME operations in python
+
+uint32_t vmeRead(VmeController* cont, long unsigned int address) {
+  uint32_t data;
+  cont->readData(address,&data);
+  return data;
+}
+
+void vmeWrite(VmeController* cont, long unsigned int address,uint64_t data) {
+  cont->writeData(address,&data);
+}
+
 #endif
