@@ -70,6 +70,7 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .add_property("busReqLevel",&VmeUsbBridge::getBusReqLevel,&VmeUsbBridge::setBusReqLevel)
          .add_property("timeout",&VmeUsbBridge::getTimeout,&VmeUsbBridge::setTimeout)
          .add_property("FIFOmode",&VmeUsbBridge::getFIFOMode,&VmeUsbBridge::setFIFOMode)
+         .def("systemReset",&VmeUsbBridge::systemReset);
          .def("getPulser",&VmeUsbBridge::getPulser,return_value_policy<copy_non_const_reference>())
          .def("getScaler",&VmeUsbBridge::getScaler,return_value_policy<copy_non_const_reference>())
     ;
