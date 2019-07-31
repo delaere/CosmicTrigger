@@ -24,9 +24,9 @@ int main(int argc, char* argv[]){
     LOG_TRACE("Instantiating the controller");
     VmeUsbBridge vme;
     LOG_TRACE("Instantiating the CAENET bridge");
-    CaenetBridge caenet(&vme, 0x900000);
+    CaenetBridge caenet(&vme, 0xF0000);
     LOG_TRACE("Instantiating the HV module");
-    auto powersupply = HVModule::HVModuleFactory(0x09, &caenet);
+    auto powersupply = HVModule::HVModuleFactory(0x02, &caenet);
     LOG_INFO(powersupply->identification() + " READY.");
     bool isN470 = (powersupply->identification().find("N470") != std::string::npos);
     bool isSY527 = (powersupply->identification().find("SY527") != std::string::npos);
