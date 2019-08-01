@@ -114,4 +114,6 @@ std::string int_to_hex( T i )
   return stream.str();
 }
 
+int quick_pow10(int n);
+
 #endif
