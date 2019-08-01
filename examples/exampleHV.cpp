@@ -20,6 +20,16 @@ int quick_pow10(int n)
     return pow10[n]; 
 }
 
+bool isRamping(bool isSY527, bool isN470, uint32_t status) {
+  bool ramping = false;
+  if(isN470) {
+    ramping = N470StatusWord(status).bit(N470StatusWord::cvRUP);
+  } else if(isSY527) {
+    ramping = SY527StatusWord(status).bit(SY527StatusWord::cvRUP);
+  }
+  return ramping;
+}
+
 int main(int argc, char* argv[]){
 
   if (argc > 1) {
@@ -36,20 +46,24 @@ int main(int argc, char* argv[]){
     LOG_TRACE("Instantiating the CAENET bridge");
     CaenetBridge caenet(&vme, 0xF0000);
     caenet.reset();
+    caenet.validStatus();
     LOG_TRACE("Instantiating the HV module");
     auto powersupply = HVModule::HVModuleFactory(0x02, &caenet);
     LOG_INFO(powersupply->identification() + " READY.");
     bool isN470 = (powersupply->identification().find("N470") != std::string::npos);
     bool isSY527 = (powersupply->identification().find("SY527") != std::string::npos);
     
-    
     for (auto& [id,channel] : powersupply->getChannels()) {
+      channel->readOperationalParameters();
       int vmax = channel->getBoard()->getVMax(); // in volts
-      int vdec = channel->getBoard()->getVDecimals();
-      int vset = vmax>200 ? 200*quick_pow10(vdec) : vmax*quick_pow10(vdec);
-      uint16_t ramp = 10;
+      int softvmax = channel->getSoftMaxV(); // in volts
+      vmax = softvmax<vmax ? softvmax : vmax;
+      int vdec = channel->getBoard()->getVDecimals(); // number of decimals
+      int vset = vmax>200 ? 200*quick_pow10(vdec) : vmax*quick_pow10(vdec); // with some digits
+      uint16_t ramp = 10; // in V/s
       ramp = ramp>channel->getBoard()->getRampMax() ? channel->getBoard()->getRampMax() : ramp;
       ramp = ramp<channel->getBoard()->getRampMin() ? channel->getBoard()->getRampMin() : ramp;
+      LOG_INFO("set V0 to " + to_string(vset/float(quick_pow10(vdec))) + " V, rup " + to_string(ramp));
       channel->setV0(vset);
       channel->setRampup(ramp);
       channel->on();
@@ -63,16 +77,19 @@ int main(int argc, char* argv[]){
       doneramping = true;
       for (auto& [id,channel] : powersupply->getChannels()) {
         channel->readOperationalParameters();
-        LOG_DATA_INFO("channel " + to_string(id.first) + "." + to_string(id.second) + " : " + to_string(channel->getVmon()) + " V");
-        if(isN470) {
-          doneramping &= ! N470StatusWord(channel->getStatus()).bit(N470StatusWord::cvRUP);
-        } else if(isSY527) {
-          doneramping &= ! SY527StatusWord(channel->getStatus()).bit(SY527StatusWord::cvRUP);
-        }
-        sleep(1);
+	doneramping &= ! isRamping(isSY527,isN470,channel->getStatus());
+	if (isRamping(isSY527,isN470,channel->getStatus())) {
+          LOG_DATA_INFO("channel " + to_string(id.first) + "." + to_string(id.second) + " : " + to_string(channel->getVmon()) + " V. RAMPING." );
+	} else {
+          LOG_DATA_INFO("channel " + to_string(id.first) + "." + to_string(id.second) + " : " + to_string(channel->getVmon()) + " V." );
+	}
       }
+      sleep(1);
     }
-    LOG_INFO("Reached the nominal voltage");
+    LOG_INFO("Reached the nominal voltage, going back off.");
+    for (auto& [id,channel] : powersupply->getChannels()) {
+      channel->off();
+    }
     delete powersupply;
     LOG_TRACE("Done");
   } catch (const CAENVMEexception& e) {

@@ -21,7 +21,7 @@
 
 using namespace std;
 
-SY527HVChannel::SY527HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge),status_(0),name_("") {}
+SY527HVChannel::SY527HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge),name_("") {}
 
 void SY527HVChannel::on() {
   // send command
@@ -141,7 +141,7 @@ void SY527HVChannel::readOperationalParameters() {
   bridge_->write({0x1,address_,0x1,chAddress()});
   // read response
   auto [ status1, chStatus ] = bridge_->readResponse(); checkCAENETexception(status1);
-  vmon_ = chStatus[0]<<16 + chStatus[1];
+  vmon_ = (chStatus[0]<<16) + chStatus[1];
   maxV_ = chStatus[2];
   imon_ = chStatus[3];
   status_ = chStatus[4];
@@ -159,8 +159,6 @@ void SY527HVChannel::readOperationalParameters() {
   for(auto character = characters.begin(); character<characters.end() && (*character); character++) {
     name_ += *character;
   }
-  //int i = 0;
-  //while(characters[i]) { name_ += characters[i++]; };
   v0_ = parameters[7] + (parameters[6]<<16);
   v1_ = parameters[9] + (parameters[8]<<16);
   i0_ = parameters[10];

@@ -92,7 +92,6 @@ protected:
   void setStatus(std::vector<uint32_t>::const_iterator data);
   
 private:
-  uint32_t status_;
   
   friend class N470HVModule;
 };

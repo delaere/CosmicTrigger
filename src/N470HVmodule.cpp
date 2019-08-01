@@ -23,7 +23,7 @@ using namespace std;
 
 //TODO check what is returned by the methods "set". If this is the status, it can be saved in status_
 
-N470HVChannel::N470HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge),status_(0) {}
+N470HVChannel::N470HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge){}
 
 void N470HVChannel::on() {
   // send command
