@@ -95,7 +95,6 @@ public:
   inline SY527StatusWord getStatus() const { return status_; }
 
 private:
-  uint32_t status_; 
   std::string name_;
   
   inline uint16_t chAddress() const { return ((board_->getSlot()<<8) + id_); }
