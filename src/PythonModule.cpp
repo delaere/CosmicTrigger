@@ -209,7 +209,7 @@ BOOST_PYTHON_MODULE(VeheMencE)
     ;
     // expose SY527PowerSystem
     {
-      scope in_SY527StatusWord = class_<SY527StatusWord>("SY527StatusWord",init<uint16_t>())
+      scope in_SY527StatusWord = class_<SY527StatusWord>("SY527StatusWord",init<uint32_t>())
            .def("status",&SY527StatusWord::status)
            .def("bit",&SY527StatusWord::bit)
       ;
