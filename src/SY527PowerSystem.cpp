@@ -141,9 +141,9 @@ void SY527HVChannel::readOperationalParameters() {
   bridge_->write({0x1,address_,0x1,chAddress()});
   // read response
   auto [ status1, chStatus ] = bridge_->readResponse(); checkCAENETexception(status1);
-  vmon_ = ((chStatus[0]<<16) + chStatus[1])/quick_pow10(board_->getVDecimals());
+  vmon_ = ((chStatus[0]<<16) + chStatus[1])/float(quick_pow10(board_->getVDecimals()));
   maxV_ = chStatus[2];
-  imon_ = chStatus[3]/quick_pow10(board_->getIDecimals());
+  imon_ = chStatus[3]/float(quick_pow10(board_->getIDecimals()));
   status_ = chStatus[4];
   // send command
   bridge_->write({0x1,address_,0x2,chAddress()});
