@@ -46,17 +46,17 @@ public:
     cvPOWON   = 31,/* Power-on behavior: off(0) or on(1) */
   } CVStatusWordBit;
   
-  SY527StatusWord(uint16_t status):status_(status) {}
+  SY527StatusWord(uint32_t status):status_(status) {}
   ~SY527StatusWord() {}
   
   // return the status word
-  inline uint16_t status() const { return status_; }
+  inline uint32_t status() const { return status_; }
   
   // extract a given bit
   inline bool bit(SY527StatusWord::CVStatusWordBit n) const { return ((status_>>n)&1); }
   
 private:
-  uint16_t status_;
+  uint32_t status_;
 };
 
 class SY527PowerSystem;
