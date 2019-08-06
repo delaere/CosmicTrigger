@@ -28,9 +28,9 @@ int main(int argc, char* argv[]){
     myTtc.changeChannel(TtcVi::cvL1A1);
       
     LOG_DEBUG("Setting Discri");
-    myDiscri.setMultiChannel(0x000F);
+    myDiscri.setChannelMask(0x000F);
     myDiscri.setMajority(4);
-    myDiscri.setTh(100);
+    myDiscri.setThreshold(100);
 
     LOG_DEBUG("DONE");
 

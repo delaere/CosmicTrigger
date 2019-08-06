@@ -21,67 +21,116 @@
 #include <cmath>
 using namespace std;
 
-Discri::Discri(VmeController *controller,int add):VmeBoard(controller, add, cvA32_U_DATA, cvD16, true) {
-  this->status_=0x0000;//All channels off
-  int data;
-  readData(add+0xFE,&data);
-  LOG_INFO("Connexion to Discri... ok!");
-  this->setMultiChannel(this->status_);
+std::vector<float> Discri::widths_    = {11.32,12.34,13.47,14.75,16.07,17.51,19.03,21.29,23.69,26.71,30.61,35.20,41.83,51.02,64.53,87.47,130.70,240.70};
+std::vector<float> Discri::wcounts_   = {0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255};
+std::vector<float> Discri::deadtimes_ = {150,2000};
+std::vector<float> Discri::dtcounts_  = {0,255};
+
+Discri::Discri(VmeController *controller,int add):VmeBoard(controller, add, cvA32_U_DATA, cvD16, true),status_(0x0000) {
+  // check the connection...
+  uint16_t data = 0;
+  readData(baseAddress()+0xFC,&data);
+  info_.moduleType_ = data;
+  readData(baseAddress()+0xFE,&data);
+  info_.serial_number_ = data;
+  readData(baseAddress()+0xFA,&data);
+  info_.moduleId_ = data;
+  assert(info_.moduleId_==0xFAF5);
+  
+  // initial config
+  setChannelMask(status_);
+  
+  LOG_DEBUG("CAEN V812 initialized. " + 
+            int_to_hex(info_.moduleType_&0x3FF) + " " + int_to_hex(info_.moduleType_>>9) + " " + 
+            int_to_hex(info_.serial_number_&0xFFF) + " " + int_to_hex(info_.serial_number_>>11) + " " + 
+            int_to_hex(info_.moduleId_));
 }
 
-void Discri::setChannel(int num, bool newState){
-  if (num==-1){
-    setMultiChannel( newState ? 0xFFFF : 0x0000);
+void Discri::enableChannel(uint8_t channel) {
+  assert(channel<16);
+  setChannel(channel,1);
+}
+  
+void Discri::disableChannel(uint8_t channel) {
+  assert(channel<16);
+  setChannel(channel,0);
+}
+  
+void Discri::setChannelMask(uint16_t mask) {
+  status_ = mask;
+  writeData(baseAddress()+0x4A,&status_);
+  LOG_INFO("Channels changed. Mask:" + to_string(status_));
+}
+
+void Discri::setChannel(uint8_t channel, bool newState){
+  if (newState != ((status_>>channel)&1)) {
+    status_ ^= (1u << channel);
+    // write the result to the proper register
+    writeData(baseAddress()+0x4A,&status_);
   }
-  if (newState != ((status_>>num)&1))
-    status_ ^= (1u << num);
-  // write the result to the proper register
-  int data = status_;
-  writeData(baseAddress()+0x4A,&data);
-  LOG_INFO("New status for channel " + to_string(num) +": "+ to_string(newState));
+  LOG_INFO("New status for channel " + to_string(channel) +": "+ to_string(newState));
 }
 
-void Discri::setMultiChannel(int code){
-  status_=code;
-  int data=code;
-  writeData(baseAddress()+0x4A,&data);
-  LOG_INFO("Channels changed. Code:" + to_string(code));
+void Discri::setMajority(uint8_t num){
+  assert(num>0 && num<21);
+  int majthr = round((num*50.-25.)/4.);
+  writeData(baseAddress()+0x48,&majthr);
+  LOG_INFO("Set majority level to " + to_string(num) + "(sent: " + to_string(majthr) + ")");
 }
 
-void Discri::setMajority(int num){
-  double nRound=(num*50-25.0)/4.0;
-  int round;
-  if ((nRound+0.5)>int(nRound)){ round=(int)nRound+1;}
-  else{ round=(int)nRound;}
-  writeData(baseAddress()+0x48,&round);
-  LOG_INFO("Set majority level to " + to_string(num) + "(sent: " + to_string(round) + ")");
-}
-
-void Discri::setTh(uint8_t value,int num){
-  if (num==-1){
+void Discri::setThreshold(uint8_t value,int8_t channel){
+  if (channel==-1){
     LOG_INFO("Setting all thresholds to "+to_string(value));
     for (int i=0; i<16; i++) 
-      this->setTh(value,i);
+      this->setThreshold(value,i);
   } else {
-    LOG_DEBUG("Setting threshold to " + to_string(value) + " on channel " + to_string(num));
-    writeData(baseAddress()+2*num,&value);
+    assert(channel>=0 && channel<16);
+    LOG_DEBUG("Setting threshold to " + to_string(value) + " on channel " + to_string(channel));
+    writeData(baseAddress()+2*channel,&value);
   }
 }
 
-void Discri::setWidth(uint8_t value,int num){
-  int data=value;
-  LOG_INFO("Setting output width to "+ to_string(value));
-  if (num<8) 
-    writeData(baseAddress()+0x40,&data);
-  if (num<0||num>7) 
-    writeData(baseAddress()+0x42,&data);
+void Discri::setWidth(float ns,uint8_t channel){
+  assert(channel<16);
+  uint16_t wcount = (uint16_t)Discri::getWCount(ns);
+  LOG_INFO("Setting output width to "+ to_string(wcount));
+  if (channel<8) {
+    writeData(baseAddress()+0x40,&wcount);
+  } else {
+    writeData(baseAddress()+0x42,&wcount);
+  }
 }
 
-void Discri::setDeadTime(uint8_t value,int num){
-  int data=value;
-  LOG_INFO("Setting dead time to " + to_string(value));
-  if (num<8) 
-    writeData(baseAddress()+0x44,&data);
-  if (num<0||num>7) 
-    writeData(baseAddress()+0x46,&data);
+void Discri::setDeadTime(float ns,uint8_t channel){
+  assert(channel<16);
+  uint16_t dtcount = (uint16_t)Discri::getDTCount(ns);
+  LOG_INFO("Setting dead time to " + to_string(dtcount));
+  if (channel<8) {
+    writeData(baseAddress()+0x44,&dtcount);
+  } else { 
+    writeData(baseAddress()+0x46,&dtcount);
+  }
+}
+
+void Discri::testPulse() {
+  LOG_INFO("Generating a test pulse.");
+  writeData(baseAddress()+0x4C,&status_);
+}
+
+float Discri::interpolate( std::vector<float> &xData, std::vector<float> &yData, float x, bool extrapolate ) {
+   int size = xData.size();
+
+   int i = 0;                                                                  // find left end of interval for interpolation
+   if ( x >= xData[size - 2] ) {                                               // special case: beyond right end
+      i = size - 2;
+   } else {
+      while ( x > xData[i+1] ) i++;
+   }
+   float xL = xData[i], yL = yData[i], xR = xData[i+1], yR = yData[i+1];      // points on either side (unless beyond ends)
+   if ( !extrapolate ) {                                                       // if beyond ends of array and not extrapolating
+      if ( x < xL ) yR = yL;
+      if ( x > xR ) yL = yR;
+   }
+   float dydx = ( yR - yL ) / ( xR - xL );                                    // gradient
+   return yL + dydx * ( x - xL );                                              // linear interpolation
 }

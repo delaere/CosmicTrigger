@@ -26,6 +26,7 @@
 #include "N470HVmodule.h"
 #include "SY527PowerSystem.h"
 #include "Scaler.h"
+#include "Discri.h"
 #define __PYTHONMODULECONFIGURATION
 
 using namespace boost::python;
@@ -244,10 +245,23 @@ BOOST_PYTHON_MODULE(VeheMencE)
     class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
          .def("updateStatus",&SY527PowerSystem::updateStatus)
     ;
-    // expose 1151N scaler_
+    // expose 1151N scaler
     class_<Scaler>("Scaler",init<VmeController*,uint32_t>())
          .def("getCount",&Scaler::getCount)
          .def("setPreset",&Scaler::setPreset)
          .def("reset",&Scaler::reset)
     ;
+    // expose V812 discri
+    class_<Discri>("Discri",init<VmeController*,uint32_t>())
+         .def("enableChannel",&Discri::enableChannel)
+         .def("disableChannel",&Discri::disableChannel)
+         .def("setChannelMask",&Discri::setChannelMask)
+         .def("getChannelMask",&Discri::getChannelMask)
+         .def("setMajority",&Discri::setMajority)
+         .def("setThreshold",&Discri::setThreshold)
+         .def("setWidth",&Discri::setWidth)
+         .def("setDeadTime",&Discri::setDeadTime)
+         .def("testPulse",&Discri::testPulse)
+    ;
+
 }
