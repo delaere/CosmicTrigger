@@ -31,7 +31,7 @@ public:
     uint16_t moduleType_;
   };
   
-  Scaler(VmeController* controller,int address=0x0B0000);///<Constructor. Sets up the address and tests communication.
+  Scaler(VmeController* controller,uint32_t address=0x0B0000);///<Constructor. Sets up the address and tests communication.
   
   // Getting count value for channel [0,15]. It reads the appropriate register and returns its value.
   uint32_t getCount(uint8_t channel, bool reset = false);

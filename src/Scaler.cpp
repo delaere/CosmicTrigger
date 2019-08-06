@@ -21,7 +21,7 @@
 #include <iostream>
 using namespace std;
 
-Scaler::Scaler(VmeController* controller,int address):VmeBoard(controller,address,cvA24_U_DATA,cvD16,true){
+Scaler::Scaler(VmeController* controller,uint32_t address):VmeBoard(controller,address,cvA24_U_DATA,cvD16,true){
   LOG_DEBUG("Address" + int_to_hex(baseAddress()));
   // check the connection...
   uint16_t data = 0;
@@ -49,7 +49,7 @@ uint32_t Scaler::getCount(uint8_t channel, bool reset){
 void Scaler::setPreset(uint8_t channel, uint32_t value){
   uint32_t data=value;
   LOG_INFO("Setting presets to "+to_string(value)+" for channel " + to_string(channel) +"...");
-  writeData(baseAddress()+0x40+4*channel,&data);
+  controller()->mode(cvA24_U_DATA,cvD32)->writeData(baseAddress()+0x40+4*channel,&data);
 }
 
 void Scaler::reset(){
