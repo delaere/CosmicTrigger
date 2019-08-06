@@ -15,10 +15,10 @@ Status of the supported boards:
 
 | Board     |  Purpose       | Implementaton   |  Tested       |  C++  | Python |
 |-----------|----------------|-----------------|---------------|-------|--------|
-| V1718     | USB VME bridge | Full   | Part (previous release) | yes  | yes |
-| SY527     | CAEN Power system | Full (initial fw)| No            | yes | yes |
-| N470      | CAEN NIM HV module | Full             | Part (previous release) | yes | yes |
-| V288      | CAENET bridge  | Full             | Part (previous release) | yes | yes |
+| V1718     | USB VME bridge | Full            | part (not scaler, pulser)          | yes   | yes    |
+| SY527     | CAEN Power system | Full (initial fw)| yes       | yes   | yes    |
+| N470      | CAEN NIM HV module | Full        | Part (previous release) | yes | yes |
+| V288      | CAENET bridge  | Full            | yes           | yes   | yes    |
 | V812      | COINC / DISCRI | Part   | Part (previous release) | yes | no |
 | V1190     | TDC            | Part   | Part (previous release) | yes | no |
 | 1151N     | Lecroy Scaler  | Part   | Part (previous release) | yes | no |
