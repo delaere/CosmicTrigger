@@ -249,6 +249,5 @@ BOOST_PYTHON_MODULE(VeheMencE)
          .def("getCount",&Scaler::getCount)
          .def("setPreset",&Scaler::setPreset)
          .def("reset",&Scaler::reset)
-         .def("setInterrupt",&Scaler::setInterrupt)
     ;
 }

@@ -45,11 +45,7 @@ public:
   
   // Sends a reset signal to the module.
   void reset();
-  
-  // Set interrupt
-  void setInterrupt(uint8_t level, uint8_t vector);
 
-  
 private:
   moduleInfo info_;
 

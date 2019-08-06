@@ -57,12 +57,3 @@ void Scaler::reset(){
   LOG_INFO("Reseting Scaler...");
   writeData(baseAddress(),&data);
 }
-
-void Scaler::setInterrupt(uint8_t level, uint8_t vector){
-  LOG_INFO("Programming interrupt for the scaler...");
-  uint16_t data;
-  data = level ? (0x10 + (level&0x7))<<8 : 0;
-  writeData(baseAddress()+0x10,&data);
-  data = (vector&0xFF)<<8;
-  writeData(baseAddress()+0x18,&data);
-}
