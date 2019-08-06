@@ -21,28 +21,37 @@
 
 #include "VmeBoard.h"
 
-// Counting unit.
+// Lecroy 1151N counting unit.
 class Scaler:public VmeBoard{
 public:
+  
+  struct moduleInfo {
+    uint16_t moduleId_;
+    uint16_t serial_number_;
+    uint16_t moduleType_;
+  };
+  
   Scaler(VmeController* controller,int address=0x0B0000);///<Constructor. Sets up the address and tests communication.
   
-  // Getting count value. It reads the appropriate register and returns its value.
-  int getCount(int channel);
+  // Getting count value for channel [0,15]. It reads the appropriate register and returns its value.
+  uint32_t getCount(uint8_t channel, bool reset = false);
 
   // Gets module's info.
-  // reads the module information register and returns its value.
-  int getInfo();
+  inline const moduleInfo getInfo() const { return info_; }
+
+  // Sets the preset for a channel in [0,15].
+  // If this value is not 0, the module will be in countdown mode from this value.
+  void setPreset(uint8_t channel,uint32_t value);
   
   // Sends a reset signal to the module.
   void reset();
   
-  // Reads channel presets.
-  // If this value is not 0, the module will be in countdown mode from this value.
-  int readPresets(int channel);
- 
-  // Sets the preset for a channel.
-  // If this value is not 0, the module will be in countdown mode from this value.
-  void setPresets(int channel,int value);
+  // Set interrupt
+  void setInterrupt(uint8_t level, uint8_t vector);
+
+  
+private:
+  moduleInfo info_;
 
 };
  

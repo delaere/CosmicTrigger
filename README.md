@@ -21,7 +21,7 @@ Status of the supported boards:
 | V288      | CAENET bridge  | Full             | Part (previous release) | yes | yes |
 | V812      | COINC / DISCRI | Part   | Part (previous release) | yes | no |
 | V1190     | TDC            | Part   | Part (previous release) | yes | no |
-|           | Scaler         | Part   | Part (previous release) | yes | no |
+| 1151N     | Lecroy Scaler  | Part   | Part (previous release) | yes | no |
 | TTCvi     | TTC controler  | Part   | Part (previous release) | yes | no |
 
 ## Installation

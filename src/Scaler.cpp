@@ -23,24 +23,33 @@ using namespace std;
 
 Scaler::Scaler(VmeController* controller,int address):VmeBoard(controller,address,cvA24_U_DATA,cvD16,true){
   LOG_DEBUG("Address" + int_to_hex(baseAddress()));
-  // call getInfo to check the connection...
-  getInfo();
+  // check the connection...
+  uint16_t data = 0;
+  readData(baseAddress()+0xFC,&data);
+  info_.moduleType_ = data;
+  readData(baseAddress()+0xFE,&data);
+  info_.serial_number_ = data;
+  readData(baseAddress()+0xFA,&data);
+  info_.moduleId_ = data;
+  assert(info_.moduleId_==0xFAF5);
+  LOG_DEBUG("Lecroy 1151N scaler initialized. " + 
+            int_to_hex(info_.moduleType_&0x3FF) + " " + int_to_hex(info_.moduleType_>>9) + " " + 
+            int_to_hex(info_.serial_number_&0xFFF) + " " + int_to_hex(info_.serial_number_>>11) + " " + 
+            int_to_hex(info_.moduleId_));
 }
  
-int Scaler::getCount(int channel){
-  int data=0;
-  int completeAdd=baseAddress()+0x80+4*(channel-1);
+uint32_t Scaler::getCount(uint8_t channel, bool reset){
+  uint32_t data=0;
+  int completeAdd = baseAddress()+0x40+((!reset)*0x40)+4*channel;
   controller()->mode(cvA24_U_DATA,cvD32)->readData(completeAdd,&data);
-  LOG_DEBUG("Count=" + to_string(data) + "(" + int_to_hex(data) + ") at add:" + int_to_hex(completeAdd));
+  LOG_DEBUG("Count for channel " + to_string(channel) + " = " + to_string(data));
   return data;
 }
 
-int Scaler::getInfo(){ 
-  int data=0;
-  LOG_INFO("Getting Scaler information...");
-  readData(baseAddress()+0xFE,&data);
-  readData(baseAddress()+0xFE,&data);
-  return data;
+void Scaler::setPreset(uint8_t channel, uint32_t value){
+  uint32_t data=value;
+  LOG_INFO("Setting presets to "+to_string(value)+" for channel " + to_string(channel) +"...");
+  writeData(baseAddress()+0x40+4*channel,&data);
 }
 
 void Scaler::reset(){
@@ -49,15 +58,11 @@ void Scaler::reset(){
   writeData(baseAddress(),&data);
 }
 
-int Scaler::readPresets(int channel){
-  int data=0;
-  readData(baseAddress()+0x40+4*(channel-1),&data);
-  LOG_INFO("Preset: "+to_string(data));
-  return data ;
-}
-
-void Scaler::setPresets(int channel,int value){
-  int data=value;
-  LOG_INFO("Setting presets to "+to_string(value)+"...");
-  writeData(baseAddress()+0x40+4*(channel-1),&data);
+void Scaler::setInterrupt(uint8_t level, uint8_t vector){
+  LOG_INFO("Programming interrupt for the scaler...");
+  uint16_t data;
+  data = level ? (0x10 + (level&0x7))<<8 : 0;
+  writeData(baseAddress()+0x10,&data);
+  data = (vector&0xFF)<<8;
+  writeData(baseAddress()+0x18,&data);
 }
