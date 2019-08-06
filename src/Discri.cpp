@@ -41,8 +41,8 @@ Discri::Discri(VmeController *controller,int add):VmeBoard(controller, add, cvA3
   setChannelMask(status_);
   
   LOG_DEBUG("CAEN V812 initialized. " + 
-            int_to_hex(info_.moduleType_&0x3FF) + " " + int_to_hex(info_.moduleType_>>9) + " " + 
-            int_to_hex(info_.serial_number_&0xFFF) + " " + int_to_hex(info_.serial_number_>>11) + " " + 
+            int_to_hex(info_.moduleType_&0x3FF) + " " + int_to_hex(info_.moduleType_>>10) + " " + 
+            int_to_hex(info_.serial_number_&0xFFF) + " " + int_to_hex(info_.serial_number_>>12) + " " + 
             int_to_hex(info_.moduleId_));
 }
 

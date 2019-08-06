@@ -33,8 +33,8 @@ Scaler::Scaler(VmeController* controller,uint32_t address):VmeBoard(controller,a
   info_.moduleId_ = data;
   assert(info_.moduleId_==0xFAF5);
   LOG_DEBUG("Lecroy 1151N scaler initialized. " + 
-            int_to_hex(info_.moduleType_&0x3FF) + " " + int_to_hex(info_.moduleType_>>9) + " " + 
-            int_to_hex(info_.serial_number_&0xFFF) + " " + int_to_hex(info_.serial_number_>>11) + " " + 
+            int_to_hex(info_.moduleType_&0x3FF) + " " + int_to_hex(info_.moduleType_>>10) + " " + 
+            int_to_hex(info_.serial_number_&0xFFF) + " " + int_to_hex(info_.serial_number_>>12) + " " + 
             int_to_hex(info_.moduleId_));
 }
  
