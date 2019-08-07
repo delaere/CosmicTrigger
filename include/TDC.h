@@ -51,11 +51,96 @@ private:
   std::vector<TDCHit> measurements_;
 };
 
+// Simple class to represent the control register.
+class V1190ControlRegister
+{
+public:
+  
+  // meaning of the control bits
+  typedef enum CVRegisterWordBit {
+    cvBERREN  = 0, /* Bus Error enable bit. Used in D32 and Block Transfer mode */
+    cvTERM    = 1, /* Set the software termination status */
+    cvTERM_SW = 2, /* Allows to select the termination mode */
+    cvEMPTYEVT= 3, /* Allows empty events */
+    cvALIGN64 = 4, /* Align to 64 bits */
+    cvCOMPEN  = 5, /* Compensation enable */
+    cvTESTEN  = 6, /* Test FIFO enable */
+    cvRCSEN   = 7, /* Read Compensation SRAM enable */
+    cvFIFOEN  = 8, /* Event FIFO enable */
+    cvEXTDTTEN= 9, /* Extended Trigger Time Tag enable */ 
+    cv16MBMEB = 12,/* 16MB address range MEB access enable */ 
+  } CVRegisterWordBit;
+  
+  V1190ControlRegister(uint32_t reg):register_(reg) {}
+  ~V1190ControlRegister() {}
+  
+  // return the status word
+  inline uint16_t register() const { return register_; }
+  
+  // extract a given bit
+  inline bool bit(V1190ControlRegister::CVRegisterWordBit n) const { return ((register_>>n)&1); }
+  
+  // set a bit
+  inline void setBit(V1190ControlRegister::CVRegisterWordBit n, bool enable=true) { if (enable^bit(n)) register_ ^= 1 << n;}
+  
+private:
+  uint16_t register_;
+};
+
+// Simple class to represent the status register.
+class V1190StatusRegister
+{
+public:
+  
+  // meaning of the status bits
+  typedef enum CVRegisterWordBit {
+    cvDATA_READY= 0, /* Data present in the output buffer */
+    cvALM_FULL  = 1, /* Almost full level reached */
+    cvFULL      = 2, /* Output buffer full */
+    cvTRG_MATCH = 3, /* Trigger matching mode */
+    cvHEADER_EN = 4, /* TDC header enabled */
+    cvTERM_ON   = 5, /* Termination on/off */
+    cvERROR0    = 6, /* error in TDC 0 */
+    cvERROR1    = 7, /* error in TDC 1 */
+    cvERROR2    = 8, /* error in TDC 2 */
+    cvERROR3    = 9, /* error in TDC 3 */ 
+    cvBERR_FLAG = 10,/* Bus error */ 
+    cvPURG      = 11,/* Purged */
+    cvRES_0     = 12,/* Resolution LSB */
+    cvRES_1     = 13,/* Resolution MSB */
+    cvPAIR      = 14,/* Pair mode */
+    cvTRIGLOST  = 15,/* Trigger lost */
+  } CVRegisterWordBit;
+  
+  V1190StatusRegister(uint32_t reg):register_(reg) {}
+  ~V1190StatusRegister() {}
+  
+  // return the status word
+  inline uint16_t register() const { return register_; }
+  
+  // extract a given bit
+  inline bool bit(V1190StatusRegister::CVRegisterWordBit n) const { return ((register_>>n)&1); }
+  
+private:
+  uint16_t register_;
+};
+
 // V1190 TDC unit
 class Tdc:public VmeBoard
 {
 public:
 
+  // module info
+  struct moduleInfo {
+    uint64_t manufacturer_;
+    uint64_t moduletype_;
+    uint8_t version_;
+    uint32_t serial_number_;
+    uint32_t revision_minor_;
+    uint32_t revision_major_;
+    uint8_t firmwareVersion_;
+  };
+  
   // acquisition modes
   typedef enum CVAcquisitionMode {
     cvContinuous = 0,
@@ -68,6 +153,7 @@ public:
     cvUser = 1,
   } CVConfiguration;
   
+  // edge detection mode
   typedef enum CVEdgeDetection {
     cvPairMode = 0,
     cvTrailing = 1,
@@ -75,12 +161,14 @@ public:
     cvBoth     = 3,
   } CVEdgeDetection;
   
+  // edge detection resolution
   typedef enum CVEdgeLSB {
     cv800ps = 0,
     cv200ps = 1,
     cv100ps = 2,
   } CVEdgeLSB;
   
+  // pair mode edge resolution
   typedef enum CVPairModeEdgeLSB {
     cvpme100ps = 0,
     cvpme200ps = 1,
@@ -92,6 +180,7 @@ public:
     cvpme12500ps = 7,
   } CVPairModeEdgeLSB;
   
+  // pair mode width resolution
   typedef enum CVPairModeWidthLSB {
     cvpmw100ps = 0,
     cvpmw200ps = 1,
@@ -109,6 +198,7 @@ public:
     cvpmw800ns = 13,
   } CVPairModeWidthLSB;
   
+  // dead time
   typedef enum CVDeadTime {
     cvdt5ns = 0,
     cvdt10ns = 1,
@@ -130,19 +220,75 @@ public:
     }
   };
   
-  Tdc(VmeController* controller,int address=0x00120000); //TODO
+  Tdc(VmeController* controller,int address=0x00120000);
 
-  // Gets data from TDC
-  TDCEvent getEvent(); //TODO
-
-  // Get the TDC status
-  unsigned int getStatus(); //TODO
-
-  // Reset the board
-  void Reset(); //TODO
+  /////////////////////////
+  //// Configuration, status, info, ...
+  /////////////////////////
+  
+  // Get module info
+  inline moduleInfo getModuleInfo() const { return info_; }
+  
+  // Reads the control register
+  V1190ControlRegister getControlRegister();
+  
+  // Writes the control register
+  void setControlRegister(V1190ControlRegister& reg);
   
   // Enables FIFO  
-  void enableFIFO(); //TODO
+  void enableFIFO(bool enable);
+  
+  // Enables BERR
+  void enableBERR(bool enable);
+  
+  // Enables Extd trigger time
+  void enableExtdTrigTime(bool enable);
+  
+  // Enables Compensation
+  void enableCompensation(bool enable);
+
+  // Get the TDC status
+  V1190StatusRegister getStatus();
+  
+  // Program interrupt
+  void setInterrupt(uint8_t level=0X0, uint16_t vector = 0xDD);
+
+  // Reset the board
+  void Reset(bool moduleReset=true, bool softClear=true, softEvtReset=true);
+  
+  // Generates a software trigger
+  void trigger(); 
+  
+  // get the event count
+  uint32_t eventCount();
+  
+  // get the stored event count
+  uint16_t storedEventCount();
+  
+  // set the almost-full level
+  void setAlmostFullLevel(uint16_t level);
+  
+  // get the almost-full level
+  uint16_t getAlmostFullLevel();
+  
+  // reads the event FIFO
+  std::pair<uint16_t,uint16_t> readFIFO();
+  
+  // reads the FIFO count
+  uint16_t getFIFOCount();
+  
+  // reads the FIFO status
+  uint8_t getFIFOStatus();
+  
+  /////////////////////////
+  //// Read data from the board
+  /////////////////////////
+  
+  // Gets data from TDC in trigger mode
+  TDCEvent getEvent(); //TODO
+  
+  // Gets data from TDC in countinuous mode
+  TDCHit getHit(); //TODO 
 
   /////////////////////////
   //// Generic opcode methods
@@ -258,18 +404,18 @@ public:
   // Adjust opcode, Misc opcodes and Advanced opcode are not implemented.
   // The user should refer to the manual and use directly the writeOpcode and readOpcode methods.
 
-  /////////////////////////
-
-
 private:
 
   //REGISTER ADRESSES (must depend on add)
-  int Opcode;
-  int StatusRegister;
-  int MicroHandshake;
-  int OutputBuffer;
-  int EventFIFO;
-  int ControlRegister;
+  int opcode_;
+  int statusRegister_;
+  int microHandshake_;
+  int outputBuffer_;
+  int eventFIFO_;
+  int controlRegister_;
+  
+  // Module info
+  moduleInfo info_;
 
   //PRIVATE FUNCTIONS
   void waitWrite();

@@ -44,12 +44,153 @@ unsigned int digit(unsigned int data, int position) {
 }
 
 Tdc::Tdc(VmeController* controller,int address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true) {
-    Opcode=baseAddress()+0x102E;
-    StatusRegister=baseAddress()+0x1002;
-    MicroHandshake=baseAddress()+0x1030;
-    OutputBuffer=baseAddress()+0x0000;
-    EventFIFO=baseAddress()+0x1038;
-    ControlRegister=baseAddress()+0x10;
+  opcode_=baseAddress()+0x102E;
+  statusRegister_=baseAddress()+0x1002;
+  microHandshake_=baseAddress()+0x1030;
+  outputBuffer_=baseAddress()+0x0000;
+  eventFIFO_=baseAddress()+0x1038;
+  controlRegister_=baseAddress()+0x10;
+  // check configuration ROM and firmware version
+  uint16_t data;
+  readData(baseAddress()+0x403C, &data);
+  info_.moduletype_ = data;
+  readData(baseAddress()+0x4038, &data);
+  info_.moduletype_ += (data<<16);
+  readData(baseAddress()+0x4034, &data);
+  info_.moduletype_ += (data<<32);
+  assert(info_.moduletype_==0x04A6);
+  readData(baseAddress()+0x4030, &data);
+  info_.version_ = data&0x1;
+  readData(baseAddress()+0x402C, &data);
+  info_.manufacturer_ = data;
+  readData(baseAddress()+0x4028, &data);
+  info_.manufacturer_ += (data<<16);
+  readData(baseAddress()+0x4024, &data);
+  info_.manufacturer_ += (data<<32);
+  assert(info_.manufacturer_==0x40E6);
+  // revision, serial number
+  readData(baseAddress()+0x4084, &data);
+  info_.serial_number_ = data;
+  readData(baseAddress()+0x4080, &data);
+  info_.serial_number_ += (data<<16);
+  readData(baseAddress()+0x404C, &data);
+  info_.revision_major_ = data;
+  readData(baseAddress()+0x4048, &data);
+  info_.revision_major_ += (data<<16);
+  readData(baseAddress()+0x4044, &data);
+  info_.revision_minor_ = data;
+  readData(baseAddress()+0x4040, &data);
+  info_.revision_minor_ += (data<<16);
+  // firmware version
+  readData(baseAddress()+0x1026, &data);
+  info_.firmwareVersion_ = data&0xFF;
+  
+  LOG_DEBUG("CAEN V1190"+ (info_.version_&0x1 ? string("B") : string("A")) + " initialized. " + 
+            int_to_hex(info_.manufacturer_) + " " + int_to_hex(info_.moduletype_) + " " + int_to_hex(info_.serial_number_) + 
+            " rev. " + to_string(info_.revision_major_) + "." + to_string(info_.revision_minor_) + 
+            " fw. "  + to_string(info_.firmwareVersion_>>4) + "." + to_string(info_.firmwareVersion_&0xF));
+}
+
+V1190ControlRegister Tdc::getControlRegister(){
+  uint16_t data;
+  readData(controlRegister_, &data);
+  return V1190ControlRegister(data);
+}
+
+void Tdc::setControlRegister(V1190ControlRegister& reg){
+  uint16_t data = reg.register();
+  writeData(controlRegister_, &data);
+}
+
+void Tdc::enableFIFO(bool enable) {
+  V1190ControlRegister reg = getControlRegister().setBit(V1190ControlRegister::cvFIFOEN,enable);
+  setControlRegister(reg);
+  if(enable) LOG_INFO("FIFO enabled !") else LOG_INFO("FIFO disabled !");
+}
+
+void Tdc::enableBERR(bool enable) {
+  V1190ControlRegister reg = getControlRegister().setBit(V1190ControlRegister::cvBERREN,enable);
+  setControlRegister(reg);
+  if(enable) LOG_INFO("BERR enabled !") else LOG_INFO("BERR disabled !");
+}
+
+void Tdc::enableExtdTrigTime(bool enable) {
+    V1190ControlRegister reg = getControlRegister().setBit(V1190ControlRegister::cvEXTDTTEN,enable);
+  setControlRegister(reg);
+  if(enable) LOG_INFO("Extended Trigger Time Tag enabled !") else LOG_INFO("Extended Trigger Time Tag disabled !");
+}
+
+void Tdc::enableCompensation(bool enable) {
+  V1190ControlRegister reg = getControlRegister().setBit(V1190ControlRegister::cvCOMPEN,enable);
+  setControlRegister(reg);
+  if(enable) LOG_INFO("Compensation enabled !") else LOG_INFO("Compensation disabled !");
+}
+
+V1190StatusRegister Tdc::getStatus() {
+  uint16_t data;
+  readData(statusRegister_,&data);
+  return V1190StatusRegister(data);
+
+void Tdc::setInterrupt(uint8_t level, uint16_t vector) {
+  uint16_t data = level;
+  writeData(baseAddress()+0x100A, &data);
+  data = vector;
+  writeData(baseAddress()+0x100C, &data);
+}
+
+void Tdc::Reset(bool moduleReset=true, bool softClear=true, softEvtReset=true) {
+  uint16_t data = 0;
+  if(moduleReset) { writeData(baseAddress() +0x1014, &data); LOG_INFO("Module Reset"); }
+  if(softClear) { writeData(baseAddress() +0x1016, &data); LOG_INFO("Software Clear"); }
+  if(softEvtReset) { writeData(baseAddress() +0x1018, &data); LOG_INFO("Software Event Reset"); }
+}
+
+void Tdc::trigger() {
+  uint16_t data = 0;
+  writeData(baseAddress() +0x101A, &data);
+  LOG_INFO("Software Trigger generated.");
+}
+
+uint32_t eventCount() {
+  uint32_t data = 0;
+  controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress() +0x101C,&data);
+  return data;
+}
+
+uint16_t storedEventCount() {
+  uint16_t data = 0;
+  readData(baseAddress() +0x1020,&data);
+  return data;
+}
+
+void setAlmostFullLevel(uint16_t level) {
+  uint16_t data = level;
+  writeData(baseAddress() +0x1022,&data);
+  LOG_INFO("Set almost-full level to " + to_string(level));
+}
+
+uint16_t getAlmostFullLevel() {
+  uint16_t data = 0;
+  readData(baseAddress() +0x1022,&data);
+  return data;
+}
+
+std::pair<uint16_t,uint16_t> readFIFO() {
+  uint32_t data = 0;
+  controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress() +0x1038,&data);
+  return make_pair(data>>16,data&0xFFFF);
+}
+
+uint16_t getFIFOCount() {
+  uint16_t data = 0;
+  readData(baseAddress() +0x103C,&data);
+  return data&0x7FF;
+}
+
+uint8_t getFIFOStatus() {
+  uint16_t data = 0;
+  readData(baseAddress() +0x103E,&data);
+  return data&0x3;
 }
 
 TDCEvent Tdc::getEvent()
@@ -58,7 +199,7 @@ TDCEvent Tdc::getEvent()
     //works only if FIFO enabled !
     this->waitDataReady(); 
     unsigned int data=0;
-    controller()->mode(cvA32_U_DATA,cvD32)->readData(this->EventFIFO,&data);
+    controller()->mode(cvA32_U_DATA,cvD32)->readData(this->eventFIFO_,&data);
     unsigned int eventNumberFIFO=digit(data,31,16);
     unsigned int numberOfWords=digit(data,15,0);
     std::vector<unsigned int> dataOutputBuffer;
@@ -78,50 +219,10 @@ TDCEvent Tdc::getEvent()
     return myEvent;
 }
 
-// Read the status with the
-unsigned int Tdc::getStatus(){
-    unsigned int data=0;
-    waitRead();
-    readData(StatusRegister,&data);
-    
-    if (data&1) {
-      LOG_DEBUG("Event Ready");
-    } else {
-      LOG_DEBUG("No data ready");
-    }
-    if (data&4) {
-      LOG_DEBUG("Output Buffer is Full");
-    } else {
-      LOG_DEBUG("Output Buffer is not full");
-    }
-    if (data&8) {
-      LOG_DEBUG("Operating Mode : Trigger");
-    } else {
-      LOG_DEBUG("Operating Mode : Continuous");
-    }
-    return data;
+TDCHit getHit()
+{
+  
 }
-
-void Tdc::Reset(){
-    unsigned int data=0;
-    int ADD = baseAddress() +0x1014;
-    for(int k = 0; k<3; k++){
-      ADD+=2;
-      writeData(ADD, &data);
-    }
-    LOG_INFO(" Module Reset, Software Clear, Software Event Reset");
-}
-
-void Tdc::enableFIFO() {
-  unsigned int data;
-  readData(ControlRegister, &data);
-  if (digit(data,8)==0) {
-    data+=0x0100;
-  }
-  writeData(ControlRegister, &data);
-  LOG_INFO("FIFO enabled !");
-}
-
 
 void Tdc::setAcquisitionMode(Tdc::CVAcquisitionMode mode) {
   uint16_t opcode = (mode==cvTrigger ? 0x0000 :0x0100);
@@ -291,7 +392,8 @@ void Tdc::enableChannel(uint8_t channel, bool enable){
   
 void Tdc::writeEnablePattern(std::bitset<128> &pattern){
   uint16_t opcode = 0x4400; writeOpcode(opcode);
-  for (int i=0; i<8; ++i) {
+  int nTDC = info_.version_&0x1 ? 4 : 8;
+  for (int i=0; i<nTDC; ++i) {
     opcode = (pattern>>(16*i)).to_ulong(); // shift and truncate
     writeOpcode(opcode);
   }
@@ -301,7 +403,8 @@ std::bitset<128> Tdc::readEnablePattern(){
   uint16_t opcode = 0x4500; writeOpcode(opcode);
   std::bitset<128> pattern = 0;
   std::bitset<128> tmp = 0;
-  for (int i=0; i<8; ++i) {
+  int nTDC = info_.version_&0x1 ? 4 : 8;
+  for (int i=0; i<nTDC; ++i) {
     readOpcode(opcode);
     tmp = opcode; tmp <<=(16*i);
     pattern |= tmp;
@@ -314,21 +417,21 @@ std::bitset<128> Tdc::readEnablePattern(){
 void Tdc::waitRead(void) {
   uint16_t data = 0;
   do {
-    readData(this->MicroHandshake,&data);
+    readData(this->microHandshake_,&data);
   } while(!(data&0x2));
 }
 
 void Tdc::waitWrite(void) {
   uint16_t data = 0;
   do {
-    readData(this->MicroHandshake,&data);
+    readData(this->microHandshake_,&data);
   } while(!(data&0x1));
 }
 
 void Tdc::waitDataReady(void) {
   uint16_t data = 0;
   do {
-    readData(this->StatusRegister,&data);
+    readData(this->statusRegister_,&data);
   } while(!(data&0x1));
 }
 
