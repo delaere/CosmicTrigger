@@ -34,7 +34,6 @@ void TDCEvent::print() const {
   LOG_DATA_INFO(stream.str());
 }
 
-
 unsigned int digit(unsigned int data, int begin, int end) {
     if (begin<end){return -1;}
     else return (((1<<(begin+1))-1)&data)>>end;
@@ -53,36 +52,6 @@ Tdc::Tdc(VmeController* controller,int address):VmeBoard(controller, address, cv
     ControlRegister=baseAddress()+0x10;
 }
 
-void Tdc::waitRead(void) {
-  unsigned int data=0;
-  while(1){
-    readData(this->MicroHandshake,&data);
-    if(data%4==3 || data%4==2){
-      break;
-    }
-  }
-}
-
-void Tdc::waitWrite(void) {
-  unsigned int data=0;
-  while(1){
-    readData(this->MicroHandshake,&data);
-    if(data%2==1) {
-      break;
-    }
-  }
-}
-
-void Tdc::waitDataReady(void) {
-  unsigned int data=0;
-  while(1){
-    readData(this->StatusRegister,&data);
-    if(data%2==1){
-      break;
-    }
-  }
-}
- 
 TDCEvent Tdc::getEvent()
 {
     TDCEvent myEvent;
@@ -143,97 +112,6 @@ void Tdc::Reset(){
     LOG_INFO(" Module Reset, Software Clear, Software Event Reset");
 }
 
-void Tdc::setMode(bool trig){
-    unsigned int data=0;
-    if(trig) data = 0x0000;
-    else data =0x0100;
-    writeOpcode(data);
-    LOG_DEBUG("Trigger Mode : " +to_string(trig));
-}
-
-void Tdc::setMaxEvPerHit(int Max_ev_per_hit){
-    for(int k=0; k<8;k++)
-    if (Max_ev_per_hit== (2^(k))) {
-      if (k == 8) LOG_INFO("No limit on Maximum number of hits per event");
-      unsigned int data=0x3300; // MEPH = maximum events per hits
-      writeOpcode(data);
-      data = k+1;
-      writeOpcode(data);
-    } else if (Max_ev_per_hit==0) {
-      unsigned int data=0x3300;
-      writeOpcode(data);
-      data=0;
-      writeOpcode(data);
-    }
-    else
-      LOG_WARN("Not a valid set  ! value of Max number of hits per event must be 0 or a power of 2 (1 2 4 .. 128) or 256 for NO LIMIT");
-   }
-
-void Tdc::setWindowWidth(unsigned int WidthSetting) {   
-  if (WidthSetting > 4095 ) {
-    LOG_WARN("Width Setting must be a integer in the range from 1 to 4095");
-  } else {
-    unsigned int data=0x1000;
-    writeOpcode(data);
-    data = WidthSetting;
-    writeOpcode(data);
-    LOG_DEBUG("Window Width set to"+to_string(WidthSetting));
-  }
-}
-
-void Tdc::setWindowOffset(int OffsetSetting) {   
-  if (OffsetSetting > 40 || OffsetSetting < -2048) {
-    LOG_WARN("Offset Setting must be a integer in the range from -2048 to +40");
-  } else {
-    unsigned int data = 0x1100;
-    writeOpcode(data);
-    data = OffsetSetting;
-    writeOpcode(data);
-    LOG_DEBUG("Window Width set to" + to_string(OffsetSetting));
-  }
-}
-
-void Tdc::setExSearchMargin(int ExSearchMrgnSetting ) {
-  if (ExSearchMrgnSetting > 50) {
-    LOG_WARN("50*25ns is the maximal value. Extra Search Margin Setting must be a integer in the range from 0 to 50");
-  } else {
-    unsigned int data = 0x1200;
-    writeOpcode(data);
-    data = ExSearchMrgnSetting;
-    writeOpcode(data);
-    LOG_DEBUG("Extra Search Margin Width set to"+to_string(ExSearchMrgnSetting));
-  }
-}
-
-void Tdc::setRejectMargin(int RejectMrgnSetting) {
-  if (RejectMrgnSetting > 4095) {
-    LOG_WARN("Offset Setting must be a integer in the range from -2048 to +40");
-  } else {
-    unsigned int data = 0x1300;
-    writeOpcode(data);
-    data = RejectMrgnSetting;
-    writeOpcode(data);
-    LOG_DEBUG("Reject Margin set to"+to_string(RejectMrgnSetting));
-  }
-}
-
-void Tdc::readWindowConfiguration() {
-  std::stringstream stream;
-  unsigned int data=0x1600;
-  writeOpcode(data);
-  readOpcode(data);
-  stream <<" Match window width : "<<digit(data,11,0);
-  readOpcode(data);
-  stream << " Window ofset : "<<digit(data,11,0)-4096;
-  readOpcode(data);
-  stream << " Extra search window width: "<<digit(data,11,0);  
-  readOpcode(data);
-  stream <<" Reject margin width: "<<digit(data,11,0);
-  readOpcode(data);
-  stream << " Trigger time substraction : "<<digit(data,0) << std::endl;
-  LOG_INFO(stream.str());
-}
-
 void Tdc::enableFIFO() {
   unsigned int data;
   readData(ControlRegister, &data);
@@ -243,29 +121,223 @@ void Tdc::enableFIFO() {
   writeData(ControlRegister, &data);
   LOG_INFO("FIFO enabled !");
 }
-  
-void Tdc::disableTDCHeaderAndTrailer() {
-  unsigned int data = 0x3100;
-  writeOpcode(data);
-  data = 0x3200;
-  writeOpcode(data);
-  readOpcode(data);
-  if (data%2==0) LOG_INFO("TDC Header and Trailer disabled");
+
+
+void Tdc::setAcquisitionMode(Tdc::CVAcquisitionMode mode) {
+  uint16_t opcode = (mode==cvTrigger ? 0x0000 :0x0100);
+  writeOpcode(opcode);
+  LOG_DEBUG("Trigger Mode : " + to_string(mode));
 }
   
-void Tdc::readResolution() {
-  unsigned int data=0x2600;
-  writeOpcode(data);
-  readOpcode(data);
-  LOG_INFO("Resolution : " + to_string(digit(data,1,0)));
+Tdc::CVAcquisitionMode Tdc::getAcquisitionMode(){
+  uint16_t opcode=0x0200;
+  writeOpcode(opcode);
+  readOpcode(opcode);
+  return CVAcquisitionMode(opcode&0x1);
 }
   
-void Tdc::writeOpcode(unsigned int &data) {
+void Tdc::keepToken(bool keep) {
+  uint16_t opcode = (keep ? 0x0300 :0x0400);
+  writeOpcode(opcode);
+  LOG_DEBUG("Keep Token : " + to_string(keep));
+}
+  
+void Tdc::saveUserConfiguration() {
+  uint16_t opcode=0x0600;
+  writeOpcode(opcode);
+  LOG_DEBUG("User configuration saved.");
+}
+  
+void Tdc::LoadConfiguration(Tdc::CVConfiguration conf) {
+  uint16_t opcode = (conf==Tdc::cvDefault ? 0x0500 : 0x0700);
+  writeOpcode(opcode);
+  LOG_DEBUG("Loaded " + std::string(conf==Tdc::cvDefault ? "default" : "user") + " configuration.");
+}
+  
+void Tdc::setStartupConfiguration(Tdc::CVConfiguration conf) {
+  uint16_t opcode = (conf==cvDefault ? 0x0900 : 0x0800);
+  writeOpcode(opcode);
+  LOG_DEBUG("Set auto load " + std::string(conf==cvDefault ? "default" : "user") + " configuration.");
+}
+
+void Tdc::setTriggerWindow(Tdc::WindowConfiguration &conf) {
+  uint16_t opcode = 0x1000; writeOpcode(opcode);
+  writeOpcode(conf.width);
+  opcode = 0x1100; writeOpcode(opcode);
+  writeOpcode(conf.offset);
+  opcode = 0x1200; writeOpcode(opcode);
+  writeOpcode(conf.extraMargin);
+  opcode = 0x1300; writeOpcode(opcode);
+  writeOpcode(conf.rejectMargin);
+  opcode = (conf.triggerTimeSubstraction ? 0x1400 : 0x1500);
+  writeOpcode(opcode);
+  LOG_DEBUG("Trigger Window configured.");
+}
+  
+Tdc::WindowConfiguration Tdc::getTriggerWindow() {
+  uint16_t opcode = 0x1600;  writeOpcode(opcode);
+  Tdc::WindowConfiguration conf;
+  readOpcode(conf.width);
+  readOpcode(conf.offset);
+  readOpcode(conf.extraMargin);
+  readOpcode(conf.rejectMargin);
+  readOpcode(opcode); conf.triggerTimeSubstraction = (opcode & 0x1);
+  return conf;
+}
+
+void Tdc::setEdgeDetectionConfiguration(Tdc::CVEdgeDetection conf){
+  uint16_t opcode = 0x2200;  writeOpcode(opcode);
+  opcode = (uint16_t)conf; writeOpcode(opcode);
+}
+  
+Tdc::CVEdgeDetection Tdc::getEdgeDetectionConfiguration(){
+  uint16_t opcode = 0x2300;  writeOpcode(opcode);
+  readOpcode(opcode);
+  return Tdc::CVEdgeDetection(opcode&0x3);
+}
+  
+void Tdc::setEdgeLSB(Tdc::CVEdgeLSB lsb){
+  uint16_t opcode = 0x2400;  writeOpcode(opcode);
+  opcode = (uint16_t)lsb; writeOpcode(opcode);
+}
+  
+void Tdc::setPairResolution(Tdc::CVPairModeEdgeLSB edge, Tdc::CVPairModeWidthLSB width){
+  uint16_t opcode = 0x2500;  writeOpcode(opcode);
+  opcode = uint16_t(edge) + (uint16_t(width)<<8); writeOpcode(opcode);
+}
+  
+Tdc::CVEdgeLSB Tdc::getResolution(){
+  uint16_t opcode = 0x2600;  writeOpcode(opcode);
+  readOpcode(opcode);
+  // assumes to be in leading/trailing edge mode
+  return Tdc::CVEdgeLSB(opcode&0x3);
+}
+
+std::pair<Tdc::CVPairModeEdgeLSB, Tdc::CVPairModeWidthLSB> Tdc::getPairResolution(){
+  uint16_t opcode = 0x2600;  writeOpcode(opcode);
+  readOpcode(opcode);
+  // assumes to be in pair mode
+  return make_pair(Tdc::CVPairModeEdgeLSB(opcode&0x7),Tdc::CVPairModeWidthLSB((opcode>>8)&0xF));
+}
+  
+void Tdc::setDeadTime(Tdc::CVDeadTime dt){
+  uint16_t opcode = 0x2800;  writeOpcode(opcode);
+  opcode = (uint16_t)dt; writeOpcode(opcode);
+}
+  
+Tdc::CVDeadTime Tdc::getDeadTime(){
+  uint16_t opcode = 0x2900;  writeOpcode(opcode);
+  readOpcode(opcode);
+  return Tdc::CVDeadTime(opcode&0x3);
+}
+
+void Tdc::enableTDCHeader(bool enable){
+  uint16_t opcode = (enable? 0x3000 : 0x3100);
+  writeOpcode(opcode);
+}
+  
+bool Tdc::isTDCHeaderEnabled(){
+  uint16_t opcode = 0x3200;  writeOpcode(opcode);
+  readOpcode(opcode);
+  return (opcode&0x1);
+}
+  
+void Tdc::setMaxHitsPerEvent(int numHits){
+  uint16_t opcode = 0x3300;  writeOpcode(opcode);
+  if(numHits<0) { opcode=9;}
+  else if(numHits==0) { opcode=0; }
+  else {
+    // silently ignore wrong inputs... take the leading bit.
+    numHits = uint8_t(numHits);
+    opcode = 1; while(numHits >>=1) ++opcode;
+  }
+  writeOpcode(opcode);
+}
+  
+int Tdc::getMaxHitsPerEvent(){
+  uint16_t opcode = 0x3400;  writeOpcode(opcode);
+  readOpcode(opcode); opcode &= 0xF;
+  if(opcode==0) return 0;
+  if(opcode==9) return -1;
+  return 1<<(opcode-1);
+}
+  
+void Tdc::configureTDCReadout(bool enableErrorMask, bool enableBypass, uint16_t internalErrorTypes, uint16_t fifoSize){
+  uint16_t opcode = (enableErrorMask? 0x3500 : 0x3600); writeOpcode(opcode);
+  opcode = (enableBypass? 0x3700 : 0x3800); writeOpcode(opcode);
+  opcode = 0x3900; writeOpcode(opcode);
+  opcode = internalErrorTypes; writeOpcode(opcode);
+  opcode = 0x3B00; writeOpcode(opcode);
+  opcode = fifoSize; writeOpcode(opcode);
+}
+  
+uint16_t Tdc::getInternalErrorTypes(){
+  uint16_t opcode = 0x3A00; writeOpcode(opcode);
+  readOpcode(opcode);
+  return opcode;
+}
+  
+uint16_t Tdc::getFifoSize(){
+  uint16_t opcode = 0x3C00; writeOpcode(opcode);
+  readOpcode(opcode);
+  return opcode;
+}
+
+void Tdc::enableChannel(uint8_t channel, bool enable){
+  uint16_t opcode = (enable? 0x4000 : 0x4100)+(channel&0x7F);
+  if(channel&128) opcode = (enable? 0x4200 : 0x4300);
+  writeOpcode(opcode);
+}
+  
+void Tdc::writeEnablePattern(std::bitset<128> &pattern){
+  uint16_t opcode = 0x4400; writeOpcode(opcode);
+  for (int i=0; i<8; ++i) {
+    opcode = (pattern>>(16*i)).to_ulong(); // shift and truncate
+    writeOpcode(opcode);
+  }
+}
+  
+std::bitset<128> Tdc::readEnablePattern(){
+  uint16_t opcode = 0x4500; writeOpcode(opcode);
+  std::bitset<128> pattern = 0;
+  std::bitset<128> tmp = 0;
+  for (int i=0; i<8; ++i) {
+    readOpcode(opcode);
+    tmp = opcode; tmp <<=(16*i);
+    pattern |= tmp;
+  }
+  return pattern;
+}
+
+/////  UTILITIES ///////
+
+void Tdc::waitRead(void) {
+  uint16_t data = 0;
+  do {
+    readData(this->MicroHandshake,&data);
+  } while(!(data&0x2));
+}
+
+void Tdc::waitWrite(void) {
+  uint16_t data = 0;
+  do {
+    readData(this->MicroHandshake,&data);
+  } while(!(data&0x1));
+}
+
+void Tdc::waitDataReady(void) {
+  uint16_t data = 0;
+  do {
+    readData(this->StatusRegister,&data);
+  } while(!(data&0x1));
+}
+
+void Tdc::writeOpcode(uint16_t &data) {
   waitWrite();
   writeData(Opcode,&data);
 }
 
-void Tdc::readOpcode(unsigned int &data)
+void Tdc::readOpcode(uint16_t &data)
 {
   waitRead();
   readData(Opcode,&data);

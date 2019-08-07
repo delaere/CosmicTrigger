@@ -22,6 +22,7 @@
 #include "VmeBoard.h"
 #include <vector>
 #include <sstream>
+#include <bitset>
 #include "time.h"
 
 typedef std::pair<uint32_t,uint32_t> TDCHit;
@@ -55,56 +56,210 @@ class Tdc:public VmeBoard
 {
 public:
 
-  Tdc(VmeController* controller,int address=0x00120000);
+  // acquisition modes
+  typedef enum CVAcquisitionMode {
+    cvContinuous = 0,
+    cvTrigger = 1,
+  } CVAcquisitionMode;
+  
+  // configurations
+  typedef enum CVConfiguration {
+    cvDefault = 0,
+    cvUser = 1,
+  } CVConfiguration;
+  
+  typedef enum CVEdgeDetection {
+    cvPairMode = 0,
+    cvTrailing = 1,
+    cvLeading  = 2,
+    cvBoth     = 3,
+  } CVEdgeDetection;
+  
+  typedef enum CVEdgeLSB {
+    cv800ps = 0,
+    cv200ps = 1,
+    cv100ps = 2,
+  } CVEdgeLSB;
+  
+  typedef enum CVPairModeEdgeLSB {
+    cvpme100ps = 0,
+    cvpme200ps = 1,
+    cvpme400ps = 2,
+    cvpme800ps = 3,
+    cvpme1600ps = 4,
+    cvpme3120ps = 5,
+    cvpme6250ps = 6,
+    cvpme12500ps = 7,
+  } CVPairModeEdgeLSB;
+  
+  typedef enum CVPairModeWidthLSB {
+    cvpmw100ps = 0,
+    cvpmw200ps = 1,
+    cvpmw400ps = 2,
+    cvpmw800ps = 3,
+    cvpmw1600ps = 4,
+    cvpmw3200ps = 5,
+    cvpmw6250ps = 6,
+    cvpmw12500ps = 7,
+    cvpmw25ns = 8,
+    cvpmw50ns = 9,
+    cvpmw100ns = 10,
+    cvpmw200ns = 11,
+    cvpmw400ns = 12,
+    cvpmw800ns = 13,
+  } CVPairModeWidthLSB;
+  
+  typedef enum CVDeadTime {
+    cvdt5ns = 0,
+    cvdt10ns = 1,
+    cvdt30ns = 2,
+    cvdt100ns = 3,
+  } CVDeadTime;
+  
+  // trigger window configuration
+  struct WindowConfiguration {
+    uint16_t width; // ns
+    uint16_t offset; // ns (signed coded on 12 bits; use helper below)
+    uint16_t extraMargin;
+    uint16_t rejectMargin;
+    bool triggerTimeSubstraction;
+    
+    static uint16_t computeOffset(int16_t signedOffset) {
+      assert(signedOffset>=-2048 && signedOffset<=40);
+      return signedOffset<0 ? 0xF000+abs(signedOffset) : abs(signedOffset);
+    }
+  };
+  
+  Tdc(VmeController* controller,int address=0x00120000); //TODO
 
   // Gets data from TDC
-  TDCEvent getEvent();
+  TDCEvent getEvent(); //TODO
 
   // Get the TDC status
-  unsigned int getStatus();
+  unsigned int getStatus(); //TODO
 
   // Reset the board
-  void Reset();
-
-  // Set the acquisition mode : Trigger (1), Continuous (0).
-  void setMode(bool Trig = 1);
-
-  // Set the maximum number of hits the TDC should memorise in a window
-  // Possible values are : -0,1,2,4,8,16,32,64,128, -256 for no limit
-  // the TDC sends an errorcode if the number is exceeded, but 'getEvent()' doesn't take account of it.
-  void setMaxEvPerHit(int Max_ev_per_hit =256 );
-
-  // Set the window width in multiples of clockcycle.
-  void setWindowWidth(unsigned int WidthSetting);
-
-  // Set the difference between the beginning of the window and the external trigger in multiples of clockcycle.
-  void setWindowOffset(int OffsetSetting);
-
-  // Set the extra search margin in units of clock cycle.
-  void setExSearchMargin(int ExSearchMrgnSetting );
-
-  // Set the reject margin in units of clock cycle.
-  void setRejectMargin(int RejectMrgnSetting);
-
-  // Get the current match window settings 
-  void readWindowConfiguration();
-
-  // Print the resolution
-  // 0 -> 800ps, 1 -> 200ps, 2 -> 100ps
-  // works only in leading/trailing edge detection mode
-  void readResolution();
-
+  void Reset(); //TODO
+  
   // Enables FIFO  
-  void enableFIFO();
+  void enableFIFO(); //TODO
 
-  //  Disable extra information send from the TDC. 
-  void disableTDCHeaderAndTrailer();
-
+  /////////////////////////
+  //// Generic opcode methods
+  /////////////////////////
+  
   // Write  a command line of 16 bit in the Micro Controller register.
-  void writeOpcode(unsigned int &data);
+  void writeOpcode(uint16_t &data);
 
   // Read a 16 bit word in the Micro Controller register.
-  void readOpcode(unsigned int &data);
+  void readOpcode(uint16_t &data);
+
+  /////////////////////////
+  //// Acquisition mode
+  /////////////////////////
+  
+  // Set the acquisition mode : Trigger (1), Continuous (0).
+  void setAcquisitionMode(Tdc::CVAcquisitionMode mode = cvTrigger);
+  
+  // Get the acquisition mode
+  Tdc::CVAcquisitionMode getAcquisitionMode();
+  
+  // Keep the token or not (TDC chip buffer access)
+  void keepToken(bool keep=true);
+  
+  // save configuration
+  void saveUserConfiguration();
+  
+  // load configuration
+  void LoadConfiguration(Tdc::CVConfiguration conf);
+  
+  // set startup configuration
+  void setStartupConfiguration(Tdc::CVConfiguration conf);
+
+  /////////////////////////
+  // Trigger
+  /////////////////////////
+  
+  // set the trigger window configuration
+  void setTriggerWindow(Tdc::WindowConfiguration &conf);
+  
+  // read the trigger window configuration
+  Tdc::WindowConfiguration getTriggerWindow();
+  
+  /////////////////////////
+  // TDC edge detection and resolution
+  /////////////////////////
+  
+  // Set edge detection configuration
+  void setEdgeDetectionConfiguration(Tdc::CVEdgeDetection conf);
+  
+  // Read edge detection configuration
+  Tdc::CVEdgeDetection getEdgeDetectionConfiguration();
+  
+  // Set LSB of leading/trailing edge
+  void setEdgeLSB(Tdc::CVEdgeLSB lsb);
+  
+  // Set leading time and width resolution when pair
+  void setPairResolution(Tdc::CVPairModeEdgeLSB edge, Tdc::CVPairModeWidthLSB width);
+  
+  // Read resolution 
+  Tdc::CVEdgeLSB getResolution();
+  std::pair<Tdc::CVPairModeEdgeLSB, Tdc::CVPairModeWidthLSB> getPairResolution();
+  
+  // set dead time
+  void setDeadTime(Tdc::CVDeadTime dt);
+  
+  // get dead time
+  Tdc::CVDeadTime getDeadTime();
+  
+  /////////////////////////
+  // TDC Readout 
+  /////////////////////////
+  
+  // enable/disable the TDC header and trailer
+  void enableTDCHeader(bool enable);
+  
+  // check if TDC header and trailer are enabled
+  bool isTDCHeaderEnabled();
+  
+  // set the maximum number of hits per event
+  // can be 0, a power of 2 (up to 128) or -1 (infinity)
+  void setMaxHitsPerEvent(int numHits);
+  
+  // get the maximum number of hits per event (-1 = no limits)
+  int getMaxHitsPerEvent();
+  
+  // configure TDC readout. Refer tp the manual for the meaning of internalErrorTypes and fifoSize
+  void configureTDCReadout(bool enableErrorMask, bool enableBypass, uint16_t internalErrorTypes, uint16_t fifoSize);
+  
+  // Read enabled TDC internal error internalErrorTypes
+  uint16_t getInternalErrorTypes();
+  
+  // Read effective size of readout FIFO
+  uint16_t getFifoSize();
+  
+  /////////////////////////
+  // Channel enable/disable
+  /////////////////////////
+
+  // Enable/Disable channel. 128 or higher means "all"
+  void enableChannel(uint8_t channel, bool enable);
+  
+  // Write Enable pattern
+  void writeEnablePattern(std::bitset<128> &pattern);
+  
+  // Read Enable pattern
+  std::bitset<128> readEnablePattern();
+  
+  /////////////////////////
+  // Other Opcodes
+  /////////////////////////
+
+  // Adjust opcode, Misc opcodes and Advanced opcode are not implemented.
+  // The user should refer to the manual and use directly the writeOpcode and readOpcode methods.
+
+  /////////////////////////
+
 
 private:
 
