@@ -20,7 +20,7 @@ Status of the supported boards:
 | N470      | CAEN NIM HV module | Full   | Part (previous release)| yes   | yes    |
 | V288      | CAENET bridge      | Full            | yes           | yes   | yes    |
 | V812      | COINC / DISCRI     | Full            | yes           | yes   | yes    |
-| V1190     | TDC                | Part   | Part (previous release)| yes   | no     |
+| V1190     | TDC                | Full            | No            | yes   | yes    |
 | 1151N     | Lecroy Scaler      | Full            | yes           | yes   | yes    |
 | TTCvi     | TTC controler      | Part   | Part (previous release)| yes   | no     |
 
