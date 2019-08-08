@@ -195,7 +195,7 @@ public:
     }
   };
   
-  Tdc(VmeController* controller,int address=0x00120000);
+  Tdc(VmeController* controller,uint32_t address=0x00120000);
 
   /////////////////////////
   //// Configuration, status, info, ...

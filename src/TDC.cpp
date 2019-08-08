@@ -31,7 +31,7 @@ unsigned int digit(unsigned int data, int position) {
     return (data>>position)&1;
 }
 
-Tdc::Tdc(VmeController* controller,int address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true) {
+Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true) {
   opcode_=baseAddress()+0x102E;
   statusRegister_=baseAddress()+0x1002;
   microHandshake_=baseAddress()+0x1030;
