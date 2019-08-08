@@ -59,6 +59,7 @@ set(VEHEMENCE_SOURCES
      "src/N470HVmodule.cpp"
      "src/SY527PowerSystem.cpp"
      "src/PythonModule.cpp"
+     "src/V1190Event.cpp"
      "src/TDC.cpp"
      "src/VmeBoard.cpp"
      "src/VmeUsbBridge.cpp"
