@@ -54,6 +54,8 @@ public:
   inline void addHit(TDCHit hit) { hits_.push_back(hit); }
   
   std::string toString() const;
+  
+  friend bool operator==(const TDCEvent& lhs, const TDCEvent& rhs);
     
 private:
   uint32_t tdcid_:2,eventid_:12, bunchid_:12; // TDC header word
@@ -88,6 +90,8 @@ public:
   inline void addTDCEvent(TDCEvent &tdc) { tdcevents_.push_back(tdc); }
   
   std::string toString() const;
+  
+  friend bool operator==(const V1190Event& lhs, const V1190Event& rhs);
   
 private:
   uint32_t eventCount_:22, geo_:5, status_:3; // header & trailer

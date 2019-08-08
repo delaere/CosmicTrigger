@@ -20,6 +20,16 @@ ostream & operator << (ostream &out, const V1190Event &c)
     return out;
 }
 
+bool operator==(const TDCEvent& lhs, const TDCEvent& rhs)
+{
+  return (lhs.tdcid_ == rhs.tdcid_) && (lhs.eventid_==rhs.eventid_) && (lhs.bunchid_ == rhs.bunchid_) && (lhs.errorflags_ == rhs.errorflags_) && (lhs.hits_ == rhs.hits_);
+}
+
+bool operator==(const V1190Event& lhs, const V1190Event& rhs)
+{
+  return (lhs.eventCount_ == rhs.eventCount_) && (lhs.geo_==rhs.geo_) && (lhs.status_ == rhs.status_) && (lhs.extTriggerTime_ == rhs.extTriggerTime_) && (lhs.hits_ == rhs.hits_) && (lhs.tdcevents_ == rhs.tdcevents_);
+}
+
 std::string TDCHit::toString() const {
   std::stringstream  output;
   if(getType()) {
