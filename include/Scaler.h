@@ -25,7 +25,7 @@
 class Scaler:public VmeBoard{
 public:
   
-  struct moduleInfo {
+  struct ModuleInfo {
     uint16_t moduleId_;
     uint16_t serial_number_;
     uint16_t moduleType_;
@@ -37,7 +37,7 @@ public:
   uint32_t getCount(uint8_t channel, bool reset = false);
 
   // Gets module's info.
-  inline const moduleInfo getInfo() const { return info_; }
+  inline const ModuleInfo getInfo() const { return info_; }
 
   // Sets the preset for a channel in [0,15].
   // If this value is not 0, the module will be in countdown mode from this value.
@@ -47,7 +47,7 @@ public:
   void reset();
 
 private:
-  moduleInfo info_;
+  ModuleInfo info_;
 
 };
  

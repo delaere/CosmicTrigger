@@ -27,7 +27,7 @@
 class Discri:public VmeBoard{
 public:
   
-  struct moduleInfo {
+  struct ModuleInfo {
     uint16_t moduleId_;
     uint16_t serial_number_;
     uint16_t moduleType_;
@@ -65,7 +65,7 @@ public:
   void testPulse();
   
   // Gets module's info.
-  inline const moduleInfo getInfo() const { return info_; }
+  inline const ModuleInfo getInfo() const { return info_; }
   
 private:  
   void setChannel(uint8_t channel, bool newState);
@@ -80,7 +80,7 @@ private:
   static float getWCount(float width) { return interpolate(widths_,wcounts_,width,false); }
   static float getDTCount(float dt) { return interpolate(deadtimes_,dtcounts_,dt,false); }
   
-  moduleInfo info_;
+  ModuleInfo info_;
 
 };
 
