@@ -20,36 +20,11 @@
 #define __TDC
 
 #include "VmeBoard.h"
+#include "V1190Event.h"
 #include <vector>
 #include <sstream>
 #include <bitset>
 #include "time.h"
-
-typedef std::pair<uint32_t,uint32_t> TDCHit;
-
-class TDCEvent
-{
-public:
-  TDCEvent() {}
-  ~TDCEvent() {}
-  
-  void setTime(time_t t) { time_ = t; }
-  time_t getTime() const { return time_; }
-  void setEventNumber(uint32_t n) { eventNumber_ = n; }
-  uint32_t eventNumber() const { return eventNumber_; }
-  
-  void addMeasurement(TDCHit hit) { measurements_.push_back(hit); }
-  void setMeasurements(const std::vector<TDCHit>& hits) { measurements_.clear(); std::copy(hits.begin(),hits.end(),measurements_.begin()); }
-  auto getMeasurements() const { return measurements_; }
-  uint32_t getNmeasurements() const { return measurements_.size(); }
-  
-  void print() const;
-  
-private:
-  uint32_t eventNumber_;
-  time_t time_;
-  std::vector<TDCHit> measurements_;
-};
 
 // Simple class to represent the control register.
 class V1190ControlRegister
@@ -75,7 +50,7 @@ public:
   ~V1190ControlRegister() {}
   
   // return the status word
-  inline uint16_t register() const { return register_; }
+  inline uint16_t registr() const { return register_; }
   
   // extract a given bit
   inline bool bit(V1190ControlRegister::CVRegisterWordBit n) const { return ((register_>>n)&1); }
@@ -116,7 +91,7 @@ public:
   ~V1190StatusRegister() {}
   
   // return the status word
-  inline uint16_t register() const { return register_; }
+  inline uint16_t registr() const { return register_; }
   
   // extract a given bit
   inline bool bit(V1190StatusRegister::CVRegisterWordBit n) const { return ((register_>>n)&1); }
@@ -131,7 +106,7 @@ class Tdc:public VmeBoard
 public:
 
   // module info
-  struct moduleInfo {
+  struct ModuleInfo {
     uint64_t manufacturer_;
     uint64_t moduletype_;
     uint8_t version_;
@@ -227,7 +202,7 @@ public:
   /////////////////////////
   
   // Get module info
-  inline moduleInfo getModuleInfo() const { return info_; }
+  inline ModuleInfo getModuleInfo() const { return info_; }
   
   // Reads the control register
   V1190ControlRegister getControlRegister();
@@ -254,7 +229,7 @@ public:
   void setInterrupt(uint8_t level=0X0, uint16_t vector = 0xDD);
 
   // Reset the board
-  void Reset(bool moduleReset=true, bool softClear=true, softEvtReset=true);
+  void Reset(bool moduleReset=true, bool softClear=true, bool softEvtReset=true);
   
   // Generates a software trigger
   void trigger(); 
@@ -285,10 +260,13 @@ public:
   /////////////////////////
   
   // Gets data from TDC in trigger mode
-  TDCEvent getEvent(); //TODO
+  V1190Event getEvent(bool useFIFO=true);
+
+  // Gets data from TDC in trigger mode
+  std::vector<V1190Event> getEvents(bool useFIFO=true);
   
   // Gets data from TDC in countinuous mode
-  TDCHit getHit(); //TODO 
+  TDCHit getHit();
 
   /////////////////////////
   //// Generic opcode methods
@@ -415,7 +393,7 @@ private:
   int controlRegister_;
   
   // Module info
-  moduleInfo info_;
+  ModuleInfo info_;
 
   //PRIVATE FUNCTIONS
   void waitWrite();

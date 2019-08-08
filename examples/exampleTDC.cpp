@@ -22,15 +22,17 @@ int main(){
   myTtc.viewMode();
   
   LOG_INFO("----------------------------------------------------");
-  myTdc.setWindowWidth(50);
-  myTdc.setWindowOffset(-25);
-  myTdc.setExSearchMargin(1);
-  myTdc.setRejectMargin(1);
-  myTdc.enableFIFO();
-  myTdc.disableTDCHeaderAndTrailer();
-  myTdc.readResolution();
+  Tdc::WindowConfiguration conf;
+  conf.width = 50;
+  conf.offset = -25;
+  conf.extraMargin = 1;
+  conf.rejectMargin = 1;
+  conf.triggerTimeSubstraction = false;
+  myTdc.setTriggerWindow(conf);
+  myTdc.enableFIFO(true);
+  myTdc.enableTDCHeader(false);
   
   for(int i=0;i<5000;i++) {
-    myTdc.getEvent().print();
+    LOG_DATA_INFO(myTdc.getEvent().toString());
   }
 }

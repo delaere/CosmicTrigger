@@ -51,7 +51,7 @@ public:
   inline void setBunchId(uint16_t id) { bunchid_ = id&0xFFF; }
   inline void setErrorFlags(uint16_t flags) { errorflags_ = flags; }
   
-  inline void addHit(TDCHit &hit) { hits_.push_back(hit); }
+  inline void addHit(TDCHit hit) { hits_.push_back(hit); }
   
   std::string toString() const;
     
@@ -82,9 +82,9 @@ public:
   inline void setEventCount(uint32_t count) { eventCount_ = count&0x7FFFFF; }
   inline void setGeo(uint8_t geo) { geo_ = geo&0x1F; }
   inline void setStatus(uint8_t status) { status_ = status&0x7; }
-  inline void setExtdTriggerTime(uint32_t time) { extTriggerTime_ = time; }
+  inline void setExtdTriggerTime(uint32_t time) { extTriggerTime_ = time&0x7FFFFFF; }
   
-  inline void addHit(TDCHit &hit) { hits_.push_back(hit); }
+  inline void addHit(TDCHit hit) { hits_.push_back(hit); }
   inline void addTDCEvent(TDCEvent &tdc) { tdcevents_.push_back(tdc); }
   
   std::string toString() const;
