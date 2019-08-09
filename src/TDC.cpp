@@ -147,7 +147,7 @@ void Tdc::setInterrupt(uint8_t level, uint16_t vector) {
   writeData(baseAddress()+0x100C, &data);
 }
 
-void Tdc::Reset(bool moduleReset, bool softClear, bool softEvtReset) {
+void Tdc::reset(bool moduleReset, bool softClear, bool softEvtReset) {
   uint16_t data = 0;
   if(moduleReset) { writeData(baseAddress() +0x1014, &data); LOG_INFO("Module Reset"); }
   if(softClear) { writeData(baseAddress() +0x1016, &data); LOG_INFO("Software Clear"); }

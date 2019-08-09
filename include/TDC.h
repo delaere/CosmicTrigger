@@ -229,7 +229,7 @@ public:
   void setInterrupt(uint8_t level=0X0, uint16_t vector = 0xDD);
 
   // Reset the board
-  void Reset(bool moduleReset=true, bool softClear=true, bool softEvtReset=true);
+  void reset(bool moduleReset=true, bool softClear=true, bool softEvtReset=true);
   
   // Generates a software trigger
   void trigger(); 
