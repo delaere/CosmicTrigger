@@ -412,6 +412,8 @@ BOOST_PYTHON_MODULE(VeheMencE)
         .def_readwrite("extraMargin", &Tdc::WindowConfiguration::extraMargin)
         .def_readwrite("rejectMargin", &Tdc::WindowConfiguration::rejectMargin)
         .def_readwrite("triggerTimeSubstraction", &Tdc::WindowConfiguration::triggerTimeSubstraction)
+        .def("computeOffset",&Tdc::WindowConfiguration::computeOffset)
+        .staticmethod("computeOffset") 
       ;
       enum_<Tdc::CVAcquisitionMode>("CVAcquisitionMode")
           .value("cvContinuous", Tdc::CVAcquisitionMode::cvContinuous)
