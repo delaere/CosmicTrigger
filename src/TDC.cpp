@@ -41,34 +41,34 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
   // check configuration ROM and firmware version
   uint16_t data;
   readData(baseAddress()+0x403C, &data);
-  info_.moduletype_ = data;
+  info_.moduletype_ = data&0xFF;
   readData(baseAddress()+0x4038, &data);
-  info_.moduletype_ += (uint64_t(data)<<16);
+  info_.moduletype_ += (data&0xFF)<<8;
   readData(baseAddress()+0x4034, &data);
-  info_.moduletype_ += (uint64_t(data)<<32);
+  info_.moduletype_ += (data&0xFF)<<16;
   assert(info_.moduletype_==0x04A6);
   readData(baseAddress()+0x4030, &data);
   info_.version_ = data&0x1;
   readData(baseAddress()+0x402C, &data);
-  info_.manufacturer_ = data;
+  info_.manufacturer_ = data&0xFF;
   readData(baseAddress()+0x4028, &data);
-  info_.manufacturer_ += (uint64_t(data)<<16);
+  info_.manufacturer_ += (data&0xFF)<<8;
   readData(baseAddress()+0x4024, &data);
-  info_.manufacturer_ += (uint64_t(data)<<32);
+  info_.manufacturer_ += (data&0xFF)<<16;
   assert(info_.manufacturer_==0x40E6);
   // revision, serial number
   readData(baseAddress()+0x4084, &data);
-  info_.serial_number_ = data;
+  info_.serial_number_ = data&0xFF;
   readData(baseAddress()+0x4080, &data);
-  info_.serial_number_ += (data<<16);
+  info_.serial_number_ += (data&0xFF)<<8;
   readData(baseAddress()+0x404C, &data);
-  info_.revision_major_ = data;
+  info_.revision_major_ = data&0xFF;
   readData(baseAddress()+0x4048, &data);
-  info_.revision_major_ += (data<<16);
+  info_.revision_major_ += (data&0xFF)<<8;
   readData(baseAddress()+0x4044, &data);
-  info_.revision_minor_ = data;
+  info_.revision_minor_ = data&0xFF;
   readData(baseAddress()+0x4040, &data);
-  info_.revision_minor_ += (data<<16);
+  info_.revision_minor_ += (data&0xFF)<<8;
   // firmware version
   readData(baseAddress()+0x1026, &data);
   info_.firmwareVersion_ = data&0xFF;

@@ -107,12 +107,12 @@ public:
 
   // module info
   struct ModuleInfo {
-    uint64_t manufacturer_;
-    uint64_t moduletype_;
+    uint32_t manufacturer_;
+    uint32_t moduletype_;
     uint8_t version_;
-    uint32_t serial_number_;
-    uint32_t revision_minor_;
-    uint32_t revision_major_;
+    uint16_t serial_number_;
+    uint16_t revision_minor_;
+    uint16_t revision_major_;
     uint8_t firmwareVersion_;
   };
   
