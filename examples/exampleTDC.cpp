@@ -13,6 +13,7 @@ int main(int argc, char* argv[]){
   try {
     VmeUsbBridge myCont;
     Tdc myTdc(&myCont,0xAA0000);
+    // some configuration...
     Tdc::WindowConfiguration conf;
     conf.width = 50;
     conf.offset = conf.computeOffset(-25);
@@ -20,39 +21,45 @@ int main(int argc, char* argv[]){
     conf.rejectMargin = 1;
     conf.triggerTimeSubstraction = false;
     myTdc.setTriggerWindow(conf);
+    // enable FIFO and TDC header
     myTdc.enableFIFO(true);
     myTdc.enableTDCHeader(true);
-    // configure some fake addData
-    uint16_t opcode = opcode = 0xC500;
-    myTdc.writeOpcode(opcode);
-    opcode = 123; myTdc.writeOpcode(opcode);
-    opcode = 0; myTdc.writeOpcode(opcode);
-    // generate trigger and read data
+    sleep(1);
+    // generate trigger and read data one event at a time
     for(int i=0;i<10;i++) {
       myTdc.trigger();
       LOG_DATA_INFO(myTdc.getEvent(true).toString());
     }
-    // now with block transfer
+    // now with block transfer and FIFO
+    // generate 10 triggers
     for(int i=0;i<10;i++) {
       myTdc.trigger();
     }  
+    // read all events and print
     auto events = myTdc.getEvents(true);
     LOG_DATA_INFO("got " + to_string(events.size()) + " events");
     for(auto e : events) {
       LOG_DATA_INFO(e.toString());
     }
-    // same without FIFO and without TDC headers
-    myTdc.enableTDCHeader(false);
+    // now with block transfer and without FIFO
     myTdc.enableFIFO(false);
+    // we also disable the TDC header but allow empty events
+    // so that we are sure to get something after the software triggers.
+    myTdc.enableTDCHeader(true);
+    V1190ControlRegister reg = myTdc.getControlRegister();
+    reg.setBit(V1190ControlRegister::cvEMPTYEVT,true);
+    myTdc.setControlRegister(reg);
+    // generate 10 triggers
     for(int i=0;i<10;i++) {
       myTdc.trigger();
     }  
+    // read all events and print
     events = myTdc.getEvents(false);
     LOG_DATA_INFO("got " + to_string(events.size()) + " events");
     for(auto e : events) {
       LOG_DATA_INFO(e.toString());
     }
-    
+    // DONE
   } catch (const CAENVMEexception& e) {
     std::cerr << e.what() << '\n';
     const boost::stacktrace::stacktrace* st = boost::get_error_info<traced>(e);
