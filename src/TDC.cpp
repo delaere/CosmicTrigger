@@ -74,7 +74,7 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
   info_.firmwareVersion_ = data&0xFF;
   
   LOG_DEBUG("CAEN V1190"+ (info_.version_&0x1 ? string("B") : string("A")) + " initialized. " + 
-            int_to_hex(info_.manufacturer_) + " " + int_to_hex(info_.moduletype_) + " " + int_to_hex(info_.serial_number_) + 
+            "Serial number: " + int_to_hex(info_.serial_number_) + 
             " rev. " + to_string(info_.revision_major_) + "." + to_string(info_.revision_minor_) + 
             " fw. "  + to_string(info_.firmwareVersion_>>4) + "." + to_string(info_.firmwareVersion_&0xF));
 }
