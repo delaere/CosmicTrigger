@@ -295,7 +295,7 @@ public:
   void saveUserConfiguration();
   
   // load configuration
-  void LoadConfiguration(Tdc::CVConfiguration conf);
+  void loadConfiguration(Tdc::CVConfiguration conf);
   
   // set startup configuration
   void setStartupConfiguration(Tdc::CVConfiguration conf);

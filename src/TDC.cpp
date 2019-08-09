@@ -365,7 +365,7 @@ void Tdc::saveUserConfiguration() {
   LOG_DEBUG("User configuration saved.");
 }
   
-void Tdc::LoadConfiguration(Tdc::CVConfiguration conf) {
+void Tdc::loadConfiguration(Tdc::CVConfiguration conf) {
   uint16_t opcode = (conf==Tdc::cvDefault ? 0x0500 : 0x0700);
   writeOpcode(opcode);
   LOG_DEBUG("Loaded " + std::string(conf==Tdc::cvDefault ? "default" : "user") + " configuration.");
