@@ -213,7 +213,7 @@ V1190Event Tdc::getEvent(bool useFIFO) {
     std::tie(eventId, nwords) = readFIFO();
   }
   // in D32 readout, read until we get to the trailer and fill progressively the event record
-  for(uint16_t i=0; !useFIFO || (i<nwords);++i) { 
+  for(uint16_t i=0; !(useFIFO&&i) || (i<nwords);++i) { 
     controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress(),&data);
     switch(data>>27) {
       case 0x8: // global header
