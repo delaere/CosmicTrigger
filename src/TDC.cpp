@@ -37,7 +37,7 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
   microHandshake_=baseAddress()+0x1030;
   outputBuffer_=baseAddress()+0x0000;
   eventFIFO_=baseAddress()+0x1038;
-  controlRegister_=baseAddress()+0x10;
+  controlRegister_=baseAddress()+0x1000;
   // check configuration ROM and firmware version
   uint16_t data;
   readData(baseAddress()+0x403C, &data);
