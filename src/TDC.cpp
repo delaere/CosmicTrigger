@@ -266,6 +266,7 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
   // if FIFO is enabled: compute exact nwords
   if(useFIFO) {
     // Calculate Nw: number of words which compose the events
+    nwords=0;
     uint16_t fifoCount = getFIFOCount();
     for(int i=0; i< fifoCount; ++i) {
       nwords += readFIFO().second;
@@ -282,8 +283,8 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
       done = true;
     }
     // copy to the input vector
-    for(uint32_t i=0;i<count;++i) {
-      input.push_back(buffer[i]);
+    for(uint32_t i=0;i<count;i+=4) {
+      input.push_back(*(uint32_t*)(buffer+i));
     }
     // clear buffer
     delete[] buffer;
