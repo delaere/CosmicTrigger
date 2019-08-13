@@ -28,6 +28,7 @@
 #include "Scaler.h"
 #include "Discri.h"
 #include "TDC.h"
+#include "TTCvi.h"
 #define __PYTHONMODULECONFIGURATION
 
 using namespace boost::python;
@@ -468,10 +469,64 @@ BOOST_PYTHON_MODULE(VeheMencE)
       ;
       class_<std::pair<uint16_t,uint16_t> >("FIFO")
           .def_readwrite("first", &std::pair<uint16_t,uint16_t>::first)
-          .def_readwrite("second", &std::pair<uint16_t,uint16_t>::second);
+          .def_readwrite("second", &std::pair<uint16_t,uint16_t>::second)
+      ;
     }
+    // expose the TTCvi classes
+    {
+      void (TtcVi::*channelBAsyncShortCommand)(uint8_t) = &TtcVi::channelBAsyncCommand;
+      void (TtcVi::*channelBAsyncLongCommand)(uint8_t, uint8_t, uint8_t, bool) = &TtcVi::channelBAsyncCommand;
 
-
-
-    
+      scope in_TTC = class_<TtcVi>("TtcVi",init<VmeController*,uint32_t>())
+          .def("reset",&TtcVi::reset)
+          .def("trigger",&TtcVi::trigger)
+          .def("resetCounter",&TtcVi::resetCounter)
+          .def("getEventNumber",&TtcVi::getEventNumber)
+          .def("setEventCounter",&TtcVi::setEventCounter)
+          .def("setCounterMode",&TtcVi::setCounterMode)
+          .def("getTriggerChannel",&TtcVi::getTriggerChannel)
+          .def("setTriggerChannel",&TtcVi::setTriggerChannel)
+          .def("getRandomTriggerRate",&TtcVi::getRandomTriggerRate)
+          .def("setRandomTriggerRate",&TtcVi::setRandomTriggerRate)
+          .def("getFIFOStatus",&TtcVi::getFIFOStatus)
+          .def("resetL1FIFO",&TtcVi::resetL1FIFO)
+          .def("getBC0Delay",&TtcVi::getBC0Delay)
+          .def("channelBAsyncShortCommand",channelBAsyncShortCommand)
+          .def("channelBAsyncLongCommand",channelBAsyncLongCommand)
+          .def("getInhibit",&TtcVi::getInhibit)
+          .def("setInhibit",&TtcVi::setInhibit)
+          .def("setBGo",&TtcVi::setBGo)
+          .def("triggerBGo",&TtcVi::triggerBGo)
+          // get the B-Go mode not exposed (requires bitset)
+      ;
+      enum_<TtcVi::CVTriggerChannel>("CVTriggerChannel")
+          .value("cvL1A0", TtcVi::CVTriggerChannel::cvL1A0)
+          .value("cvL1A1", TtcVi::CVTriggerChannel::cvL1A1)
+          .value("cvL1A2", TtcVi::CVTriggerChannel::cvL1A2)
+          .value("cvL1A3", TtcVi::CVTriggerChannel::cvL1A3)
+          .value("cvVME", TtcVi::CVTriggerChannel::cvVME)
+          .value("cvRandom", TtcVi::CVTriggerChannel::cvRandom)
+          .value("cvCalib", TtcVi::CVTriggerChannel::cvCalib)
+          .value("cvDisable", TtcVi::CVTriggerChannel::cvDisable)
+      ;
+      enum_<TtcVi::CVTriggerRate>("CVTriggerRate")
+          .value("cv1Hz", TtcVi::CVTriggerRate::cv1Hz)
+          .value("cv100Hz", TtcVi::CVTriggerRate::cv100Hz)
+          .value("cv1kHz", TtcVi::CVTriggerRate::cv1kHz)
+          .value("cv5kHz", TtcVi::CVTriggerRate::cv5kHz)
+          .value("cv10kHz", TtcVi::CVTriggerRate::cv10kHz)
+          .value("cv25kHz", TtcVi::CVTriggerRate::cv25kHz)
+          .value("cv50kHz", TtcVi::CVTriggerRate::cv50kHz)
+          .value("cv100kHz", TtcVi::CVTriggerRate::cv100kHz)
+      ;
+      class_<TtcVi::ModuleInfo>("ModuleInfo")
+        .def_readwrite("manufacturer", &TtcVi::ModuleInfo::manufacturer_)
+        .def_readwrite("serial_number", &TtcVi::ModuleInfo::serial_number_)
+        .def_readwrite("revision_", &TtcVi::ModuleInfo::revision_)
+      ;
+      class_<std::pair<uint8_t,uint8_t> >("Inhibit")
+          .def_readwrite("delay", &std::pair<uint8_t,uint8_t>::first)
+          .def_readwrite("duration", &std::pair<uint8_t,uint8_t>::second)
+      ;
+    }
 }
