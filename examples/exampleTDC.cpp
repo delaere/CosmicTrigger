@@ -3,6 +3,8 @@
 #include "Discri.h"
 #include "TDC.h"
 
+using namespace std;
+
 int main(int argc, char* argv[]){
   if (argc > 1) {
     Logger::initFromConfig(argv[1]);
