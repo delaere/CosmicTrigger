@@ -24,28 +24,28 @@ TtcVi::TtcVi(VmeController* controller,int address):VmeBoard(controller, address
   uint16_t data;
   
   readData(baseAddress()+0x2E,&data);
-  info_.manufacturer_ = data&0xF;
+  info_.manufacturer_ = data&0xFF;
   readData(baseAddress()+0x2A,&data);
-  info_.manufacturer_ |= (data&0xF)<<8;
+  info_.manufacturer_ |= (data&0xFF)<<8;
   readData(baseAddress()+0x26,&data);
-  info_.manufacturer_ |= (data&0xF)<<16;
-  // assert(info_.manufacturer_==xxxxxxx); //TODO
+  info_.manufacturer_ |= (data&0xFF)<<16;
+  assert(info_.manufacturer_==0x80030);
   readData(baseAddress()+0x3E,&data);
-  info_.serial_number_ = data&0xF;
+  info_.serial_number_ = data&0xFF;
   readData(baseAddress()+0x3A,&data);
-  info_.serial_number_ |= (data&0xF)<<8;
+  info_.serial_number_ |= (data&0xFF)<<8;
   readData(baseAddress()+0x36,&data);
-  info_.serial_number_ |= (data&0xF)<<16;
+  info_.serial_number_ |= (data&0xFF)<<16;
   readData(baseAddress()+0x32,&data);
-  info_.serial_number_ |= (data&0xF)<<24;
+  info_.serial_number_ |= (data&0xFF)<<24;
   readData(baseAddress()+0x4E,&data);
-  info_.revision_ = data&0xF;
+  info_.revision_ = data&0xFF;
   readData(baseAddress()+0x4A,&data);
-  info_.revision_ |= (data&0xF)<<8;
+  info_.revision_ |= (data&0xFF)<<8;
   readData(baseAddress()+0x46,&data);
-  info_.revision_ |= (data&0xF)<<16;
+  info_.revision_ |= (data&0xFF)<<16;
   readData(baseAddress()+0x42,&data);
-  info_.revision_ |= (data&0xF)<<24;
+  info_.revision_ |= (data&0xFF)<<24;
   
   LOG_INFO("TTCvi initialized. Serial number: " + int_to_hex(info_.serial_number_) + 
             " rev. " + to_string(info_.revision_) );
@@ -72,14 +72,14 @@ uint32_t TtcVi::getEventNumber(){
   readData(baseAddress()+0x8A,&data);
   event = data;
   readData(baseAddress()+0x88,&data);
-  event |= ((data&0xF)<<16);
+  event |= ((data&0xFF)<<16);
   return event;
 }
 
 void TtcVi::setEventCounter(uint32_t count){
-  uint16_t data = count&0xFF;
+  uint16_t data = count&0xFFFF;
   writeData(baseAddress()+0x8A,&data);
-  data = (count>>16)&0xF;
+  data = (count>>16)&0xFF;
   writeData(baseAddress()+0x88,&data);
 }
 
@@ -146,9 +146,9 @@ std::pair<uint8_t, uint8_t> TtcVi::getInhibit(unsigned int n){
   assert(n<4);
   uint32_t address = baseAddress()+0x92+n*0x8;
   readData(address,&data);
-  delay = data&0xF;
+  delay = data&0xFFF;
   readData(address+0x2,&data);
-  duration = data&0xF;
+  duration = data&0xFF;
   return std::make_pair(delay,duration);
 }
   
