@@ -47,7 +47,6 @@ void N470HVChannel::setV0(uint32_t v0) {
   bridge_->write({0x1,address_,(id_<<8)+0x3,v0});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
-  status_ = data[0];
   LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": V0 set to " + to_string(v0));
 }
 
@@ -57,7 +56,6 @@ void N470HVChannel::setV1(uint32_t v1) {
   bridge_->write({0x1,address_,(id_<<8)+0x5,v1});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
-  status_ = data[0];
   LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": V1 set to " + to_string(v1));
 }
 
@@ -67,7 +65,6 @@ void N470HVChannel::setI0(uint32_t i0) {
   bridge_->write({0x1,address_,(id_<<8)+0x4,i0});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
-  status_ = data[0];
   LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": I0 set to " + to_string(i0));
 }
 
@@ -77,7 +74,6 @@ void N470HVChannel::setI1(uint32_t i1) {
   bridge_->write({0x1,address_,(id_<<8)+0x6,i1});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
-  status_ = data[0];
   LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": I1 set to " + to_string(i1));
 }
 
@@ -87,7 +83,6 @@ void N470HVChannel::setRampup(uint32_t rampup) {
   bridge_->write({0x1,address_,(id_<<8)+0x8,rampup});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
-  status_ = data[0];
   LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": Ramp UP set to " + to_string(rampup));
 }
 
@@ -97,7 +92,6 @@ void N470HVChannel::setRampdown(uint32_t rampdown) {
   bridge_->write({0x1,address_,(id_<<8)+0x9,rampdown});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
-  status_ = data[0];
   LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": Ramp DOWN set to " + to_string(rampdown));
 }
 
@@ -107,7 +101,6 @@ void N470HVChannel::setTrip(uint32_t trip) {
   bridge_->write({0x1,address_,(id_<<8)+0x7,trip});
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
-  status_ = data[0];
   LOG_DEBUG("Channel " + to_string(board()) + "." + to_string(id()) + ": TRIP set to " + to_string(trip));
 }
 
