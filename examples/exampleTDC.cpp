@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
     myTdc.enableFIFO(false);
     // we also disable the TDC header but allow empty events
     // so that we are sure to get something after the software triggers.
-    myTdc.enableTDCHeader(true);
+    myTdc.enableTDCHeader(false);
     V1190ControlRegister reg = myTdc.getControlRegister();
     reg.setBit(V1190ControlRegister::cvEMPTYEVT,true);
     myTdc.setControlRegister(reg);
