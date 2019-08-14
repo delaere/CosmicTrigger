@@ -476,7 +476,6 @@ BOOST_PYTHON_MODULE(VeheMencE)
     {
       void (TtcVi::*channelBAsyncShortCommand)(uint8_t) = &TtcVi::channelBAsyncCommand;
       void (TtcVi::*channelBAsyncLongCommand)(uint8_t, uint8_t, uint8_t, bool) = &TtcVi::channelBAsyncCommand;
-
       scope in_TTC = class_<TtcVi>("TtcVi",init<VmeController*,uint32_t>())
           .def("reset",&TtcVi::reset)
           .def("trigger",&TtcVi::trigger)
@@ -497,7 +496,7 @@ BOOST_PYTHON_MODULE(VeheMencE)
           .def("setInhibit",&TtcVi::setInhibit)
           .def("setBGo",&TtcVi::setBGo)
           .def("triggerBGo",&TtcVi::triggerBGo)
-          // get the B-Go mode not exposed (requires bitset)
+          .def("getBGo",&TtcVi::getBGo)
       ;
       enum_<TtcVi::CVTriggerChannel>("CVTriggerChannel")
           .value("cvL1A0", TtcVi::CVTriggerChannel::cvL1A0)
@@ -527,6 +526,16 @@ BOOST_PYTHON_MODULE(VeheMencE)
       class_<std::pair<uint8_t,uint8_t> >("Inhibit")
           .def_readwrite("delay", &std::pair<uint8_t,uint8_t>::first)
           .def_readwrite("duration", &std::pair<uint8_t,uint8_t>::second)
+      ;
+      std::bitset<4>& (std::bitset<4>::*bitsetset)(std::size_t,bool) = &std::bitset<4>::set;
+      std::bitset<4>& (std::bitset<4>::*bitsetreset)(std::size_t) = &std::bitset<4>::reset;
+      std::bitset<4>& (std::bitset<4>::*bitsetflip)(std::size_t) = &std::bitset<4>::flip;
+      class_<std::bitset<4> >("BGo")
+        .def("test",&std::bitset<4>::test)
+        .def("set",bitsetset,return_value_policy<copy_non_const_reference>())
+        .def("reset",bitsetreset,return_value_policy<copy_non_const_reference>())
+        .def("flip",bitsetflip,return_value_policy<copy_non_const_reference>())
+        .def("to_ulong",&std::bitset<4>::to_ulong)
       ;
     }
 }
