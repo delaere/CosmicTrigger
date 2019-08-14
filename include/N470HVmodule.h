@@ -103,7 +103,6 @@ public:
   ~N470HVModule() {}
   
   void updateStatus();
-  inline uint32_t getStatus() const { return status_; }
   
   void kill();
   void clearAlarm();
@@ -117,9 +116,6 @@ protected:
   
   // method to check that the returned identity is ok for this class
   virtual void assertIdentity() const override;
-  
-private:
-  uint32_t status_; //TODO this might not exist...
 };
 
 #endif //N470HVModule

@@ -199,11 +199,10 @@ BOOST_PYTHON_MODULE(VeheMencE)
       ;
     }
        
-    class_<N470HVChannel>("N470HVChannel",init<uint32_t,HVBoard&,uint32_t,CaenetBridge*>())
+    class_<N470HVChannel, bases<HVChannel> >("N470HVChannel",init<uint32_t,HVBoard&,uint32_t,CaenetBridge*>())
          .def("getStatus",&N470HVChannel::getStatus)
     ;
-    class_<N470HVModule>("N470HVModule",init<uint32_t,CaenetBridge*>())
-         .add_property("status",&N470HVModule::getStatus)
+    class_<N470HVModule, bases<HVModule> >("N470HVModule",init<uint32_t,CaenetBridge*>())
          .def("updateStatus",&N470HVModule::updateStatus)
          .def("kill",&N470HVModule::kill)
          .def("clearAlarm",&N470HVModule::clearAlarm)

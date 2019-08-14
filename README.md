@@ -17,7 +17,7 @@ Status of the supported boards:
 |-----------|--------------------|-----------------|---------------|-------|--------|
 | V1718     | USB VME bridge     | Full            | yes           | yes   | yes    |
 | SY527     | CAEN Power system  | Full(initial fw)| yes           | yes   | yes    |
-| N470      | CAEN NIM HV module | Full   | Part (previous release)| yes   | yes    |
+| N470      | CAEN NIM HV module | Full            | yes           | yes   | yes    |
 | V288      | CAENET bridge      | Full            | yes           | yes   | yes    |
 | V812      | COINC / DISCRI     | Full            | yes           | yes   | yes    |
 | V1190     | TDC                | Full            | yes           | yes   | yes    |
