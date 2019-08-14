@@ -51,6 +51,7 @@ int main(int argc, char* argv[]){
     V1190ControlRegister reg = myTdc.getControlRegister();
     reg.setBit(V1190ControlRegister::cvEMPTYEVT,true);
     myTdc.setControlRegister(reg);
+    sleep(1);
     // generate 10 triggers
     for(int i=0;i<10;i++) {
       myTdc.trigger();
