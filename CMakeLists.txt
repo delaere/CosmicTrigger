@@ -48,21 +48,21 @@ add_definitions(-DLINUX)
 
 # Specify the sources
 set(VEHEMENCE_SOURCES 
+     "src/CommonDef.cpp"
+     "src/logger.cpp"
+     "src/VmeController.cpp"
+     "src/VmeUsbBridge.cpp"
+     "src/VmeBoard.cpp"
      "src/CaenetBridge.cpp"
      "src/Discri.cpp"
-     "src/logger.cpp"
      "src/Scaler.cpp"
      "src/TTCvi.cpp"
-     "src/VmeController.cpp"
-     "src/CommonDef.cpp"
      "src/HVmodule.cpp"
      "src/N470HVmodule.cpp"
      "src/SY527PowerSystem.cpp"
-     "src/PythonModule.cpp"
      "src/V1190Event.cpp"
      "src/TDC.cpp"
-     "src/VmeBoard.cpp"
-     "src/VmeUsbBridge.cpp"
+     "src/PythonModule.cpp"
    )
 
 # Build and link the shared library
