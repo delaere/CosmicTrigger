@@ -67,22 +67,22 @@ VmeUsbBridge& VmeUsbBridge::operator=(const VmeUsbBridge& other){
   return *this;
 }
 
-void VmeUsbBridge::writeData(long unsigned int address,void* data) const{
+void VmeUsbBridge::writeDataImpl(long unsigned int address,void* data) const{
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_WriteCycle(this->BHandle_,address,data,AM,DW));
 }
 
-void VmeUsbBridge::readData(long unsigned int address,void* data) const {
+void VmeUsbBridge::readDataImpl(long unsigned int address,void* data) const {
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_ReadCycle(this->BHandle_,address,data,AM,DW));
 }
 
-void VmeUsbBridge::readWriteData(const long unsigned int address,void* data) const {
+void VmeUsbBridge::readWriteDataImpl(const long unsigned int address,void* data) const {
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_RMWCycle(this->BHandle_,address,data,AM,DW));
 }
 
-void VmeUsbBridge::blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
+void VmeUsbBridge::blockReadDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
   auto [AM, DW] = useMode();
   if (multiplex) {
     checkCAENVMEexception(CAENVME_MBLTReadCycle(this->BHandle_, address, buffer, size, AM, count));
@@ -91,7 +91,7 @@ void VmeUsbBridge::blockReadData(const long unsigned int address,unsigned char *
   }
 }
 
-void VmeUsbBridge::blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
+void VmeUsbBridge::blockWriteDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex) const {
   auto [AM, DW] = useMode();
   if (multiplex) {
     checkCAENVMEexception(CAENVME_MBLTWriteCycle(this->BHandle_, address, buffer, size, AM, count));
@@ -100,7 +100,7 @@ void VmeUsbBridge::blockWriteData(const long unsigned int address,unsigned char 
   }
 }
 
-void VmeUsbBridge::ADOCycle(const long unsigned int address) const {
+void VmeUsbBridge::ADOCycleImpl(const long unsigned int address) const {
   auto [AM, DW] = useMode();
   checkCAENVMEexception(CAENVME_ADOCycle(this->BHandle_, address, AM));
 }

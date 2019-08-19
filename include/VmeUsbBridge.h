@@ -106,15 +106,7 @@ public:
      VmeUsbBridge(const VmeUsbBridge& other); ///< copy constructor
      VmeUsbBridge& operator=(const VmeUsbBridge& other); ///< copy operator
      ~VmeUsbBridge();///< Liberates the USB controller and "BHandle    
-
-     /* VME data cycles */
-     void writeData(const long unsigned int address,void* data) const override;
-     void readData (const long unsigned int address,void* data) const override;
-     void readWriteData(const long unsigned int address,void* data) const override;
-     void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override;
-     void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override;
-     void ADOCycle(const long unsigned int address) const override;
-     
+    
      /* Pulser */
      V1718Pulser& getPulser(CVPulserSelect); 
      
@@ -166,6 +158,14 @@ private:
   V1718Pulser* pulserA_;
   V1718Pulser* pulserB_;
   V1718Scaler* scaler_;
+  
+  /* VME data cycles */
+  void writeDataImpl(const long unsigned int address,void* data) const override;
+  void readDataImpl (const long unsigned int address,void* data) const override;
+  void readWriteDataImpl(const long unsigned int address,void* data) const override;
+  void blockReadDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override;
+  void blockWriteDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override;
+  void ADOCycleImpl(const long unsigned int address) const override;
 };
 
 #endif

@@ -46,20 +46,20 @@ protected:
   // proxy for the controller operations.
   // it automatically uses the proper AM/DW mode if enforced
   
-  inline void writeData(long unsigned int address,void* data) const { 
+  template<typename T> void writeData(long unsigned int address,T data) const { 
     controller()->writeData(address,data); 
   }
-  inline void readData (long unsigned int address,void* data) const { 
-    controller()->readData(address,data); 
+  template<typename T> T readData (long unsigned int address) const { 
+    return controller()->readData<T>(address); 
   }
-  inline void readWriteData(const long unsigned int address,void* data) const { 
-    controller()->readWriteData(address,data); 
+  template<typename T> T readWriteData(const long unsigned int address,T data) const { 
+    return controller()->readWriteData(address,data); 
   }
-  inline void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const { 
-    controller()->blockReadData(address, buffer, size, count, multiplex); 
+  template<typename T> std::vector<T> blockReadData(const long unsigned int address, int size, bool multiplex=false) const { 
+    return controller()->blockReadData<T>(address, size, multiplex); 
   }
-  inline void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const {
-    controller()->blockWriteData(address, buffer, size, count, multiplex); 
+  template<typename T> int blockWriteData(const long unsigned int address, std::vector<T> data, bool multiplex=false) const {
+    return controller()->blockWriteData(address, data, multiplex); 
   }
   inline void ADOCycle(const long unsigned int address) const {
     controller()->ADOCycle(address);

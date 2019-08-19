@@ -38,12 +38,12 @@ class VmeController{
     virtual void setDW(CVDataWidth DW);///<Sets default modes.
   
     // VME BUS operations
-    virtual void writeData(long unsigned int address,void* data) const = 0;///<Short write data function using default modes.
-    virtual void readData (long unsigned int address,void* data) const = 0;///<Short read data function using default modes.
-    virtual void readWriteData(const long unsigned int address,void* data) const = 0;
-    virtual void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
-    virtual void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
-    virtual void ADOCycle(const long unsigned int address) const = 0;
+    template<typename T> void writeData(long unsigned int address,T data) const;
+    template<typename T> T    readData (long unsigned int address) const;
+    template<typename T> T    readWriteData(const long unsigned int address,T data) const;
+    template<typename T> std::vector<T> blockReadData(const long unsigned int address, int size, bool multiplex=false) const;
+    template<typename T> int blockWriteData(const long unsigned int address, std::vector<T> data, bool multiplex=false) const;
+    void ADOCycle(const long unsigned int address) const;
     
     // IRQ operations
     virtual void IRQEnable(uint32_t mask) const = 0;
@@ -60,6 +60,15 @@ class VmeController{
     CVDataWidth DW_;
     mutable CVAddressModifier AMtmp_;
     mutable CVDataWidth DWtmp_;
+
+    // actual implementation with C-like type erasure (type unsafe, but the CAEN lib is anyway C.
+    // not needed for ADOCycle, but we keep it here for consistency
+    virtual void writeDataImpl(long unsigned int address,void* data) const = 0;
+    virtual void readDataImpl(long unsigned int address,void* data) const = 0;
+    virtual void readWriteDataImpl(const long unsigned int address,void* data) const = 0;
+    virtual void blockReadDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
+    virtual void blockWriteDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const = 0;
+    virtual void ADOCycleImpl(const long unsigned int address) const = 0;
 };
 
 #endif
