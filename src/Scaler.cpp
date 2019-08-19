@@ -24,13 +24,9 @@ using namespace std;
 Scaler::Scaler(VmeController* controller,uint32_t address):VmeBoard(controller,address,cvA24_U_DATA,cvD16,true){
   LOG_DEBUG("Address" + int_to_hex(baseAddress()));
   // check the connection...
-  uint16_t data = 0;
-  readData(baseAddress()+0xFC,&data);
-  info_.moduleType_ = data;
-  readData(baseAddress()+0xFE,&data);
-  info_.serial_number_ = data;
-  readData(baseAddress()+0xFA,&data);
-  info_.moduleId_ = data;
+  info_.moduleType_ = readData<uint16_t>(baseAddress()+0xFC);
+  info_.serial_number_ = readData<uint16_t>(baseAddress()+0xFE);
+  info_.moduleId_ = readData<uint16_t>(baseAddress()+0xFA);
   assert(info_.moduleId_==0xFAF5);
   LOG_DEBUG("Lecroy 1151N scaler initialized. " + 
             int_to_hex(info_.moduleType_&0x3FF) + " " + int_to_hex(info_.moduleType_>>10) + " " + 
@@ -39,21 +35,18 @@ Scaler::Scaler(VmeController* controller,uint32_t address):VmeBoard(controller,a
 }
  
 uint32_t Scaler::getCount(uint8_t channel, bool reset){
-  uint32_t data=0;
   int completeAdd = baseAddress()+0x40+((!reset)*0x40)+4*channel;
-  controller()->mode(cvA24_U_DATA,cvD32)->readData(completeAdd,&data);
+  uint32_t data = controller()->mode(cvA24_U_DATA,cvD32)->readData<uint32_t>(completeAdd);
   LOG_DEBUG("Count for channel " + to_string(channel) + " = " + to_string(data));
   return data;
 }
 
 void Scaler::setPreset(uint8_t channel, uint32_t value){
-  uint32_t data=value;
   LOG_INFO("Setting presets to "+to_string(value)+" for channel " + to_string(channel) +"...");
-  controller()->mode(cvA24_U_DATA,cvD32)->writeData(baseAddress()+0x40+4*channel,&data);
+  controller()->mode(cvA24_U_DATA,cvD32)->writeData(baseAddress()+0x40+4*channel,value);
 }
 
 void Scaler::reset(){
-  int data=0;
   LOG_INFO("Reseting Scaler...");
-  writeData(baseAddress(),&data);
+  writeData(baseAddress(),0);
 }

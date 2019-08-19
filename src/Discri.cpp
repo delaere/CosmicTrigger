@@ -28,13 +28,9 @@ std::vector<float> Discri::dtcounts_  = {0,255};
 
 Discri::Discri(VmeController *controller,int add):VmeBoard(controller, add, cvA32_U_DATA, cvD16, true),status_(0x0000) {
   // check the connection...
-  uint16_t data = 0;
-  readData(baseAddress()+0xFC,&data);
-  info_.moduleType_ = data;
-  readData(baseAddress()+0xFE,&data);
-  info_.serial_number_ = data;
-  readData(baseAddress()+0xFA,&data);
-  info_.moduleId_ = data;
+  info_.moduleType_ = readData<uint16_t>(baseAddress()+0xFC);
+  info_.serial_number_ = readData<uint16_t>(baseAddress()+0xFE);
+  info_.moduleId_ = readData<uint16_t>(baseAddress()+0xFA);
   assert(info_.moduleId_==0xFAF5);
   
   // initial config
@@ -58,7 +54,7 @@ void Discri::disableChannel(uint8_t channel) {
   
 void Discri::setChannelMask(uint16_t mask) {
   status_ = mask;
-  writeData(baseAddress()+0x4A,&status_);
+  writeData(baseAddress()+0x4A,status_);
   LOG_INFO("Channels changed. Mask:" + to_string(status_));
 }
 
@@ -66,16 +62,15 @@ void Discri::setChannel(uint8_t channel, bool newState){
   if (newState != ((status_>>channel)&1)) {
     status_ ^= (1u << channel);
     // write the result to the proper register
-    writeData(baseAddress()+0x4A,&status_);
+    writeData(baseAddress()+0x4A,status_);
   }
   LOG_INFO("New status for channel " + to_string(channel) +": "+ to_string(newState));
 }
 
 void Discri::setMajority(uint8_t num){
   assert(num>0 && num<21);
-  int majthr = round((num*50.-25.)/4.);
-  writeData(baseAddress()+0x48,&majthr);
-  LOG_INFO("Set majority level to " + to_string(num) + "(sent: " + to_string(majthr) + ")");
+  writeData(baseAddress()+0x48,round((num*50.-25.)/4.));
+  LOG_INFO("Set majority level to " + to_string(num) + "(sent: " + to_string(round((num*50.-25.)/4.)) + ")");
 }
 
 void Discri::setThreshold(uint8_t value,int8_t channel){
@@ -86,7 +81,7 @@ void Discri::setThreshold(uint8_t value,int8_t channel){
   } else {
     assert(channel>=0 && channel<16);
     LOG_DEBUG("Setting threshold to " + to_string(value) + " on channel " + to_string(channel));
-    writeData(baseAddress()+2*channel,&value);
+    writeData(baseAddress()+2*channel,value);
   }
 }
 
@@ -95,9 +90,9 @@ void Discri::setWidth(float ns,uint8_t channel){
   uint16_t wcount = (uint16_t)Discri::getWCount(ns);
   LOG_INFO("Setting output width to "+ to_string(wcount));
   if (channel<8) {
-    writeData(baseAddress()+0x40,&wcount);
+    writeData(baseAddress()+0x40,wcount);
   } else {
-    writeData(baseAddress()+0x42,&wcount);
+    writeData(baseAddress()+0x42,wcount);
   }
 }
 
@@ -106,15 +101,15 @@ void Discri::setDeadTime(float ns,uint8_t channel){
   uint16_t dtcount = (uint16_t)Discri::getDTCount(ns);
   LOG_INFO("Setting dead time to " + to_string(dtcount));
   if (channel<8) {
-    writeData(baseAddress()+0x44,&dtcount);
+    writeData(baseAddress()+0x44,dtcount);
   } else { 
-    writeData(baseAddress()+0x46,&dtcount);
+    writeData(baseAddress()+0x46,dtcount);
   }
 }
 
 void Discri::testPulse() {
   LOG_INFO("Generating a test pulse.");
-  writeData(baseAddress()+0x4C,&status_);
+  writeData(baseAddress()+0x4C,status_);
 }
 
 float Discri::interpolate( std::vector<float> &xData, std::vector<float> &yData, float x, bool extrapolate ) {

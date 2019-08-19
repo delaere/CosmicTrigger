@@ -22,29 +22,26 @@
 CaenetBridge::CaenetBridge(VmeController *cont, uint32_t bridgeAdd, uint8_t interrupt):VmeBoard(cont,bridgeAdd,cvA24_S_DATA,cvD16,true),interrupt_(interrupt) {}
 
 void CaenetBridge::reset() {
-  uint16_t data = 0x0000;
   LOG_TRACE("sending reset command " + int_to_hex(baseAddress()+0x6));
-  writeData(baseAddress()+0x6,&data);
+  writeData(baseAddress()+0x6,0x0000);
 }
 
 bool CaenetBridge::validStatus() {
   uint16_t data = 0x0000;
   LOG_TRACE("checking the status at " + int_to_hex(baseAddress()+0x2));
-  readData(baseAddress()+0x2,&data);
-  return !(data&0x1);
+  return !(readData<uint16_t>(baseAddress()+0x2)&0x1);
 }
 
 void CaenetBridge::write(const std::vector<uint32_t>& data) {
   // buffers data
   for(auto d : data) {
     LOG_TRACE("writing data " + int_to_hex(d) + " to " + int_to_hex(baseAddress()));
-    writeData(baseAddress(),&d);
+    writeData(baseAddress(),d);
     if (!validStatus()) throw CAENETexception(0XFFF0);
   }
   // start transmission
-  uint32_t tmp = 0x0000;
   LOG_TRACE("start the transmission");
-  writeData(baseAddress()+0x4,&tmp);
+  writeData(baseAddress()+0x4,0x0000);
   if (!validStatus()) throw CAENETexception(0XFFF0);
 }
 
@@ -61,12 +58,12 @@ std::pair<uint32_t, std::vector<uint32_t> > CaenetBridge::readResponse() {
   // polling. First word read is the error code (0 for success)
   do {
     usleep(10000); // wait 10ms 
-    readData(baseAddress(),&errorCode);
+    errorCode = readData<uint16_t>(baseAddress());
   } while (!validStatus());
   LOG_TRACE("received first data word: " + int_to_hex(tmp));
   // then read data
   while (validStatus()) {
-    readData(baseAddress(),&tmp);
+    tmp = readData<uint16_t>(baseAddress());
     LOG_TRACE("received data: " + int_to_hex(tmp));
     data.push_back(tmp);
   }
