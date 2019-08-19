@@ -38,12 +38,38 @@ class VmeController{
     virtual void setDW(CVDataWidth DW);///<Sets default modes.
   
     // VME BUS operations
-    template<typename T> void writeData(long unsigned int address,T data) const;
-    template<typename T> T    readData (long unsigned int address) const;
-    template<typename T> T    readWriteData(const long unsigned int address,T data) const;
-    template<typename T> std::vector<T> blockReadData(const long unsigned int address, int size, bool multiplex=false) const;
-    template<typename T> int blockWriteData(const long unsigned int address, std::vector<T> data, bool multiplex=false) const;
-    void ADOCycle(const long unsigned int address) const;
+    template<typename T> void writeData(long unsigned int address,T data) const {
+      static_assert(!std::is_pointer<T>::value,"writeData argument is the data, not a pointer to it");
+      writeDataImpl(address,&data);
+    }
+    template<typename T> T    readData (long unsigned int address) const {
+      T data;
+      readDataImpl(address,&data);
+      return data;
+    }
+    template<typename T> T    readWriteData(const long unsigned int address,T data) const {
+      readWriteDataImpl(address,&data);
+      return data;
+    }
+    template<typename T> std::vector<T> blockReadData(const long unsigned int address, int size, bool multiplex=false) const {
+      size_t sizeoft = sizeof(T);
+      std::vector<T> output(size);
+      void* buffer = output.data();
+      int count = 0;
+      blockReadDataImpl(address, (unsigned char*)buffer, size*sizeoft , &count, multiplex);
+      output.resize(count);
+      return output;
+    }
+    template<typename T> int blockWriteData(const long unsigned int address, std::vector<T> data, bool multiplex=false) const {
+      size_t sizeoft = sizeof(T);
+      void* buffer = data.data();
+      int count = 0;
+      blockWriteDataImpl(address,(unsigned char *)buffer, data.size()*sizeoft, &count, multiplex);
+      return count;
+    }
+    void ADOCycle(const long unsigned int address) const{
+      ADOCycleImpl(address);
+    }
     
     // IRQ operations
     virtual void IRQEnable(uint32_t mask) const = 0;
