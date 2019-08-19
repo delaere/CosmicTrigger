@@ -73,7 +73,7 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
   readData(baseAddress()+0x1026, &data);
   info_.firmwareVersion_ = data&0xFF;
   
-  LOG_DEBUG("CAEN V1190"+ (info_.version_&0x1 ? string("B") : string("A")) + " initialized. " + 
+  LOG_DEBUG("CAEN V1190"+ ((info_.version_&0x1) ? string("B") : string("A")) + " initialized. " + 
             "Serial number: " + int_to_hex(info_.serial_number_) + 
             " rev. " + to_string(info_.revision_major_) + "." + to_string(info_.revision_minor_) + 
             " fw. "  + to_string(info_.firmwareVersion_>>4) + "." + to_string(info_.firmwareVersion_&0xF));
@@ -279,7 +279,7 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
     buffer = new unsigned char[nwords*4];
     try {
       controller()->mode(cvA32_U_BLT,cvD32)->blockReadData(baseAddress(),buffer, nwords*4, &count);
-    } catch(CAENVMEexception e) { 
+    } catch(CAENVMEexception &e) { 
       done = true;
     }
     // copy to the input vector
@@ -509,7 +509,7 @@ void Tdc::enableChannel(uint8_t channel, bool enable){
   
 void Tdc::writeEnablePattern(std::bitset<128> &pattern){
   uint16_t opcode = 0x4400; writeOpcode(opcode);
-  int nTDC = info_.version_&0x1 ? 4 : 8;
+  int nTDC = (info_.version_&0x1) ? 4 : 8;
   for (int i=0; i<nTDC; ++i) {
     opcode = (pattern>>(16*i)).to_ulong(); // shift and truncate
     writeOpcode(opcode);
@@ -519,8 +519,8 @@ void Tdc::writeEnablePattern(std::bitset<128> &pattern){
 std::bitset<128> Tdc::readEnablePattern(){
   uint16_t opcode = 0x4500; writeOpcode(opcode);
   std::bitset<128> pattern = 0;
-  std::bitset<128> tmp = 0;
-  int nTDC = info_.version_&0x1 ? 4 : 8;
+  std::bitset<128> tmp;
+  int nTDC = (info_.version_&0x1) ? 4 : 8;
   for (int i=0; i<nTDC; ++i) {
     readOpcode(opcode);
     tmp = opcode; tmp <<=(16*i);
