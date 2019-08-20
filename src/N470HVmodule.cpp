@@ -18,6 +18,7 @@
 
 #include "N470HVmodule.h"
 #include "CaenetBridge.h"
+#include "PythonModule.h"
 
 using namespace std;
 
@@ -203,4 +204,48 @@ void N470HVModule::setNIM() {
   // read response
   auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
   LOG_DEBUG("Input set to NIM");
+}
+
+using namespace boost::python;
+
+template<> void exposeToPython<N470HVChannel>() {
+  class_<N470HVChannel, bases<HVChannel> >("N470HVChannel",init<uint32_t,HVBoard&,uint32_t,CaenetBridge*>())
+    .def("getStatus",&N470HVChannel::getStatus)
+  ;
+}
+
+template<> void exposeToPython<N470StatusWord>() {
+  scope in_N470StatusWord = class_<N470StatusWord>("N470StatusWord",init<uint16_t>())
+    .def("status",&N470StatusWord::status)
+    .def("bit",&N470StatusWord::bit)
+  ;
+  enum_<N470StatusWord::CVStatusWordBit>("CVStatusWordBit")
+    .value("cvONOFF", N470StatusWord::cvONOFF)
+    .value("cvOVC", N470StatusWord::cvOVC)
+    .value("cvOVV", N470StatusWord::cvOVV)
+    .value("cvUNV", N470StatusWord::cvUNV)
+    .value("cvTRIP", N470StatusWord::cvTRIP)
+    .value("cvRUP", N470StatusWord::cvRUP)
+    .value("cvRDW", N470StatusWord::cvRDW)
+    .value("cvMAXV", N470StatusWord::cvMAXV)
+    .value("cvPOL", N470StatusWord::cvPOL)
+    .value("cvVSEL", N470StatusWord::cvVSEL)
+    .value("cvISEL", N470StatusWord::cvISEL)
+    .value("cvKILL", N470StatusWord::cvKILL)
+    .value("cvHVEN", N470StatusWord::cvHVEN)
+    .value("cvNIMTTL", N470StatusWord::cvNIMTTL)
+    .value("cvOUTCAL", N470StatusWord::cvOUTCAL)
+    .value("cvALARM", N470StatusWord::cvALARM)
+  ;
+}
+  
+template<> void exposeToPython<N470HVModule>() {
+  class_<N470HVModule, bases<HVModule> >("N470HVModule",init<uint32_t,CaenetBridge*>())
+    .def("updateStatus",&N470HVModule::updateStatus)
+    .def("kill",&N470HVModule::kill)
+    .def("clearAlarm",&N470HVModule::clearAlarm)
+    .def("enableKeyboard",&N470HVModule::enableKeyboard)
+    .def("setTTL",&N470HVModule::setTTL)
+    .def("setNIM",&N470HVModule::setNIM)
+  ;
 }

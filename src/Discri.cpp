@@ -17,6 +17,8 @@
 */
 
 #include "Discri.h"
+#include "PythonModule.h"
+
 #include <iostream>
 #include <cmath>
 using namespace std;
@@ -128,4 +130,20 @@ float Discri::interpolate( std::vector<float> &xData, std::vector<float> &yData,
    }
    float dydx = ( yR - yL ) / ( xR - xL );                                    // gradient
    return yL + dydx * ( x - xL );                                              // linear interpolation
+}
+
+using namespace boost::python;
+
+template<> void exposeToPython<Discri>() {
+  class_<Discri>("Discri",init<VmeController*,uint32_t>())
+    .def("enableChannel",&Discri::enableChannel)
+    .def("disableChannel",&Discri::disableChannel)
+    .def("setChannelMask",&Discri::setChannelMask)
+    .def("getChannelMask",&Discri::getChannelMask)
+    .def("setMajority",&Discri::setMajority)
+    .def("setThreshold",&Discri::setThreshold)
+    .def("setWidth",&Discri::setWidth)
+    .def("setDeadTime",&Discri::setDeadTime)
+    .def("testPulse",&Discri::testPulse)
+  ;
 }

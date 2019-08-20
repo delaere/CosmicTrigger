@@ -17,6 +17,7 @@
 */
 
 #include "VmeController.h"
+#include "PythonModule.h"
 
 using namespace std;
 
@@ -65,3 +66,73 @@ std::tuple<CVAddressModifier,CVDataWidth> VmeController::useMode() const {
   this->DWtmp_ = this->DW_;
   return std::make_tuple(AM,DW);
 }
+
+using namespace boost::python;
+
+template<> void exposeToPython<VmeController>() {
+  struct VmeControllerWrap : VmeController, wrapper<VmeController> {
+    VmeControllerWrap():VmeController(),wrapper<VmeController>() {}
+    void writeDataImpl(long unsigned int address,void* data) const override {
+      this->get_override("writeDataImpl")(address,data);
+    }
+    void readDataImpl(long unsigned int address,void* data) const override {
+      this->get_override("readDataImpl")(address,data);
+    }
+    void readWriteDataImpl(const long unsigned int address,void* data) const override {
+      this->get_override("readWriteDataImpl")(address,data);
+    }
+    void blockReadDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
+      this->get_override("blockReadDataImpl")(address,buffer,size,count,multiplex);
+    }
+    void blockWriteDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
+      this->get_override("blockWriteDataImpl")(address,buffer,size,count,multiplex);
+    }
+    void ADOCycleImpl(const long unsigned int address) const override {
+      this->get_override("ADOCycleImpl")(address);
+    }
+    void IRQEnable(uint32_t mask) const override {
+      this->get_override("IRQEnable")(mask);
+    }
+    void IRQDisable(uint32_t mask) const override {
+      this->get_override("IRQDisable")(mask);
+    }
+    void IRQWait(uint32_t mask, uint32_t timeout_ms) const override {
+      this->get_override("IRQWait")(mask,timeout_ms);
+    }
+    unsigned char IRQCheck() const override {
+      return this->get_override("IRQCheck")();
+    }
+    uint16_t IACK(CVIRQLevels Level) const override {
+      return this->get_override("IACK")(Level);
+    }
+  };
+  
+  class_<VmeControllerWrap, boost::noncopyable>("VmeController")
+    .def("setMode", &VmeController::setMode)
+    .def("mode", &VmeController::mode,return_value_policy<manage_new_object>())
+    .add_property("AM",&VmeController::getAM,&VmeController::setAM)
+    .add_property("DW",&VmeController::getDW,&VmeController::setDW)
+    .def("writeData16",&VmeController::writeData<uint16_t>)
+    .def("readData16",&VmeController::readData<uint16_t>)
+    .def("readWriteData16",&VmeController::readWriteData<uint16_t>)
+    .def("blockReadData16",&VmeController::blockReadData<uint16_t>)
+    .def("blockWriteData16",&VmeController::blockWriteData<uint16_t>)
+    .def("writeData32",&VmeController::writeData<uint32_t>)
+    .def("readData32",&VmeController::readData<uint32_t>)
+    .def("readWriteData32",&VmeController::readWriteData<uint32_t>)
+    .def("blockReadData32",&VmeController::blockReadData<uint32_t>)
+    .def("blockWriteData32",&VmeController::blockWriteData<uint32_t>)
+    .def("writeData64",&VmeController::writeData<uint64_t>)
+    .def("readData64",&VmeController::readData<uint64_t>)
+    .def("readWriteData64",&VmeController::readWriteData<uint64_t>)
+    .def("blockReadData64",&VmeController::blockReadData<uint64_t>)
+    .def("blockWriteData64",&VmeController::blockWriteData<uint64_t>)
+    .def("ADOCycle",&VmeController::ADOCycle)
+    .def("IRQEnable",pure_virtual(&VmeController::IRQEnable))
+    .def("IRQDisable",pure_virtual(&VmeController::IRQDisable))
+    .def("IRQWait",pure_virtual(&VmeController::IRQWait))
+    .def("IRQCheck",pure_virtual(&VmeController::IRQCheck))
+    .def("IACK",pure_virtual(&VmeController::IACK))
+  ;
+}
+

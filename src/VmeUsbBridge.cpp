@@ -17,6 +17,7 @@
 */
 
 #include "VmeUsbBridge.h"
+#include "PythonModule.h"
 #include <iostream>
 
 VmeUsbBridge::VmeUsbBridge():VmeController() {
@@ -331,4 +332,60 @@ unsigned short V1718Scaler::count() const {
   unsigned int data = 0;
   checkCAENVMEexception(CAENVME_ReadRegister(this->BHandle_, cvScaler1, &data));
   return (data & 1023);
+}
+
+using namespace boost::python;
+
+template<> void exposeToPython<VmeUsbBridge>() {
+  class_<VmeUsbBridge, bases<VmeController> >("VmeUsbBridge")
+    .def("configureOutputLine",&VmeUsbBridge::configureOutputLine)
+    .def("configureInputLine",&VmeUsbBridge::configureInputLine)
+    .def("outputLineConfiguration",&VmeUsbBridge::outputLineConfiguration)
+    .def("inputLineConfiguration",&VmeUsbBridge::inputLineConfiguration)
+    .def("readRegister",&VmeUsbBridge::readRegister)
+    .def("setOutputRegister",&VmeUsbBridge::setOutputRegister)
+    .def("clearOutputRegister",&VmeUsbBridge::clearOutputRegister)
+    .def("pulseOutputRegister",&VmeUsbBridge::pulseOutputRegister)
+    .def("readDisplay",&VmeUsbBridge::readDisplay)
+    .add_property("arbiterType",&VmeUsbBridge::getArbiterType,&VmeUsbBridge::setArbiterType)
+    .add_property("requesterType",&VmeUsbBridge::getRequesterType,&VmeUsbBridge::setRequesterType)
+    .add_property("releaseType",&VmeUsbBridge::getReleaseType,&VmeUsbBridge::setReleaseType)
+    .add_property("busReqLevel",&VmeUsbBridge::getBusReqLevel,&VmeUsbBridge::setBusReqLevel)
+    .add_property("timeout",&VmeUsbBridge::getTimeout,&VmeUsbBridge::setTimeout)
+    .add_property("FIFOmode",&VmeUsbBridge::getFIFOMode,&VmeUsbBridge::setFIFOMode)
+    .def("systemReset",&VmeUsbBridge::systemReset)
+    .def("getPulser",&VmeUsbBridge::getPulser,return_value_policy<copy_non_const_reference>())
+    .def("getScaler",&VmeUsbBridge::getScaler,return_value_policy<copy_non_const_reference>())
+  ;
+}
+
+template<> void exposeToPython<V1718Pulser>() {
+  class_<V1718Pulser>("V1718Pulser",init<uint32_t,CVPulserSelect>())
+    .def("configure",&V1718Pulser::configure)
+    .def("update",&V1718Pulser::configure)
+    .def("start",&V1718Pulser::start)
+    .def("stop",&V1718Pulser::stop)
+    .add_property("period",&V1718Pulser::getPeriod,&V1718Pulser::setPeriod)
+    .add_property("width",&V1718Pulser::getWidth,&V1718Pulser::setWidth)
+    .add_property("units",&V1718Pulser::getUnits,&V1718Pulser::setUnits)
+    .add_property("pulseNo",&V1718Pulser::getPulseNo,&V1718Pulser::setPulseNo)
+    .add_property("startSource",&V1718Pulser::getStartSource,&V1718Pulser::setStartSource)
+    .add_property("stopSource",&V1718Pulser::getStopSource,&V1718Pulser::setStopSource)
+  ;
+}
+
+template<> void exposeToPython<V1718Scaler>() {
+  class_<V1718Scaler>("V1718Scaler",init<uint32_t>())
+    .def("configure",&V1718Scaler::configure)
+    .def("update",&V1718Scaler::update)
+    .def("resetCount",&V1718Scaler::resetCount)
+    .def("enableGate",&V1718Scaler::enableGate)
+    .def("disableGate",&V1718Scaler::disableGate)
+    .def("count",&V1718Scaler::count)
+    .add_property("limit",&V1718Scaler::getLimit,&V1718Scaler::setLimit)
+    .add_property("autoReset",&V1718Scaler::getAutoReset,&V1718Scaler::setAutoReset)
+    .add_property("hitSource",&V1718Scaler::getHitSource,&V1718Scaler::setHitSource)
+    .add_property("gateSource",&V1718Scaler::getGateSource,&V1718Scaler::setGateSource)
+    .add_property("resetSource",&V1718Scaler::getResetSource,&V1718Scaler::setResetSource)
+  ;
 }
