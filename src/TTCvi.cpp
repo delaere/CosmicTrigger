@@ -21,66 +21,44 @@
 using namespace std;
 
 TtcVi::TtcVi(VmeController* controller,int address):VmeBoard(controller, address, cvA32_U_DATA, cvD16, true) {
-  uint16_t data;
-  
-  readData(baseAddress()+0x2E,&data);
-  info_.manufacturer_ = data&0xFF;
-  readData(baseAddress()+0x2A,&data);
-  info_.manufacturer_ |= (data&0xFF)<<8;
-  readData(baseAddress()+0x26,&data);
-  info_.manufacturer_ |= (data&0xFF)<<16;
+  info_.manufacturer_ = readData<uint16_t>(baseAddress()+0x2E)&0xFF;
+  info_.manufacturer_ |= (readData<uint16_t>(baseAddress()+0x2A)&0xFF)<<8;
+  info_.manufacturer_ |= (readData<uint16_t>(baseAddress()+0x26)&0xFF)<<16;
   assert(info_.manufacturer_==0x80030);
-  readData(baseAddress()+0x3E,&data);
-  info_.serial_number_ = data&0xFF;
-  readData(baseAddress()+0x3A,&data);
-  info_.serial_number_ |= (data&0xFF)<<8;
-  readData(baseAddress()+0x36,&data);
-  info_.serial_number_ |= (data&0xFF)<<16;
-  readData(baseAddress()+0x32,&data);
-  info_.serial_number_ |= (data&0xFF)<<24;
-  readData(baseAddress()+0x4E,&data);
-  info_.revision_ = data&0xFF;
-  readData(baseAddress()+0x4A,&data);
-  info_.revision_ |= (data&0xFF)<<8;
-  readData(baseAddress()+0x46,&data);
-  info_.revision_ |= (data&0xFF)<<16;
-  readData(baseAddress()+0x42,&data);
-  info_.revision_ |= (data&0xFF)<<24;
+  info_.serial_number_ = readData<uint16_t>(baseAddress()+0x3E)&0xFF;
+  info_.serial_number_ |= (readData<uint16_t>(baseAddress()+0x3A)&0xFF)<<8;
+  info_.serial_number_ |= (readData<uint16_t>(baseAddress()+0x36)&0xFF)<<16;
+  info_.serial_number_ |= (readData<uint16_t>(baseAddress()+0x32)&0xFF)<<24;
+  info_.revision_ = readData<uint16_t>(baseAddress()+0x4E)&0xFF;
+  info_.revision_ |= (readData<uint16_t>(baseAddress()+0x4A)&0xFF)<<8;
+  info_.revision_ |= (readData<uint16_t>(baseAddress()+0x46)&0xFF)<<16;
+  info_.revision_ |= (readData<uint16_t>(baseAddress()+0x42)&0xFF)<<24;
   
   LOG_INFO("TTCvi initialized. Serial number: " + int_to_hex(info_.serial_number_) + 
             " rev. " + to_string(info_.revision_) );
 }
 
 void TtcVi::reset(){
-  uint16_t data = 0;
-  writeData(baseAddress()+0x84,&data);
+  writeData(baseAddress()+0x84,0);
 }
 
 void TtcVi::trigger(){
-  uint16_t data = 0;
-  writeData(baseAddress()+0x86,&data);
+  writeData(baseAddress()+0x86,0);
 }
 
 void TtcVi::resetCounter(){
-  uint16_t data = 0;
-  writeData(baseAddress()+0x8C,&data);
+  writeData(baseAddress()+0x8C,0);
 }
 
 uint32_t TtcVi::getEventNumber(){
-  uint32_t event = 0;
-  uint16_t data = 0;
-  readData(baseAddress()+0x8A,&data);
-  event = data;
-  readData(baseAddress()+0x88,&data);
-  event |= ((data&0xFF)<<16);
+  uint32_t event = readData<uint16_t>(baseAddress()+0x8A);
+  event |= ((readData<uint16_t>(baseAddress()+0x88)&0xFF)<<16);
   return event;
 }
 
 void TtcVi::setEventCounter(uint32_t count){
-  uint16_t data = count&0xFFFF;
-  writeData(baseAddress()+0x8A,&data);
-  data = (count>>16)&0xFF;
-  writeData(baseAddress()+0x88,&data);
+  writeData(baseAddress()+0x8A,count&0xFFFF);
+  writeData(baseAddress()+0x88,(count>>16)&0xFF);
 }
 
 void TtcVi::setCounterMode(bool orbit){
@@ -129,79 +107,63 @@ uint8_t TtcVi::getBC0Delay(){
 }
 
 void TtcVi::channelBAsyncCommand(uint8_t command){
-  uint16_t data = command;
-  writeData(baseAddress()+0x8b,&data);
+  writeData(baseAddress()+0x8b,(uint16_t)command);
 }
   
 void TtcVi::channelBAsyncCommand(uint8_t addr, uint8_t subAddr, uint8_t data, bool internal){
   uint16_t dta = 0x8000 | (addr<<1) | (internal ? 0x0 : 0x1);
-  writeData(baseAddress()+0xC0,&dta);
+  writeData(baseAddress()+0xC0,dta);
   dta = (subAddr<<8) | data;
-  writeData(baseAddress()+0xC2,&dta);
+  writeData(baseAddress()+0xC2,dta);
 }
   
 std::pair<uint8_t, uint8_t> TtcVi::getInhibit(unsigned int n){
   uint8_t delay,duration;
-  uint16_t data;
   assert(n<4);
   uint32_t address = baseAddress()+0x92+n*0x8;
-  readData(address,&data);
-  delay = data&0xFFF;
-  readData(address+0x2,&data);
-  duration = data&0xFF;
+  delay = readData<uint16_t>(address)&0xFFF;
+  duration = readData<uint16_t>(address+0x2)&0xFF;
   return std::make_pair(delay,duration);
 }
   
 void TtcVi::setInhibit(unsigned int n,uint8_t delay,uint8_t duration){
-  uint16_t data = delay;
   assert(n<4);
   uint32_t address = baseAddress()+0x92+n*0x8;
-  writeData(address,&data);
-  data = duration;
-  writeData(address+0x2,&data);
+  writeData(address,(uint16_t)delay);
+  writeData(address+0x2,(uint16_t)duration);
 }
   
 std::bitset<4> TtcVi::getBGo(unsigned int n){
-  uint16_t data;
   assert(n<4);
   uint32_t address = baseAddress()+0x90+n*0x8;
-  readData(address,&data);
-  return std::bitset<4>(data&0xF);
+  return std::bitset<4>(readData<uint16_t>(address)&0xF);
 }
   
 void TtcVi::setBGo(unsigned int n,bool softTrigger, bool asynchronous, bool repeat, bool autoTrigger){
-  uint16_t data;
   assert(n<4);
   uint32_t address = baseAddress()+0x90+n*0x8;
-  data = (softTrigger<<3) | (asynchronous<<2) | (repeat<<1) | autoTrigger;
-  writeData(address,&data);
+  uint16_t data = (softTrigger<<3) | (asynchronous<<2) | (repeat<<1) | autoTrigger;
+  writeData(address,data);
 }
   
 void TtcVi::triggerBGo(unsigned int n){
-  uint16_t data = 1;
   assert(n<4);
   uint32_t address = baseAddress()+0x96+n*0x8;
-  writeData(address,&data);
+  writeData(address,1);
 }
 
 uint16_t TtcVi::readCSR1(){
-  uint16_t data;
-  readData(baseAddress()+0x80,&data);
-  return data;
+  return readData<uint16_t>(baseAddress()+0x80);
 }
 
 uint16_t TtcVi::readCSR2(){
-  uint16_t data;
-  readData(baseAddress()+0x82,&data);
-  return data;
+  return readData<uint16_t>(baseAddress()+0x82);
 }
 
 void TtcVi::writeCSR1(uint16_t word){
-  uint16_t data = word;
-  writeData(baseAddress()+0x80,&data);
+  writeData(baseAddress()+0x80,word);
 }
 
 void TtcVi::writeCSR2(uint16_t word){
-  uint16_t data = word;
-  writeData(baseAddress()+0x82,&data);
+  writeData(baseAddress()+0x82,word);
 }

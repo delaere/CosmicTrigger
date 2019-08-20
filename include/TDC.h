@@ -214,6 +214,7 @@ public:
   void enableFIFO(bool enable);
   
   // Enables BERR
+  // note: BERR stop condition should be avoided, since this implementation would discard the last BLT read.
   void enableBERR(bool enable);
   
   // Enables Extd trigger time

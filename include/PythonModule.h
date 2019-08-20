@@ -22,22 +22,22 @@ struct VmeControllerWrap : VmeController, wrapper<VmeController>
 {
   VmeControllerWrap():VmeController(),wrapper<VmeController>() {}
   
-  void writeData(long unsigned int address,void* data) const override {
+  void writeDataImpl(long unsigned int address,void* data) const override {
     this->get_override("writeData")(address,data);
   }
-  void readData(long unsigned int address,void* data) const override {
+  void readDataImpl(long unsigned int address,void* data) const override {
     this->get_override("readData")(address,data);
   }
-  void readWriteData(const long unsigned int address,void* data) const override {
+  void readWriteDataImpl(const long unsigned int address,void* data) const override {
     this->get_override("readWriteData")(address,data);
   }
-  void blockReadData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
+  void blockReadDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
     this->get_override("blockReadData")(address,buffer,size,count,multiplex);
   }
-  void blockWriteData(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
+  void blockWriteDataImpl(const long unsigned int address,unsigned char *buffer, int size, int *count, bool multiplex=false) const override {
     this->get_override("blockWriteData")(address,buffer,size,count,multiplex);
   }
-  void ADOCycle(const long unsigned int address) const override {
+  void ADOCycleImpl(const long unsigned int address) const override {
     this->get_override("ADOCycle")(address);
   }
   void IRQEnable(uint32_t mask) const override {
@@ -119,17 +119,5 @@ struct HVModuleWrap : HVModule, wrapper<HVModule>
     this->get_override("assertIdentity")();
   }
 };
-
-// utilities to debug simple VME operations in python
-
-uint32_t vmeRead(VmeController* cont, long unsigned int address) {
-  uint32_t data;
-  cont->readData(address,&data);
-  return data;
-}
-
-void vmeWrite(VmeController* cont, long unsigned int address,uint64_t data) {
-  cont->writeData(address,&data);
-}
 
 #endif

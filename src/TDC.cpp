@@ -39,39 +39,24 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
   eventFIFO_=baseAddress()+0x1038;
   controlRegister_=baseAddress()+0x1000;
   // check configuration ROM and firmware version
-  uint16_t data;
-  readData(baseAddress()+0x403C, &data);
-  info_.moduletype_ = data&0xFF;
-  readData(baseAddress()+0x4038, &data);
-  info_.moduletype_ += (data&0xFF)<<8;
-  readData(baseAddress()+0x4034, &data);
-  info_.moduletype_ += (data&0xFF)<<16;
+  info_.moduletype_ = readData<uint16_t>(baseAddress()+0x403C)&0xFF;
+  info_.moduletype_ |= (readData<uint16_t>(baseAddress()+0x4038)&0xFF)<<8;
+  info_.moduletype_ |= (readData<uint16_t>(baseAddress()+0x4034)&0xFF)<<16;
   assert(info_.moduletype_==0x04A6);
-  readData(baseAddress()+0x4030, &data);
-  info_.version_ = data&0x1;
-  readData(baseAddress()+0x402C, &data);
-  info_.manufacturer_ = data&0xFF;
-  readData(baseAddress()+0x4028, &data);
-  info_.manufacturer_ += (data&0xFF)<<8;
-  readData(baseAddress()+0x4024, &data);
-  info_.manufacturer_ += (data&0xFF)<<16;
+  info_.version_ = readData<uint16_t>(baseAddress()+0x4030)&0x1;
+  info_.manufacturer_ = readData<uint16_t>(baseAddress()+0x402C)&0xFF;
+  info_.manufacturer_ |= (readData<uint16_t>(baseAddress()+0x4028)&0xFF)<<8;
+  info_.manufacturer_ |= (readData<uint16_t>(baseAddress()+0x4024)&0xFF)<<16;
   assert(info_.manufacturer_==0x40E6);
   // revision, serial number
-  readData(baseAddress()+0x4084, &data);
-  info_.serial_number_ = data&0xFF;
-  readData(baseAddress()+0x4080, &data);
-  info_.serial_number_ += (data&0xFF)<<8;
-  readData(baseAddress()+0x404C, &data);
-  info_.revision_major_ = data&0xFF;
-  readData(baseAddress()+0x4048, &data);
-  info_.revision_major_ += (data&0xFF)<<8;
-  readData(baseAddress()+0x4044, &data);
-  info_.revision_minor_ = data&0xFF;
-  readData(baseAddress()+0x4040, &data);
-  info_.revision_minor_ += (data&0xFF)<<8;
+  info_.serial_number_ = readData<uint16_t>(baseAddress())&0xFF;
+  info_.serial_number_ |= (readData<uint16_t>(baseAddress()+0x4080)&0xFF)<<8;
+  info_.revision_major_ = readData<uint16_t>(baseAddress()+0x404C)&0xFF;
+  info_.revision_major_ |= (readData<uint16_t>(baseAddress()+0x4048)&0xFF)<<8;
+  info_.revision_minor_ = readData<uint16_t>(baseAddress()+0x4044)&0xFF;
+  info_.revision_minor_ |= (readData<uint16_t>(baseAddress()+0x4040)&0xFF)<<8;
   // firmware version
-  readData(baseAddress()+0x1026, &data);
-  info_.firmwareVersion_ = data&0xFF;
+  info_.firmwareVersion_ = readData<uint16_t>(baseAddress()+0x1026)&0xFF;
   
   LOG_DEBUG("CAEN V1190"+ ((info_.version_&0x1) ? string("B") : string("A")) + " initialized. " + 
             "Serial number: " + int_to_hex(info_.serial_number_) + 
@@ -80,14 +65,11 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
 }
 
 V1190ControlRegister Tdc::getControlRegister(){
-  uint16_t data;
-  readData(controlRegister_, &data);
-  return V1190ControlRegister(data);
+  return V1190ControlRegister(readData<uint16_t>(controlRegister_));
 }
 
 void Tdc::setControlRegister(V1190ControlRegister& reg){
-  uint16_t data = reg.registr();
-  writeData(controlRegister_, &data);
+  writeData(controlRegister_, reg.registr());
 }
 
 void Tdc::enableFIFO(bool enable) {
@@ -135,71 +117,53 @@ void Tdc::enableCompensation(bool enable) {
 }
 
 V1190StatusRegister Tdc::getStatus() {
-  uint16_t data;
-  readData(statusRegister_,&data);
-  return V1190StatusRegister(data);
+  return V1190StatusRegister(readData<uint16_t>(statusRegister_));
 }
 
 void Tdc::setInterrupt(uint8_t level, uint16_t vector) {
-  uint16_t data = level;
-  writeData(baseAddress()+0x100A, &data);
-  data = vector;
-  writeData(baseAddress()+0x100C, &data);
+  writeData(baseAddress()+0x100A, (uint16_t)level);
+  writeData(baseAddress()+0x100C, vector);
 }
 
 void Tdc::reset(bool moduleReset, bool softClear, bool softEvtReset) {
-  uint16_t data = 0;
-  if(moduleReset) { writeData(baseAddress() +0x1014, &data); LOG_INFO("Module Reset"); }
-  if(softClear) { writeData(baseAddress() +0x1016, &data); LOG_INFO("Software Clear"); }
-  if(softEvtReset) { writeData(baseAddress() +0x1018, &data); LOG_INFO("Software Event Reset"); }
+  if(moduleReset) { writeData(baseAddress() +0x1014, 0); LOG_INFO("Module Reset"); }
+  if(softClear) { writeData(baseAddress() +0x1016, 0); LOG_INFO("Software Clear"); }
+  if(softEvtReset) { writeData(baseAddress() +0x1018, 0); LOG_INFO("Software Event Reset"); }
 }
 
 void Tdc::trigger() {
-  uint16_t data = 0;
-  writeData(baseAddress() +0x101A, &data);
+  writeData(baseAddress() +0x101A, 0);
   LOG_INFO("Software Trigger generated.");
 }
 
 uint32_t Tdc::eventCount() {
-  uint32_t data = 0;
-  controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress() +0x101C,&data);
-  return data;
+  return controller()->mode(cvA32_U_DATA,cvD32)->readData<uint32_t>(baseAddress() +0x101C);
 }
 
 uint16_t Tdc::storedEventCount() {
-  uint16_t data = 0;
-  readData(baseAddress() +0x1020,&data);
-  return data;
+  return readData<uint16_t>(baseAddress() +0x1020);
 }
 
 void Tdc::setAlmostFullLevel(uint16_t level) {
-  uint16_t data = level;
-  writeData(baseAddress() +0x1022,&data);
+  writeData(baseAddress() +0x1022,level);
   LOG_INFO("Set almost-full level to " + to_string(level));
 }
 
 uint16_t Tdc::getAlmostFullLevel() {
-  uint16_t data = 0;
-  readData(baseAddress() +0x1022,&data);
-  return data;
+  return readData<uint16_t>(baseAddress() +0x1022);
 }
 
 std::pair<uint16_t,uint16_t> Tdc::readFIFO() {
-  uint32_t data = 0;
-  controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress() +0x1038,&data);
+  uint32_t data = controller()->mode(cvA32_U_DATA,cvD32)->readData<uint32_t>(baseAddress() +0x1038);
   return make_pair(data>>16,data&0xFFFF);
 }
 
 uint16_t Tdc::getFIFOCount() {
-  uint16_t data = 0;
-  readData(baseAddress() +0x103C,&data);
-  return data&0x7FF;
+  return readData<uint16_t>(baseAddress() +0x103C)&0x7FF;
 }
 
 uint8_t Tdc::getFIFOStatus() {
-  uint16_t data = 0;
-  readData(baseAddress() +0x103E,&data);
-  return data&0x3;
+  return readData<uint16_t>(baseAddress() +0x103E)&0x3;
 }
 
 V1190Event Tdc::getEvent(bool useFIFO) {
@@ -214,7 +178,7 @@ V1190Event Tdc::getEvent(bool useFIFO) {
   }
   // in D32 readout, read until we get to the trailer and fill progressively the event record
   for(uint16_t i=0; !(useFIFO&&i) || (i<nwords);++i) { 
-    controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress(),&data);
+    data = controller()->mode(cvA32_U_DATA,cvD32)->readData<uint32_t>(baseAddress());
     switch(data>>27) {
       case 0x8: // global header
         event = V1190Event(data);
@@ -275,23 +239,19 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
   // read all
   bool done = false;
   while(!done) {
-    // read nwords (from FIFO or default)
-    buffer = new unsigned char[nwords*4];
+    std::vector<uint32_t> tmp; 
+    // read n 32 bits words (from FIFO or default)
     try {
-      controller()->mode(cvA32_U_BLT,cvD32)->blockReadData(baseAddress(),buffer, nwords*4, &count);
-    } catch(CAENVMEexception &e) { 
+      tmp = controller()->mode(cvA32_U_BLT,cvD32)->blockReadData<uint32_t>(baseAddress(), nwords);
+    } catch(CAENVMEexception &e) {
+      // note: BERR stop condition should be avoided, since this implementation would discard the last BLT read.
       done = true;
     }
     // copy to the input vector
-    for(uint32_t i=0;i<count;i+=4) {
-      input.push_back(*(uint32_t*)(buffer+i));
-    }
-    // clear buffer
-    delete[] buffer;
-    // stop conditions: BERR (above), useFIFO (on BLT is enough), or buffer empty
+    input.insert(input.end(),tmp.begin(),tmp.end());
+    // stop conditions: BERR (above), useFIFO (one BLT is enough), or buffer empty
     if(useFIFO) done = true;
-    uint16_t data; readData(this->statusRegister_,&data);
-    done = (!(data&0x1));
+    done = (!(readData<uint16_t>(this->statusRegister_)&0x1));
   }
   // then loop on the data retrieved and create events
   for(auto data : input) {
@@ -324,7 +284,7 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
       case 0x3: // TDC trailer
         event.addTDCEvent(tdc);
         break;
-      case 0x18: // Filler... this should never happen.
+      case 0x18: // Filler... 
         break;
     }
   }
@@ -334,11 +294,8 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
 TDCHit Tdc::getHit()
 {
   waitDataReady();
-  // read one word
-  uint32_t data=0;
-  controller()->mode(cvA32_U_DATA,cvD32)->readData(baseAddress(),&data);
-  // interpret it as a hit and return the result
-  return TDCHit(data);
+  // read one word, interpret it as a hit and return the result
+  return TDCHit(controller()->mode(cvA32_U_DATA,cvD32)->readData<uint32_t>(baseAddress()));
 }
 
 void Tdc::setAcquisitionMode(Tdc::CVAcquisitionMode mode) {
@@ -532,33 +489,33 @@ std::bitset<128> Tdc::readEnablePattern(){
 /////  UTILITIES ///////
 
 void Tdc::waitRead(void) {
-  uint16_t data = 0;
+  uint16_t data;
   do {
-    readData(this->microHandshake_,&data);
+    data = readData<uint16_t>(this->microHandshake_);
   } while(!(data&0x2));
 }
 
 void Tdc::waitWrite(void) {
-  uint16_t data = 0;
+  uint16_t data;
   do {
-    readData(this->microHandshake_,&data);
+    data = readData<uint16_t>(this->microHandshake_);
   } while(!(data&0x1));
 }
 
 void Tdc::waitDataReady(void) {
-  uint16_t data = 0;
+  uint16_t data;
   do {
-    readData(this->statusRegister_,&data);
+    data = readData<uint16_t>(this->statusRegister_);
   } while(!(data&0x1));
 }
 
 void Tdc::writeOpcode(uint16_t &data) {
   waitWrite();
-  writeData(opcode_,&data);
+  writeData(opcode_,data);
 }
 
 void Tdc::readOpcode(uint16_t &data)
 {
   waitRead();
-  readData(opcode_,&data);
+  data = readData<uint16_t>(opcode_);
 }
