@@ -274,10 +274,10 @@ public:
   /////////////////////////
   
   // Write  a command line of 16 bit in the Micro Controller register.
-  void writeOpcode(uint16_t &data);
+  void writeOpcode(uint16_t data);
 
   // Read a 16 bit word in the Micro Controller register.
-  void readOpcode(uint16_t &data);
+  uint16_t readOpcode();
 
   /////////////////////////
   //// Acquisition mode

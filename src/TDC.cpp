@@ -299,126 +299,114 @@ TDCHit Tdc::getHit()
 }
 
 void Tdc::setAcquisitionMode(Tdc::CVAcquisitionMode mode) {
-  uint16_t opcode = (mode==cvTrigger ? 0x0000 :0x0100);
-  writeOpcode(opcode);
+  writeOpcode((mode==cvTrigger ? 0x0000 :0x0100));
   LOG_DEBUG("Trigger Mode : " + to_string(mode));
 }
   
 Tdc::CVAcquisitionMode Tdc::getAcquisitionMode(){
-  uint16_t opcode=0x0200;
-  writeOpcode(opcode);
-  readOpcode(opcode);
-  return CVAcquisitionMode(opcode&0x1);
+  writeOpcode(0x0200);
+  return CVAcquisitionMode(readOpcode()&0x1);
 }
   
 void Tdc::keepToken(bool keep) {
-  uint16_t opcode = (keep ? 0x0300 :0x0400);
-  writeOpcode(opcode);
+  writeOpcode((keep ? 0x0300 :0x0400));
   LOG_DEBUG("Keep Token : " + to_string(keep));
 }
   
 void Tdc::saveUserConfiguration() {
-  uint16_t opcode=0x0600;
-  writeOpcode(opcode);
+  writeOpcode(0x0600);
   LOG_DEBUG("User configuration saved.");
 }
   
 void Tdc::loadConfiguration(Tdc::CVConfiguration conf) {
-  uint16_t opcode = (conf==Tdc::cvDefault ? 0x0500 : 0x0700);
-  writeOpcode(opcode);
+  writeOpcode((conf==Tdc::cvDefault ? 0x0500 : 0x0700));
   LOG_DEBUG("Loaded " + std::string(conf==Tdc::cvDefault ? "default" : "user") + " configuration.");
 }
   
 void Tdc::setStartupConfiguration(Tdc::CVConfiguration conf) {
-  uint16_t opcode = (conf==cvDefault ? 0x0900 : 0x0800);
-  writeOpcode(opcode);
+  writeOpcode((conf==cvDefault ? 0x0900 : 0x0800));
   LOG_DEBUG("Set auto load " + std::string(conf==cvDefault ? "default" : "user") + " configuration.");
 }
 
 void Tdc::setTriggerWindow(Tdc::WindowConfiguration &conf) {
-  uint16_t opcode = 0x1000; writeOpcode(opcode);
+  writeOpcode(0x1000);
   writeOpcode(conf.width);
-  opcode = 0x1100; writeOpcode(opcode);
+  writeOpcode(0x1100);
   writeOpcode(conf.offset);
-  opcode = 0x1200; writeOpcode(opcode);
+  writeOpcode(0x1200);
   writeOpcode(conf.extraMargin);
-  opcode = 0x1300; writeOpcode(opcode);
+  writeOpcode(0x1300);
   writeOpcode(conf.rejectMargin);
-  opcode = (conf.triggerTimeSubstraction ? 0x1400 : 0x1500);
-  writeOpcode(opcode);
+  writeOpcode((conf.triggerTimeSubstraction ? 0x1400 : 0x1500));
   LOG_DEBUG("Trigger Window configured.");
 }
   
 Tdc::WindowConfiguration Tdc::getTriggerWindow() {
-  uint16_t opcode = 0x1600;  writeOpcode(opcode);
+  writeOpcode(0x1600);
   Tdc::WindowConfiguration conf;
-  readOpcode(conf.width);
-  readOpcode(conf.offset);
-  readOpcode(conf.extraMargin);
-  readOpcode(conf.rejectMargin);
-  readOpcode(opcode); conf.triggerTimeSubstraction = (opcode & 0x1);
+  conf.width = readOpcode();
+  conf.offset = readOpcode();
+  conf.extraMargin = readOpcode();
+  conf.rejectMargin = readOpcode();
+  conf.triggerTimeSubstraction = (readOpcode() & 0x1);
   return conf;
 }
 
 void Tdc::setEdgeDetectionConfiguration(Tdc::CVEdgeDetection conf){
-  uint16_t opcode = 0x2200;  writeOpcode(opcode);
-  opcode = (uint16_t)conf; writeOpcode(opcode);
+  writeOpcode(0x2200);
+  writeOpcode(conf);
 }
   
 Tdc::CVEdgeDetection Tdc::getEdgeDetectionConfiguration(){
-  uint16_t opcode = 0x2300;  writeOpcode(opcode);
-  readOpcode(opcode);
-  return Tdc::CVEdgeDetection(opcode&0x3);
+  writeOpcode(0x2300);
+  return Tdc::CVEdgeDetection(readOpcode()&0x3);
 }
   
 void Tdc::setEdgeLSB(Tdc::CVEdgeLSB lsb){
-  uint16_t opcode = 0x2400;  writeOpcode(opcode);
-  opcode = (uint16_t)lsb; writeOpcode(opcode);
+  writeOpcode(0x2400);
+  writeOpcode(lsb);
 }
   
 void Tdc::setPairResolution(Tdc::CVPairModeEdgeLSB edge, Tdc::CVPairModeWidthLSB width){
-  uint16_t opcode = 0x2500;  writeOpcode(opcode);
-  opcode = uint16_t(edge) + (uint16_t(width)<<8); writeOpcode(opcode);
+  writeOpcode(0x2500);
+  writeOpcode(uint16_t(edge) + (uint16_t(width)<<8));
 }
   
 Tdc::CVEdgeLSB Tdc::getResolution(){
-  uint16_t opcode = 0x2600;  writeOpcode(opcode);
-  readOpcode(opcode);
+  writeOpcode(0x2600);
   // assumes to be in leading/trailing edge mode
-  return Tdc::CVEdgeLSB(opcode&0x3);
+  return Tdc::CVEdgeLSB(readOpcode()&0x3);
 }
 
 std::pair<Tdc::CVPairModeEdgeLSB, Tdc::CVPairModeWidthLSB> Tdc::getPairResolution(){
-  uint16_t opcode = 0x2600;  writeOpcode(opcode);
-  readOpcode(opcode);
+  writeOpcode(0x2600);
+  uint16_t opcode = readOpcode();
   // assumes to be in pair mode
   return make_pair(Tdc::CVPairModeEdgeLSB(opcode&0x7),Tdc::CVPairModeWidthLSB((opcode>>8)&0xF));
 }
   
 void Tdc::setDeadTime(Tdc::CVDeadTime dt){
-  uint16_t opcode = 0x2800;  writeOpcode(opcode);
-  opcode = (uint16_t)dt; writeOpcode(opcode);
+  writeOpcode(0x2800);
+  writeOpcode(dt);
 }
   
 Tdc::CVDeadTime Tdc::getDeadTime(){
-  uint16_t opcode = 0x2900;  writeOpcode(opcode);
-  readOpcode(opcode);
-  return Tdc::CVDeadTime(opcode&0x3);
+  writeOpcode(0x2900);
+  return Tdc::CVDeadTime(readOpcode()&0x3);
 }
 
 void Tdc::enableTDCHeader(bool enable){
-  uint16_t opcode = (enable? 0x3000 : 0x3100);
-  writeOpcode(opcode);
+  writeOpcode((enable? 0x3000 : 0x3100));
 }
   
 bool Tdc::isTDCHeaderEnabled(){
-  uint16_t opcode = 0x3200;  writeOpcode(opcode);
-  readOpcode(opcode);
-  return (opcode&0x1);
+  writeOpcode(0x3200);
+  return (readOpcode()&0x1);
 }
   
 void Tdc::setMaxHitsPerEvent(int numHits){
-  uint16_t opcode = 0x3300;  writeOpcode(opcode);
+  writeOpcode(0x3300);
+  uint16_t opcode;
   if(numHits<0) { opcode=9;}
   else if(numHits==0) { opcode=0; }
   else {
@@ -430,32 +418,30 @@ void Tdc::setMaxHitsPerEvent(int numHits){
 }
   
 int Tdc::getMaxHitsPerEvent(){
-  uint16_t opcode = 0x3400;  writeOpcode(opcode);
-  readOpcode(opcode); opcode &= 0xF;
+  writeOpcode(0x3400);
+  uint16_t opcode = readOpcode()&0xF;
   if(opcode==0) return 0;
   if(opcode==9) return -1;
   return 1<<(opcode-1);
 }
   
 void Tdc::configureTDCReadout(bool enableErrorMask, bool enableBypass, uint16_t internalErrorTypes, uint16_t fifoSize){
-  uint16_t opcode = (enableErrorMask? 0x3500 : 0x3600); writeOpcode(opcode);
-  opcode = (enableBypass? 0x3700 : 0x3800); writeOpcode(opcode);
-  opcode = 0x3900; writeOpcode(opcode);
-  opcode = internalErrorTypes; writeOpcode(opcode);
-  opcode = 0x3B00; writeOpcode(opcode);
-  opcode = fifoSize; writeOpcode(opcode);
+  writeOpcode((enableErrorMask? 0x3500 : 0x3600));
+  writeOpcode((enableBypass? 0x3700 : 0x3800));
+  writeOpcode(0x3900);
+  writeOpcode(internalErrorTypes);
+  writeOpcode(0x3B00);
+  writeOpcode(fifoSize);
 }
   
 uint16_t Tdc::getInternalErrorTypes(){
-  uint16_t opcode = 0x3A00; writeOpcode(opcode);
-  readOpcode(opcode);
-  return opcode;
+  writeOpcode(0x3A00);
+  return readOpcode();
 }
   
 uint16_t Tdc::getFifoSize(){
-  uint16_t opcode = 0x3C00; writeOpcode(opcode);
-  readOpcode(opcode);
-  return opcode;
+  writeOpcode(0x3C00);
+  return readOpcode();
 }
 
 void Tdc::enableChannel(uint8_t channel, bool enable){
@@ -465,22 +451,20 @@ void Tdc::enableChannel(uint8_t channel, bool enable){
 }
   
 void Tdc::writeEnablePattern(std::bitset<128> &pattern){
-  uint16_t opcode = 0x4400; writeOpcode(opcode);
+  writeOpcode(0x4400);
   int nTDC = (info_.version_&0x1) ? 4 : 8;
   for (int i=0; i<nTDC; ++i) {
-    opcode = (pattern>>(16*i)).to_ulong(); // shift and truncate
-    writeOpcode(opcode);
+    writeOpcode((pattern>>(16*i)).to_ulong());  // shift and truncate
   }
 }
   
 std::bitset<128> Tdc::readEnablePattern(){
-  uint16_t opcode = 0x4500; writeOpcode(opcode);
+  writeOpcode(0x4500);
   std::bitset<128> pattern = 0;
   std::bitset<128> tmp;
   int nTDC = (info_.version_&0x1) ? 4 : 8;
   for (int i=0; i<nTDC; ++i) {
-    readOpcode(opcode);
-    tmp = opcode; tmp <<=(16*i);
+    tmp = readOpcode(); tmp <<=(16*i);
     pattern |= tmp;
   }
   return pattern;
@@ -509,13 +493,13 @@ void Tdc::waitDataReady(void) {
   } while(!(data&0x1));
 }
 
-void Tdc::writeOpcode(uint16_t &data) {
+void Tdc::writeOpcode(uint16_t data) {
   waitWrite();
   writeData(opcode_,data);
 }
 
-void Tdc::readOpcode(uint16_t &data)
+uint16_t Tdc::readOpcode()
 {
   waitRead();
-  data = readData<uint16_t>(opcode_);
+  return readData<uint16_t>(opcode_);
 }
