@@ -17,6 +17,7 @@
 */
 
 #include "HVmodule.h"
+#include "PythonModule.h"
 #include "CommonDef.h"
 #include "CaenetBridge.h"
 
@@ -104,4 +105,106 @@ HVModule* HVModule::HVModuleFactory(uint32_t address, CaenetBridge* bridge) {
   
   // fall back
   return nullptr;
+}
+
+using namespace boost::python;
+
+template<> void exposeToPython<HVChannel>() {
+  struct HVChannelWrap : HVChannel, wrapper<HVChannel> {
+    HVChannelWrap(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address, board, id, bridge), wrapper<HVChannel>() {} 
+    void on() override {
+      this->get_override("on")();
+    }
+    void off() override {
+      this->get_override("off")();
+    }
+    void setV0(uint32_t v0) override {
+      this->get_override("setV0")(v0);
+    }
+    void setV1(uint32_t v1) override {
+      this->get_override("setV1")(v1);
+    }
+    void setI0(uint32_t i0) override {
+      this->get_override("setI0")(i0);
+    }
+    void setI1(uint32_t i1) override {
+      this->get_override("setI1")(i1);
+    }
+    void setRampup(uint32_t rampup) override {
+      this->get_override("setRampup")(rampup);
+    }
+    void setRampdown(uint32_t rampdown) override {
+      this->get_override("setRampdown")(rampdown);
+    }
+    void setTrip(uint32_t trip) override {
+      this->get_override("setTrip")(trip);
+    }
+    void setSoftMaxV(uint32_t maxv) override {
+      this->get_override("setSoftMaxV")(maxv);
+    }
+    void readOperationalParameters() override {
+      this->get_override("readOperationalParameters")();
+    }
+  };
+  class_<HVChannelWrap, boost::noncopyable>("HVChannel", init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
+    .add_property("id",&HVChannel::id)
+    .add_property("board",&HVChannel::board)
+    .def("getBoard",&HVChannel::getBoard, return_value_policy<reference_existing_object>())
+    .add_property("V0",&HVChannel::getV0,&HVChannel::setV0)
+    .add_property("V1",&HVChannel::getV1,&HVChannel::setV1)
+    .add_property("I0",&HVChannel::getI0,&HVChannel::setI0)
+    .add_property("I1",&HVChannel::getI1,&HVChannel::setI1)
+    .add_property("rampup",&HVChannel::getRampup,&HVChannel::setRampup)
+    .add_property("rampdown",&HVChannel::getRampdown,&HVChannel::setRampdown)
+    .add_property("trip",&HVChannel::getTrip,&HVChannel::setTrip)
+    .add_property("Vmon",&HVChannel::getVmon)
+    .add_property("Imon",&HVChannel::getImon)
+    .add_property("maxV",&HVChannel::getmaxV)
+    .add_property("status",&HVChannel::getStatus)
+    .def("on",&HVChannel::on)
+    .def("off",&HVChannel::off)
+    .def("readOperationalParameters",&HVChannel::readOperationalParameters)
+  ;
+}
+
+template<> void exposeToPython<HVBoard>() {
+  class_<HVBoard>("HVBoard",init<uint32_t, std::string, uint8_t,uint16_t, uint16_t, uint8_t, uint32_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t>())
+    .def("getChannels",&HVBoard::getChannels)
+    .def("getSlot",&HVBoard::getSlot)
+    .def("getName",&HVBoard::getName)
+    .def("getCurrentUnit",&HVBoard::getCurrentUnit)
+    .def("getSerialNumber",&HVBoard::getSerialNumber)
+    .def("getSoftwareVersion",&HVBoard::getSoftwareVersion)
+    .def("getNChannels",&HVBoard::getNChannels)
+    .def("getVMax",&HVBoard::getVMax)
+    .def("getIMax",&HVBoard::getIMax)
+    .def("getRampMin",&HVBoard::getRampMin)
+    .def("getRampMax",&HVBoard::getRampMax)
+    .def("getVResolution",&HVBoard::getVResolution)
+    .def("getIResolution",&HVBoard::getIResolution)
+    .def("getVDecimals",&HVBoard::getVDecimals)
+    .def("getIDecimals",&HVBoard::getIDecimals)
+  ;
+}
+
+template<> void exposeToPython<HVModule>() {
+  struct HVModuleWrap : HVModule, wrapper<HVModule> {
+    HVModuleWrap(uint32_t address, CaenetBridge* bridge):HVModule(address, bridge), wrapper<HVModule>() {}
+    void discoverBoards() override {
+      this->get_override("discoverBoards")();
+    }
+    void assertIdentity() const override {
+      this->get_override("assertIdentity")();
+    }
+  };
+
+  class_<HVModuleWrap, boost::noncopyable>("HVModule", init<uint32_t, CaenetBridge*>())
+    .add_property("identification",&HVModule::identification)
+    .def("HVModuleFactory",&HVModule::HVModuleFactory,return_value_policy<manage_new_object>())
+    .staticmethod("HVModuleFactory") 
+    .def("channel",&HVModule::channel,return_value_policy<reference_existing_object>())
+    .def("board",&HVModule::board,return_value_policy<copy_non_const_reference>())
+    .def("getChannels",&HVModule::getChannels,return_value_policy<copy_non_const_reference>())
+    .def("getBoards",&HVModule::getBoards,return_value_policy<copy_non_const_reference>())
+  ;
 }

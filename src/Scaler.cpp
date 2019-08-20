@@ -17,8 +17,10 @@
 */
 
 #include "Scaler.h"
+#include "PythonModule.h"
 #include "CommonDef.h"
 #include <iostream>
+
 using namespace std;
 
 Scaler::Scaler(VmeController* controller,uint32_t address):VmeBoard(controller,address,cvA24_U_DATA,cvD16,true){
@@ -56,4 +58,14 @@ void Scaler::reset(){
   int data=0;
   LOG_INFO("Reseting Scaler...");
   writeData(baseAddress(),&data);
+}
+
+using namespace boost::python;
+
+template<> void exposeToPython<Scaler>() {
+  class_<Scaler>("Scaler",init<VmeController*,uint32_t>())
+    .def("getCount",&Scaler::getCount)
+    .def("setPreset",&Scaler::setPreset)
+    .def("reset",&Scaler::reset)
+  ;
 }

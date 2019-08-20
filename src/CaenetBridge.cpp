@@ -17,6 +17,7 @@
 */
 
 #include "CaenetBridge.h"
+#include "PythonModule.h"
 #include <unistd.h>
 
 CaenetBridge::CaenetBridge(VmeController *cont, uint32_t bridgeAdd, uint8_t interrupt):VmeBoard(cont,bridgeAdd,cvA24_S_DATA,cvD16,true),interrupt_(interrupt) {}
@@ -74,3 +75,23 @@ std::pair<uint32_t, std::vector<uint32_t> > CaenetBridge::readResponse() {
   data.pop_back();
   return make_pair(errorCode,data);
 }
+
+using namespace boost::python;
+
+template<> void exposeToPython<CaenetBridge>() {
+  class_<CaenetBridge, bases<VmeBoard> >("CaenetBridge",init<VmeController*, uint32_t, uint8_t>())
+    .def("reset",&CaenetBridge::reset)
+    .def("validStatus",&CaenetBridge::validStatus)
+    .def("write",&CaenetBridge::write)
+    .def("readResponse",&CaenetBridge::readResponse)
+  ;
+  class_<std::vector<uint32_t> >("vec_int")
+    .def(vector_indexing_suite<std::vector<uint32_t> >())
+    .def("__iter__", iterator<std::vector<uint32_t> >())
+  ;
+  class_<std::pair<uint32_t, std::vector<uint32_t> > >("CaenetResponse")
+    .def_readwrite("errorCode", &std::pair<uint32_t, std::vector<uint32_t> >::first)
+    .def_readwrite("data",&std::pair<uint32_t, std::vector<uint32_t> >::second)
+  ;
+}
+

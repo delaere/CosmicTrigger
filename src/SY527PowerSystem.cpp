@@ -18,6 +18,7 @@
 
 #include "SY527PowerSystem.h"
 #include "CaenetBridge.h"
+#include "PythonModule.h"
 
 using namespace std;
 
@@ -230,4 +231,48 @@ void SY527PowerSystem::updateStatus() {
   for (auto [key,channel] : getChannels()) {
     channel->readOperationalParameters();
   }
+}
+
+using namespace boost::python;
+
+template<> void exposeToPython<SY527StatusWord>() {
+  scope in_SY527StatusWord = class_<SY527StatusWord>("SY527StatusWord",init<uint32_t>())
+   .def("status",&SY527StatusWord::status)
+   .def("bit",&SY527StatusWord::bit)
+  ;
+
+  enum_<SY527StatusWord::CVStatusWordBit>("CVStatusWordBit")
+    .value("cvPRESENT", SY527StatusWord::cvPRESENT)
+    .value("cvINTRIP", SY527StatusWord::cvINTRIP)
+    .value("cvKILL", SY527StatusWord::cvKILL)
+    .value("cvMAXV", SY527StatusWord::cvMAXV)
+    .value("cvEXTRIP", SY527StatusWord::cvEXTRIP)
+    .value("cvOVV", SY527StatusWord::cvOVV)
+    .value("cvUNV", SY527StatusWord::cvUNV)
+    .value("cvOVC", SY527StatusWord::cvOVC)
+    .value("cvRDW", SY527StatusWord::cvRDW)
+    .value("cvRUP", SY527StatusWord::cvRUP)
+    .value("cvONOFF", SY527StatusWord::cvONOFF)
+    .value("cvEXTRIPEN", SY527StatusWord::cvEXTRIPEN)
+    .value("cvPWDREQ", SY527StatusWord::cvPWDREQ)
+    .value("cvPOWDOWN", SY527StatusWord::cvPOWDOWN)
+    .value("cvOOEN", SY527StatusWord::cvOOEN)
+    .value("cvPOWON", SY527StatusWord::cvPOWON)
+  ;
+}
+
+template<> void exposeToPython<SY527HVChannel>() {
+  class_<SY527HVChannel, bases<HVChannel> >("SY527HVChannel",init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
+    .def("setPasswordFlag",&SY527HVChannel::setPasswordFlag)
+    .def("setOnOffFlag",&SY527HVChannel::setOnOffFlag)
+    .def("setPoweronFlag",&SY527HVChannel::setPoweronFlag)
+    .def("getName",&SY527HVChannel::getName)
+    .def("getStatus",&SY527HVChannel::getStatus)
+  ;
+}
+
+template<> void exposeToPython<SY527PowerSystem>() {
+  class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
+    .def("updateStatus",&SY527PowerSystem::updateStatus)
+  ;
 }

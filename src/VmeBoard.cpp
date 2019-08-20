@@ -17,9 +17,18 @@
 */
 
 #include "VmeBoard.h"
-
+#include "PythonModule.h"
 
 VmeBoard::VmeBoard(VmeController* cont, uint32_t baseAddress, 
                    CVAddressModifier AM, CVDataWidth DW, 
                    bool enforceAMDW):cont_(cont),AM_(AM),DW_(DW),enforceAMDW_(enforceAMDW),baseAddress_(baseAddress) {}
+                   
+using namespace boost::python;
+
+template<> void exposeToPython<VmeBoard>() {
+  class_<VmeBoard>("VmeBoard",init<VmeController*, uint32_t, CVAddressModifier, CVDataWidth, bool>())
+    .add_property("enforce",&VmeBoard::isAMDWenforced,&VmeBoard::enforceAMDW)
+  ;
+}
+
 

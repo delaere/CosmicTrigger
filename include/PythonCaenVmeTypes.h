@@ -16,7 +16,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef __PYTHONMODULECONFIGURATION
+#ifndef __PYTHONCAENVMETYPES
+#define __PYTHONCAENVMETYPES
+
+using namespace boost::python;
+
+void exposeCaenVmeTypes() {
 
 enum_<CVDataWidth>("CVDataWidth")
   .value("cvD8", cvD8)
@@ -230,5 +235,7 @@ class_<CVDisplay>("CVDisplay")
   .def_readwrite("cvBR",&CVDisplay::cvBR)
   .def_readwrite("cvBG",&CVDisplay::cvBG)
   ;
+
+}
 
 #endif
