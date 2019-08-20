@@ -49,7 +49,7 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
   info_.manufacturer_ |= (readData<uint16_t>(baseAddress()+0x4024)&0xFF)<<16;
   assert(info_.manufacturer_==0x40E6);
   // revision, serial number
-  info_.serial_number_ = readData<uint16_t>(baseAddress())&0xFF;
+  info_.serial_number_ = readData<uint16_t>(baseAddress()+0x4084)&0xFF;
   info_.serial_number_ |= (readData<uint16_t>(baseAddress()+0x4080)&0xFF)<<8;
   info_.revision_major_ = readData<uint16_t>(baseAddress()+0x404C)&0xFF;
   info_.revision_major_ |= (readData<uint16_t>(baseAddress()+0x4048)&0xFF)<<8;
