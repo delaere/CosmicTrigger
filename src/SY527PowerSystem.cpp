@@ -233,6 +233,17 @@ void SY527PowerSystem::updateStatus() {
   }
 }
 
+uint16_t SY527PowerSystem::getHWStatus() {
+  bridge_->write({0x1,address_,0x7});
+  auto [ status, hwstatus ] = bridge_->readResponse(); checkCAENETexception(status);
+  return hwstatus[0];
+}
+  
+void SY527PowerSystem::selfTest(bool alwaysRestart) {
+  bridge_->write({0x1,address_,uint16_t(alwaysRestart ? 0x8 : 0x9)});
+  LOG_INFO("Triggered a self-test. Wait few seconds before checking the HW status.");
+}
+
 using namespace boost::python;
 
 template<> void exposeToPython<SY527StatusWord>() {
@@ -274,5 +285,7 @@ template<> void exposeToPython<SY527HVChannel>() {
 template<> void exposeToPython<SY527PowerSystem>() {
   class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
     .def("updateStatus",&SY527PowerSystem::updateStatus)
+    .def("getHWStatus",&SY527PowerSystem::getHWStatus)
+    .def("selfTest",&SY527PowerSystem::selfTest)
   ;
 }

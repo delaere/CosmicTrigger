@@ -109,7 +109,13 @@ public:
   ~SY527PowerSystem() {}
   
   void updateStatus();
-
+  
+  // checks the hardware status (result of a self-test)
+  uint16_t getHWStatus();
+  
+  // performs a self-test
+  void selfTest(bool alwaysRestart = true);
+  
 protected:
   // method to populate the boards map
   virtual void discoverBoards() override;
