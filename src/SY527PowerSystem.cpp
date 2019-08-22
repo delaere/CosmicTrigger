@@ -22,7 +22,7 @@
 
 using namespace std;
 
-SY527HVChannel::SY527HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge),name_("") {}
+SY527HVChannel::SY527HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):HVChannel(address,board,id,type,bridge),name_("") {}
 
 void SY527HVChannel::on() {
   // send command
@@ -142,9 +142,9 @@ void SY527HVChannel::readOperationalParameters() {
   bridge_->write({0x1,address_,0x1,chAddress()});
   // read response
   auto [ status1, chStatus ] = bridge_->readResponse(); checkCAENETexception(status1);
-  vmon_ = ((chStatus[0]<<16) + chStatus[1])/float(quick_pow10(board_->getVDecimals()));
+  vmon_ = ((chStatus[0]<<16) + chStatus[1])/float(quick_pow10(getProperties().getVDecimals()));
   maxV_ = chStatus[2];
-  imon_ = chStatus[3]/float(quick_pow10(board_->getIDecimals()));
+  imon_ = chStatus[3]/float(quick_pow10(getProperties().getIDecimals()));
   status_ = chStatus[4];
   // send command
   bridge_->write({0x1,address_,0x2,chAddress()});
@@ -181,13 +181,6 @@ SY527PowerSystem::SY527PowerSystem(uint32_t address, CaenetBridge* bridge):HVMod
   discoverBoards();
   LOG_INFO("Has "+to_string(getBoards().size())+ " boards.");
 
-  // instantiate the channels
-  for( auto & [slot, board] : getBoards() ) {
-    LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(board.getNChannels()) + " channels.");
-    for(int i=0;i<board.getNChannels();i++) {
-      channels_[std::pair(board.getSlot(),i)] = new SY527HVChannel(address,board,i,bridge); 
-    }
-  }
 }
 
 void SY527PowerSystem::discoverBoards() {
@@ -204,19 +197,58 @@ void SY527PowerSystem::discoverBoards() {
       std::string name = { char(boardDesc[0]>>8),char(boardDesc[0]&0xFF),
                            char(boardDesc[1]>>8),char(boardDesc[1]&0xFF),
                            char(boardDesc[2]>>8)};
-      uint8_t currlim  =  boardDesc[2]&0xFF;
       uint16_t sernum  = boardDesc[3];
       uint16_t ver     = boardDesc[4];
       uint8_t nchan    = (boardDesc[15]>>8);
-      uint32_t vmax    = (boardDesc[19]>>8)+(boardDesc[18]<<8)+((boardDesc[17]&0xFF)<<24);
-      uint16_t imax    = (boardDesc[20]>>8)+((boardDesc[19]&0xFF)<<8);
-      uint16_t rpmin   = (boardDesc[21]>>8)+((boardDesc[20]&0xFF)<<8);
-      uint16_t rpmax   = (boardDesc[22]>>8)+((boardDesc[21]&0xFF)<<8);
-      uint16_t vres    = (boardDesc[23]>>8)+((boardDesc[22]&0xFF)<<8);
-      uint16_t ires    = (boardDesc[24]>>8)+((boardDesc[23]&0xFF)<<8);
-      uint16_t vdec    = (boardDesc[25]>>8)+((boardDesc[24]&0xFF)<<8);
-      uint16_t idec    = (boardDesc[26]>>8)+((boardDesc[25]&0xFF)<<8);
-      boards_[i]  = HVBoard(i,name,currlim,sernum,ver,nchan,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec);
+      HVBoard board(i,name, sernum, ver, nchan);
+      LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(board.getNChannels()) + " channels.");
+      
+      // type of board
+      bool homogeneous  = !((boardDesc[16]>>9)&0x1);
+      if(homogeneous) {
+        // data for uniform boards
+        uint8_t curruni  =  boardDesc[2]&0xFF;
+        uint32_t vmax    = (boardDesc[19]>>8)+(boardDesc[18]<<8)+((boardDesc[17]&0xFF)<<24);
+        uint16_t imax    = (boardDesc[20]>>8)+((boardDesc[19]&0xFF)<<8);
+        uint16_t rpmin   = (boardDesc[21]>>8)+((boardDesc[20]&0xFF)<<8);
+        uint16_t rpmax   = (boardDesc[22]>>8)+((boardDesc[21]&0xFF)<<8);
+        uint16_t vres    = (boardDesc[23]>>8)+((boardDesc[22]&0xFF)<<8);
+        uint16_t ires    = (boardDesc[24]>>8)+((boardDesc[23]&0xFF)<<8);
+        uint16_t vdec    = (boardDesc[25]>>8)+((boardDesc[24]&0xFF)<<8);
+        uint16_t idec    = (boardDesc[26]>>8)+((boardDesc[25]&0xFF)<<8);
+        ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec);
+        board.add(props);
+        boards_.insert({i,board});
+        // instantiate the channels
+        for(int ch=0;i<nchan;i++) {
+          channels_[std::pair(i,ch)] = new SY527HVChannel(address_,board,ch,0,bridge_);
+        }
+      } else {
+        // look at additional words to build various channel types
+        uint16_t numtypes = boardDesc[27];        
+        // build the various channel types and add them to the board
+        for(uint8_t tpe = 0; tpe<numtypes; ++tpe) {
+          unsigned int startword = 31+(nchan-1)/2+14*tpe;
+          uint8_t curruni  =  boardDesc[startword]>>8;
+          uint32_t vmax    = (boardDesc[startword+3]<<16)+boardDesc[startword+4];
+          uint16_t imax    =  boardDesc[startword+5];
+          uint16_t rpmin   =  boardDesc[startword+6];
+          uint16_t rpmax   =  boardDesc[startword+7];
+          uint16_t vres    =  boardDesc[startword+8];
+          uint16_t ires    =  boardDesc[startword+9];
+          uint16_t vdec    =  boardDesc[startword+10];
+          uint16_t idec    =  boardDesc[startword+11];
+          ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec);
+          board.add(props);
+        }
+        boards_.insert({i,board});
+        LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(numtypes) + " channels types.");
+        // instantiate the channels
+        for(int ch=0;i<nchan;i++) {
+          uint8_t chtype = ch%2 ? ((boardDesc[28+ch/2])&0xFF) : ((boardDesc[28+ch/2])>>8);
+          channels_[std::pair(i,ch)] = new SY527HVChannel(address_,board,ch,chtype,bridge_);
+        }
+      }
     }
   }
 }
@@ -273,7 +305,7 @@ template<> void exposeToPython<SY527StatusWord>() {
 }
 
 template<> void exposeToPython<SY527HVChannel>() {
-  class_<SY527HVChannel, bases<HVChannel> >("SY527HVChannel",init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
+  class_<SY527HVChannel, bases<HVChannel> >("SY527HVChannel",init<uint32_t, HVBoard&, uint32_t, uint8_t, CaenetBridge*>())
     .def("setPasswordFlag",&SY527HVChannel::setPasswordFlag)
     .def("setOnOffFlag",&SY527HVChannel::setOnOffFlag)
     .def("setPoweronFlag",&SY527HVChannel::setPoweronFlag)

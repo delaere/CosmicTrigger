@@ -65,7 +65,7 @@ class SY527PowerSystem;
 class SY527HVChannel: public HVChannel
 {
 public:
-  explicit SY527HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge);
+  explicit SY527HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge);
   virtual ~SY527HVChannel() {}
   
   // turn on/off

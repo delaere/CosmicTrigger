@@ -26,18 +26,31 @@
 
 using namespace std;
 
-HVBoard::HVBoard(uint32_t slot, std::string name, uint8_t current_unit, uint16_t serial_number,
-                 uint16_t software_version, uint8_t nChannels, uint32_t vmax, uint16_t imax,
-                 uint16_t rampmin, uint16_t rampmax, uint16_t vres, uint16_t ires, uint16_t vdec, uint16_t idec):
-                 slot_(slot),name_(name),current_unit_(current_unit),serial_number_(serial_number),
-                 software_version_(software_version),nChannels_(nChannels),vmax_(vmax),imax_(imax),
-                 rampmin_(rampmin),rampmax_(rampmax),vres_(vres),ires_(ires),vdec_(vdec),idec_(idec) {
+HVBoard::HVBoard(uint32_t slot, std::string name, uint16_t serial_number,
+                 uint16_t software_version, uint8_t nChannels):
+                 slot_(slot),name_(name),serial_number_(serial_number),
+                 software_version_(software_version),nChannels_(nChannels) {
   LOG_TRACE("Board in slot " + to_string(slot) + ":");
   LOG_TRACE("Name: " + name);
-  LOG_TRACE("current_unit: " + to_string(current_unit));
+
   LOG_TRACE("serial_number: " + to_string(serial_number));
   LOG_TRACE("software_version: " + to_string(software_version));
   LOG_TRACE("nChannels: " + to_string(nChannels));
+
+}
+
+ChannelProperties::ChannelProperties(
+          uint8_t current_unit,
+          uint32_t vmax,
+          uint16_t imax,
+          uint16_t rampmin,
+          uint16_t rampmax,
+          uint16_t vres,
+          uint16_t ires,
+          uint16_t vdec,
+          uint16_t idec ):current_unit_(current_unit),vmax_(vmax),imax_(imax),
+            rampmin_(rampmin),rampmax_(rampmax),vres_(vres),ires_(ires),vdec_(vdec),idec_(idec) {
+  LOG_TRACE("current_unit: " + to_string(current_unit));
   LOG_TRACE("vmax: " + to_string(vmax));
   LOG_TRACE("imax: " + to_string(imax));
   LOG_TRACE("rampmin: " + to_string(rampmin));
@@ -47,9 +60,8 @@ HVBoard::HVBoard(uint32_t slot, std::string name, uint8_t current_unit, uint16_t
   LOG_TRACE("vdec: " + to_string(vdec));
   LOG_TRACE("idec: " + to_string(idec));
 }
-
             
-HVChannel::HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):bridge_(bridge),address_(address),id_(id),
+HVChannel::HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):bridge_(bridge),type_(type),address_(address),id_(id),
   vmon_(0.),imon_(0.),v0_(0),v1_(0),i0_(0),i1_(0),maxV_(3000),softmaxV_(3000),status_(0),rampup_(0),rampdown_(0),trip_(0) {
     // create a bidirectional link between the channel and the board
     attach(board);
@@ -57,12 +69,14 @@ HVChannel::HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge
 
 uint32_t HVChannel::board() const { return board_ ? board_->getSlot() : 0; }
 
-void HVChannel::attach(HVBoard &board) {
+const ChannelProperties& HVChannel::getProperties() const { return board_->getChannelProperties(type_); }
+
+void HVChannel::attach(const HVBoard &board) {
     board_ = &board;
     board.attachWithoutReciprocating(*this);
 }
 
-void HVChannel::attachWithoutReciprocating(HVBoard &board) {
+void HVChannel::attachWithoutReciprocating(const HVBoard &board) const {
     board_ = &board;
 }
   
@@ -80,11 +94,6 @@ HVModule::HVModule(uint32_t address, CaenetBridge* bridge):bridge_(bridge),addre
   // discover boards
   discoverBoards();
 
-  // instantiate the channels
-  for( auto & [slot, board] : getBoards() ) {
-    for(int i=0;i<board.getNChannels();i++) {
-      getChannels()[std::pair(board.getSlot(),i)] = new HVChannel(address,board,i,bridge); 
-    }
   }
   */
 }
@@ -111,7 +120,7 @@ using namespace boost::python;
 
 template<> void exposeToPython<HVChannel>() {
   struct HVChannelWrap : HVChannel, wrapper<HVChannel> {
-    HVChannelWrap(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address, board, id, bridge), wrapper<HVChannel>() {} 
+    HVChannelWrap(uint32_t address, HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):HVChannel(address, board, id, type,bridge), wrapper<HVChannel>() {} 
     void on() override {
       this->get_override("on")();
     }
@@ -146,7 +155,7 @@ template<> void exposeToPython<HVChannel>() {
       this->get_override("readOperationalParameters")();
     }
   };
-  class_<HVChannelWrap, boost::noncopyable>("HVChannel", init<uint32_t, HVBoard&, uint32_t, CaenetBridge*>())
+  class_<HVChannelWrap, boost::noncopyable>("HVChannel", init<uint32_t, HVBoard&, uint32_t, uint8_t, CaenetBridge*>())
     .add_property("id",&HVChannel::id)
     .add_property("board",&HVChannel::board)
     .def("getBoard",&HVChannel::getBoard, return_value_policy<reference_existing_object>())
@@ -168,22 +177,27 @@ template<> void exposeToPython<HVChannel>() {
 }
 
 template<> void exposeToPython<HVBoard>() {
-  class_<HVBoard>("HVBoard",init<uint32_t, std::string, uint8_t,uint16_t, uint16_t, uint8_t, uint32_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t>())
-    .def("getChannels",&HVBoard::getChannels)
+  class_<HVBoard>("HVBoard",init<uint32_t, std::string, uint16_t, uint16_t, uint8_t>())
     .def("getSlot",&HVBoard::getSlot)
     .def("getName",&HVBoard::getName)
-    .def("getCurrentUnit",&HVBoard::getCurrentUnit)
     .def("getSerialNumber",&HVBoard::getSerialNumber)
     .def("getSoftwareVersion",&HVBoard::getSoftwareVersion)
     .def("getNChannels",&HVBoard::getNChannels)
-    .def("getVMax",&HVBoard::getVMax)
-    .def("getIMax",&HVBoard::getIMax)
-    .def("getRampMin",&HVBoard::getRampMin)
-    .def("getRampMax",&HVBoard::getRampMax)
-    .def("getVResolution",&HVBoard::getVResolution)
-    .def("getIResolution",&HVBoard::getIResolution)
-    .def("getVDecimals",&HVBoard::getVDecimals)
-    .def("getIDecimals",&HVBoard::getIDecimals)
+    .def("getChannel",&HVBoard::getChannel,return_value_policy<copy_non_const_reference>())
+  ;
+}
+
+template<> void exposeToPython<ChannelProperties>() {
+  class_<ChannelProperties>("ChannelProperties",init<uint8_t,uint32_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t>())
+    .def("getCurrentUnit",&ChannelProperties::getCurrentUnit)
+    .def("getVMax",&ChannelProperties::getVMax)
+    .def("getIMax",&ChannelProperties::getIMax)
+    .def("getRampMin",&ChannelProperties::getRampMin)
+    .def("getRampMax",&ChannelProperties::getRampMax)
+    .def("getVResolution",&ChannelProperties::getVResolution)
+    .def("getIResolution",&ChannelProperties::getIResolution)
+    .def("getVDecimals",&ChannelProperties::getVDecimals)
+    .def("getIDecimals",&ChannelProperties::getIDecimals)
   ;
 }
 
@@ -203,7 +217,7 @@ template<> void exposeToPython<HVModule>() {
     .def("HVModuleFactory",&HVModule::HVModuleFactory,return_value_policy<manage_new_object>())
     .staticmethod("HVModuleFactory") 
     .def("channel",&HVModule::channel,return_value_policy<reference_existing_object>())
-    .def("board",&HVModule::board,return_value_policy<copy_non_const_reference>())
+    .def("board",&HVModule::board,return_value_policy<copy_const_reference>())
     .def("getChannels",&HVModule::getChannels,return_value_policy<copy_non_const_reference>())
     .def("getBoards",&HVModule::getBoards,return_value_policy<copy_non_const_reference>())
   ;

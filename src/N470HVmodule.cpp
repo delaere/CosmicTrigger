@@ -22,7 +22,7 @@
 
 using namespace std;
 
-N470HVChannel::N470HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,bridge){}
+N470HVChannel::N470HVChannel(uint32_t address, const HVBoard& board, uint32_t id, CaenetBridge* bridge):HVChannel(address,board,id,0,bridge){}
 
 void N470HVChannel::on() {
   // send command
@@ -135,18 +135,22 @@ N470HVModule::N470HVModule(uint32_t address, CaenetBridge* bridge):HVModule(addr
   discoverBoards();
   LOG_INFO("Has "+to_string(getBoards().size())+ " boards.");
 
-  // instantiate the channels
-  for( auto & [slot, board] : getBoards() ) {
-    LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(board.getNChannels()) + " channels.");
-    for(int i=0;i<board.getNChannels();i++) {
-      channels_[std::pair(board.getSlot(),i)] = new N470HVChannel(address,board,i,bridge); 
-    }
-  }
 }
 
 void N470HVModule::discoverBoards() {
   // only one board in that module. Cannot be dynamically discovered.
-  boards_[0] = HVBoard(0,"N470", 2, 0, 0, 4, 8000, 3000, 0, 500, 500, 1000, 0, 0);
+  HVBoard board(0,"N470", 0, 0, 4);
+  ChannelProperties props(2, 8000, 3000, 0, 500, 500, 1000, 0, 0);
+  board.add(props);
+  boards_.insert({0,board});
+  
+  // instantiate the channels
+  for( auto & [slot, board] : getBoards() ) {
+    LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(board.getNChannels()) + " channels.");
+    for(int i=0;i<board.getNChannels();i++) {
+      channels_[std::pair(board.getSlot(),i)] = new N470HVChannel(address_,board,i,bridge_);
+    }
+  }
 }
   
 void N470HVModule::assertIdentity() const {

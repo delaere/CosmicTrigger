@@ -65,7 +65,7 @@ class N470HVModule;
 class N470HVChannel: public HVChannel
 {
 public:
-  explicit N470HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge);
+  explicit N470HVChannel(uint32_t address, const HVBoard& board, uint32_t id, CaenetBridge* bridge);
   virtual ~N470HVChannel() {}
   
   // turn on/off

@@ -45,14 +45,14 @@ int main(int argc, char* argv[]){
     
     for (auto& [id,channel] : powersupply->getChannels()) {
       channel->readOperationalParameters();
-      int vmax = channel->getBoard()->getVMax(); // in volts
+      int vmax = channel->getProperties().getVMax(); // in volts
       int softvmax = channel->getSoftMaxV(); // in volts
       vmax = softvmax<vmax ? softvmax : vmax;
-      int vdec = channel->getBoard()->getVDecimals(); // number of decimals
+      int vdec = channel->getProperties().getVDecimals(); // number of decimals
       int vset = vmax>200 ? 200*quick_pow10(vdec) : vmax*quick_pow10(vdec); // with some digits
       uint16_t ramp = 10; // in V/s
-      ramp = ramp>channel->getBoard()->getRampMax() ? channel->getBoard()->getRampMax() : ramp;
-      ramp = ramp<channel->getBoard()->getRampMin() ? channel->getBoard()->getRampMin() : ramp;
+      ramp = ramp>channel->getProperties().getRampMax() ? channel->getProperties().getRampMax() : ramp;
+      ramp = ramp<channel->getProperties().getRampMin() ? channel->getProperties().getRampMin() : ramp;
       LOG_INFO("set V0 to " + to_string(vset/float(quick_pow10(vdec))) + " V, rup " + to_string(ramp));
       channel->setV0(vset);
       channel->setRampup(ramp);

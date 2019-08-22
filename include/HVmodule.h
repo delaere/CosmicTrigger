@@ -25,13 +25,14 @@ class CaenetBridge;
 
 class HVModule;
 class HVBoard;
+class ChannelProperties;
 class HVChannel;
 
 // One single HV channel.
 class HVChannel
 {
 public:
-  explicit HVChannel(uint32_t address, HVBoard& board, uint32_t id, CaenetBridge* bridge);
+  explicit HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge);
   virtual ~HVChannel() {}
   
   // the channel id
@@ -40,6 +41,7 @@ public:
   
   // the board properties
   const HVBoard* getBoard() const { return board_; }
+  const ChannelProperties& getProperties() const;
   
   // turn on/off
   void virtual on() = 0 ;
@@ -75,11 +77,13 @@ public:
   
 protected:
   
-  void attach(HVBoard &board);
-  void attachWithoutReciprocating(HVBoard &board);
+  void attach(const HVBoard &board);
+  void attachWithoutReciprocating(const HVBoard &board) const;
   
   CaenetBridge* bridge_;
-  HVBoard* board_;
+  mutable HVBoard const* board_;
+  
+  uint8_t type_;
   uint32_t address_;
   uint32_t id_;
   float vmon_;
@@ -104,10 +108,54 @@ class HVBoard{
 public:
   HVBoard(uint32_t slot,
           std::string name,
-          uint8_t current_unit,
           uint16_t serial_number,
           uint16_t software_version,
-          uint8_t nChannels,
+          uint8_t nChannels);
+  HVBoard():slot_(0),name_(""),serial_number_(0),software_version_(0),nChannels_(0) {}
+  virtual ~HVBoard() {};
+  void add(ChannelProperties &properties) {
+    channelsProps_.push_back(properties);
+  }
+
+  inline uint32_t getSlot() const { return slot_; }
+  inline std::string getName() const { return name_; }
+  inline uint16_t getSerialNumber() const { return serial_number_; }
+  inline uint16_t getSoftwareVersion() const { return software_version_; }
+  inline uint8_t getNChannels() const { return nChannels_; }
+  
+  inline HVChannel& getChannel(unsigned int n) { return *channels_.at(n); }
+  
+protected:
+  void attach(HVChannel &channel) const {
+    channels_.push_back(&channel);
+    channel.attachWithoutReciprocating(*this);
+  }
+
+  void attachWithoutReciprocating(HVChannel &channel) const {
+    channels_.push_back(&channel);
+  }
+  
+  inline const ChannelProperties& getChannelProperties(uint8_t ch) const { return channelsProps_.at(ch); }
+  
+private:
+  uint32_t slot_;
+  std::string name_;
+  uint16_t serial_number_;
+  uint16_t software_version_;
+  uint8_t nChannels_;
+  
+  mutable std::vector<HVChannel*> channels_;
+  std::vector<ChannelProperties> channelsProps_;
+
+  friend class HVModule;
+  friend class HVChannel;
+};
+
+// channel properties
+class ChannelProperties{
+public:
+  ChannelProperties(
+          uint8_t current_unit,
           uint32_t vmax,
           uint16_t imax,
           uint16_t rampmin,
@@ -116,18 +164,11 @@ public:
           uint16_t ires,
           uint16_t vdec,
           uint16_t idec );
-  HVBoard():slot_(0),name_(""),current_unit_(0),serial_number_(0),
-            software_version_(0),nChannels_(0),vmax_(0),imax_(0),
-            rampmin_(0),rampmax_(0),vres_(0),ires_(0),vdec_(0),idec_(0) {}
-  virtual ~HVBoard() {};
+  ChannelProperties():current_unit_(0),vmax_(0),imax_(0),
+            rampmin_(0),rampmax_(0),vres_(0),ires_(0),vdec_(0),idec_(0) { }
+  virtual ~ChannelProperties() {};
 
-  inline std::vector<HVChannel*> getChannels() { return channels_; }
-  inline uint32_t getSlot() const { return slot_; }
-  inline std::string getName() const { return name_; }
   inline uint8_t getCurrentUnit() const { return current_unit_; }
-  inline uint16_t getSerialNumber() const { return serial_number_; }
-  inline uint16_t getSoftwareVersion() const { return software_version_; }
-  inline uint8_t getNChannels() const { return nChannels_; }
   inline uint32_t getVMax() const { return vmax_; }
   inline uint16_t getIMax() const { return imax_; }
   inline uint16_t getRampMin() const { return rampmin_; }
@@ -137,24 +178,8 @@ public:
   inline uint16_t getVDecimals() const { return vdec_; }
   inline uint16_t getIDecimals() const { return idec_; }
   
-protected:
-  void attach(HVChannel &channel) {
-    channels_.push_back(&channel);
-    channel.attachWithoutReciprocating(*this);
-  }
-
-  void attachWithoutReciprocating(HVChannel &channel) {
-    channels_.push_back(&channel);
-  }
-  
 private:
-  uint32_t slot_;
-  std::vector<HVChannel*> channels_;
-  std::string name_;
   uint8_t current_unit_; // 0:A, 1:mA, 2:uA, 3:nA
-  uint16_t serial_number_;
-  uint16_t software_version_;
-  uint8_t nChannels_;
   uint32_t vmax_;
   uint16_t imax_;
   uint16_t rampmin_;
@@ -163,10 +188,6 @@ private:
   uint16_t ires_;
   uint16_t vdec_;
   uint16_t idec_;
-  
-  friend class HVModule;
-  friend class HVChannel;
-
 };
 
 // One HV module or crate
@@ -190,13 +211,13 @@ public:
   inline HVChannel* channel(uint32_t board, uint32_t channel) { return channels_.at(std::make_pair(board,channel)); }
   
   // returns one board
-  inline HVBoard& board(uint32_t slot) { return boards_.at(slot); }
+  inline const HVBoard& board(uint32_t slot) { return boards_.at(slot); }
   
   // returns all channels
   inline std::map<std::pair<uint32_t,uint32_t>, HVChannel*>& getChannels() { return channels_; }
   
   // returns all boards
-  inline std::map<uint32_t, HVBoard>& getBoards() { return boards_; }
+  inline std::map<uint32_t, const HVBoard>& getBoards() { return boards_; }
 
 protected:
   // method to be implemented to build the channel map. It populates the boards map
@@ -210,7 +231,7 @@ protected:
 
   std::map<std::pair<uint32_t,uint32_t>, HVChannel*> channels_; 
 
-  std::map<uint32_t, HVBoard> boards_;
+  std::map<uint32_t, const HVBoard> boards_;
 
   std::string identification_;
 };
