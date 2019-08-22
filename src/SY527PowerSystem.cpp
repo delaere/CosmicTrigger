@@ -220,7 +220,7 @@ void SY527PowerSystem::discoverBoards() {
         board.add(props);
         boards_.insert({i,board});
         // instantiate the channels
-        for(int ch=0;i<nchan;i++) {
+        for(int ch=0;ch<nchan;ch++) {
           channels_[std::pair(i,ch)] = new SY527HVChannel(address_,board,ch,0,bridge_);
         }
       } else {
@@ -244,7 +244,7 @@ void SY527PowerSystem::discoverBoards() {
         boards_.insert({i,board});
         LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(numtypes) + " channels types.");
         // instantiate the channels
-        for(int ch=0;i<nchan;i++) {
+        for(int ch=0;ch<nchan;ch++) {
           uint8_t chtype = ch%2 ? ((boardDesc[28+ch/2])&0xFF) : ((boardDesc[28+ch/2])>>8);
           channels_[std::pair(i,ch)] = new SY527HVChannel(address_,board,ch,chtype,bridge_);
         }
