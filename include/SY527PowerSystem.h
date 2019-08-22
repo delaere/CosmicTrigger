@@ -103,7 +103,7 @@ private:
   friend class SY527PowerSystem;
 };
 
-class channelGroup;
+class ChannelGroup;
 
 class SY527PowerSystem: public HVModule 
 {
@@ -120,7 +120,7 @@ public:
   void selfTest(bool alwaysRestart = true);
   
   // access groups of channels
-  channelGroup getGroup(uint n);
+  ChannelGroup getGroup(uint n);
   
 protected:
   // method to populate the boards map
@@ -131,10 +131,10 @@ protected:
 
 };
 
-class channelGroup
+class ChannelGroup
 {
 public:
-  virtual ~channelGroup() {}
+  virtual ~ChannelGroup() {}
   
   // types
   typedef std::set<SY527HVChannel*>::key_type        key_type;
@@ -198,16 +198,16 @@ public:
   void off();
   
 private:
-  channelGroup(uint id, CaenetBridge* bridge);
+  ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address);
   
   void setGroupName();
-  void readChannels();
   void addChannel(uint16_t num);
   void removeChannel(uint16_t num);
   
   uint id_;
   std::string name_;
   CaenetBridge* bridge_;
+  uint32_t address_;
   std::set<SY527HVChannel*> channels_;
   
   friend SY527PowerSystem;

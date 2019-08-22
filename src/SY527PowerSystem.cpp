@@ -276,6 +276,32 @@ void SY527PowerSystem::selfTest(bool alwaysRestart) {
   LOG_INFO("Triggered a self-test. Wait few seconds before checking the HW status.");
 }
 
+ChannelGroup SY527PowerSystem::getGroup(uint n) {
+  bridge_->write({0x1,address_,0x40, n});
+  auto [ status, groupDefinition ] = bridge_->readResponse(); checkCAENETexception(status);
+  // group name
+  std::string name = { char(groupDefinition[0]>>8),char(groupDefinition[0]&0xFF),
+                       char(groupDefinition[1]>>8),char(groupDefinition[1]&0xFF),
+                       char(groupDefinition[2]>>8),char(groupDefinition[2]&0xFF),
+                       char(groupDefinition[3]>>8),char(groupDefinition[3]&0xFF),
+                       char(groupDefinition[4]>>8),char(groupDefinition[4]&0xFF),
+                       char(groupDefinition[5]>>8)};
+  ChannelGroup group(n,name,bridge_,address_);
+  // channels
+  for(uint i = 6;i<groupDefinition.size();i+=2) {
+    uint8_t board = groupDefinition[i]>>8;
+    uint8_t chan = groupDefinition[i]&0xFF;
+    uint8_t priorityOn = groupDefinition[i+1]>>8; //TODO handle this
+    uint8_t priotityOff = groupDefinition[i+1]&0xFF; //TODO handle this
+    group.insert((SY527HVChannel*)(channel(board,chan)));
+  }
+  // return the group
+  return group;
+}
+
+ChannelGroup::ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address):id_(id),name_(name),bridge_(bridge),address_(address) {
+}
+
 using namespace boost::python;
 
 template<> void exposeToPython<SY527StatusWord>() {
