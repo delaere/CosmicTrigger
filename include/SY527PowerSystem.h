@@ -20,6 +20,7 @@
 #define __SY527HVMODULE
 
 #include "HVmodule.h"
+#include <set>
 
 // Simple class to represent the status word.
 class SY527StatusWord
@@ -102,6 +103,8 @@ private:
   friend class SY527PowerSystem;
 };
 
+class channelGroup;
+
 class SY527PowerSystem: public HVModule 
 {
 public:
@@ -116,6 +119,9 @@ public:
   // performs a self-test
   void selfTest(bool alwaysRestart = true);
   
+  // access groups of channels
+  channelGroup getGroup(uint n);
+  
 protected:
   // method to populate the boards map
   virtual void discoverBoards() override;
@@ -123,6 +129,88 @@ protected:
   // method to check that the returned identity is ok for this class
   virtual void assertIdentity() const override;
 
+};
+
+class channelGroup
+{
+public:
+  virtual ~channelGroup() {}
+  
+  // types
+  typedef std::set<SY527HVChannel*>::key_type        key_type;
+  typedef std::set<SY527HVChannel*>::value_type      value_type;
+  typedef std::set<SY527HVChannel*>::key_compare     key_compare;
+  typedef std::set<SY527HVChannel*>::value_compare   value_compare;
+  typedef std::set<SY527HVChannel*>::reference       reference;
+  typedef std::set<SY527HVChannel*>::const_reference const_reference;
+  typedef std::set<SY527HVChannel*>::iterator        iterator;
+  typedef std::set<SY527HVChannel*>::const_iterator  const_iterator; 
+  typedef std::set<SY527HVChannel*>::size_type       size_type;
+  typedef std::set<SY527HVChannel*>::difference_type difference_type;
+  typedef std::set<SY527HVChannel*>::allocator_type  allocator_type;
+  typedef std::set<SY527HVChannel*>::pointer         pointer;
+  typedef std::set<SY527HVChannel*>::const_pointer   const_pointer;
+
+  // iterators
+  inline iterator       begin() noexcept { return channels_.begin(); }
+  inline const_iterator begin() const noexcept { return channels_.begin(); }
+  inline iterator       end() noexcept { return channels_.end(); }
+  inline const_iterator end() const noexcept { return channels_.end(); }
+ 
+  // size
+  inline size_type size() { return channels_.size(); }
+  
+  // element access
+  inline iterator       find(const key_type& x) { return channels_.find(x); }
+  inline const_iterator find(const key_type& x) const { return channels_.find(x); }
+  inline size_type      count(const key_type& x) const { return channels_.count(x); }
+  
+  // modifiers
+  std::pair<iterator,bool> insert(const value_type& x);
+  std::pair<iterator,bool> insert(value_type&& x);
+  std::pair<iterator,bool> insert(uint board, uint channel);
+
+  iterator erase(const_iterator position);
+  size_type erase(const key_type& x);
+  size_type erase(uint board, uint channel);
+  iterator erase(const_iterator first, const_iterator last);
+  
+  // Group name
+  void setName(std::string name);
+  inline std::string getName() const { return name_; }
+  
+  // Read Vmon/Status/Imon of Channels in a Group
+  void readParameters();
+  
+  // Read V0set/I0set, V1set/I1set, Vmax/ITrip, Rup/Rdwn of Channels in a Group
+  void readSettings();
+  
+  // set all channeles in the group
+  void setV0(uint32_t v0);
+  void setV1(uint32_t v1);
+  void setI0(uint32_t i0);
+  void setI1(uint32_t i1);
+  void setRampup(uint32_t rampup);
+  void setRampdown(uint32_t rampdown);
+  void setTrip(uint32_t trip);
+  void setSoftMaxV(uint32_t maxv);
+  void on();
+  void off();
+  
+private:
+  channelGroup(uint id, CaenetBridge* bridge);
+  
+  void setGroupName();
+  void readChannels();
+  void addChannel(uint16_t num);
+  void removeChannel(uint16_t num);
+  
+  uint id_;
+  std::string name_;
+  CaenetBridge* bridge_;
+  std::set<SY527HVChannel*> channels_;
+  
+  friend SY527PowerSystem;
 };
 
 #endif //SY527PowerSystem
