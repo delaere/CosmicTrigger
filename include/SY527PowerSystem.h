@@ -61,6 +61,7 @@ private:
 };
 
 class SY527PowerSystem;
+class ChannelGroup;
 
 // One single HV channel.
 class SY527HVChannel: public HVChannel
@@ -101,9 +102,8 @@ private:
   inline uint16_t chAddress() const { return ((board_->getSlot()<<8) + id_); }
   
   friend class SY527PowerSystem;
+  friend class ChannelGroup;
 };
-
-class ChannelGroup;
 
 class SY527PowerSystem: public HVModule 
 {
@@ -131,25 +131,40 @@ protected:
 
 };
 
+struct channelEqual {
+  SY527HVChannel* m_value;
+  channelEqual(SY527HVChannel* value) : m_value(value) {}
+  bool operator()(const SY527HVChannel* cls) const {
+    return ((cls->board()<<8)|cls->id()) == ((m_value->board()<<8)|m_value->id());
+  }
+};
+
+struct channelIdx {
+  std::pair<uint32_t,uint32_t> m_value;
+  channelIdx(std::pair<uint32_t,uint32_t> value) : m_value(value) {}
+  bool operator()(const SY527HVChannel* cls) const {
+    return ((cls->board()<<8)|cls->id()) == ((m_value.first<<8)|m_value.second);
+  }
+};
+
+//TODO handle channel priority
 class ChannelGroup
 {
 public:
   virtual ~ChannelGroup() {}
   
   // types
-  typedef std::set<SY527HVChannel*>::key_type        key_type;
-  typedef std::set<SY527HVChannel*>::value_type      value_type;
-  typedef std::set<SY527HVChannel*>::key_compare     key_compare;
-  typedef std::set<SY527HVChannel*>::value_compare   value_compare;
-  typedef std::set<SY527HVChannel*>::reference       reference;
-  typedef std::set<SY527HVChannel*>::const_reference const_reference;
-  typedef std::set<SY527HVChannel*>::iterator        iterator;
-  typedef std::set<SY527HVChannel*>::const_iterator  const_iterator; 
-  typedef std::set<SY527HVChannel*>::size_type       size_type;
-  typedef std::set<SY527HVChannel*>::difference_type difference_type;
-  typedef std::set<SY527HVChannel*>::allocator_type  allocator_type;
-  typedef std::set<SY527HVChannel*>::pointer         pointer;
-  typedef std::set<SY527HVChannel*>::const_pointer   const_pointer;
+  typedef std::vector<SY527HVChannel*>::value_type      value_type;
+  typedef std::pair<uint32_t,uint32_t>                  key_type;
+  typedef std::vector<SY527HVChannel*>::reference       reference;
+  typedef std::vector<SY527HVChannel*>::const_reference const_reference;
+  typedef std::vector<SY527HVChannel*>::iterator        iterator;
+  typedef std::vector<SY527HVChannel*>::const_iterator  const_iterator; 
+  typedef std::vector<SY527HVChannel*>::size_type       size_type;
+  typedef std::vector<SY527HVChannel*>::difference_type difference_type;
+  typedef std::vector<SY527HVChannel*>::allocator_type  allocator_type;
+  typedef std::vector<SY527HVChannel*>::pointer         pointer;
+  typedef std::vector<SY527HVChannel*>::const_pointer   const_pointer;
 
   // iterators
   inline iterator       begin() noexcept { return channels_.begin(); }
@@ -161,22 +176,33 @@ public:
   inline size_type size() { return channels_.size(); }
   
   // element access
-  inline iterator       find(const key_type& x) { return channels_.find(x); }
-  inline const_iterator find(const key_type& x) const { return channels_.find(x); }
-  inline size_type      count(const key_type& x) const { return channels_.count(x); }
+  
+  inline iterator       find(const value_type& x) { return std::find_if(begin(),end(),channelEqual(x)); }
+  inline const_iterator find(const value_type& x) const { return std::find_if(begin(),end(),channelEqual(x)); }
+  inline size_type      count(const value_type& x) const { return find(x)!=end(); }
+  
+  inline iterator       find(const key_type& x) { return std::find_if(begin(),end(),channelIdx(x)); }
+  inline const_iterator find(const key_type& x) const { return std::find_if(begin(),end(),channelIdx(x)); }
+  inline size_type      count(const key_type& x) const { return find(x)!=end(); }
+  
+  inline reference       operator[](size_type n) { return channels_.operator[](n); }
+  inline const_reference operator[](size_type n) const { return channels_.operator[](n); }
+  inline reference       at(size_type n) { return channels_.at(n); }
+  inline const_reference at(size_type n) const { return channels_.at(n); }
+  inline reference       front() { return channels_.front(); }
+  inline const_reference front() const { return channels_.front(); }
+  inline reference       back() { return channels_.back(); }
+  inline const_reference back() const { return channels_.back(); }
   
   // modifiers
   std::pair<iterator,bool> insert(const value_type& x);
-  std::pair<iterator,bool> insert(value_type&& x);
-  std::pair<iterator,bool> insert(uint board, uint channel);
-
   iterator erase(const_iterator position);
+  size_type erase(const value_type& x);
   size_type erase(const key_type& x);
-  size_type erase(uint board, uint channel);
   iterator erase(const_iterator first, const_iterator last);
   
   // Group name
-  void setName(std::string name);
+  inline void setName(std::string name) { name_=name; name_.resize(name_.size()<12 ? name_.size() : 11); setGroupName(); }
   inline std::string getName() const { return name_; }
   
   // Read Vmon/Status/Imon of Channels in a Group
@@ -208,7 +234,7 @@ private:
   std::string name_;
   CaenetBridge* bridge_;
   uint32_t address_;
-  std::set<SY527HVChannel*> channels_;
+  std::vector<SY527HVChannel*> channels_;
   
   friend SY527PowerSystem;
 };

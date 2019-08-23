@@ -245,7 +245,7 @@ void SY527PowerSystem::discoverBoards() {
         LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(numtypes) + " channels types.");
         // instantiate the channels
         for(int ch=0;ch<nchan;ch++) {
-          uint8_t chtype = ch%2 ? ((boardDesc[28+ch/2])&0xFF) : ((boardDesc[28+ch/2])>>8);
+          uint8_t chtype = (ch%2) ? ((boardDesc[28+ch/2])&0xFF) : ((boardDesc[28+ch/2])>>8);
           channels_[std::pair(i,ch)] = new SY527HVChannel(address_,boards_[i],ch,chtype,bridge_);
         }
       }
@@ -300,6 +300,207 @@ ChannelGroup SY527PowerSystem::getGroup(uint n) {
 }
 
 ChannelGroup::ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address):id_(id),name_(name),bridge_(bridge),address_(address) {
+}
+
+std::pair<ChannelGroup::iterator,bool> ChannelGroup::insert(const value_type& x) {
+  // check that the channel is not yet in the group
+  ChannelGroup::iterator item = find(x);
+  if(item != end()) {
+    return make_pair(item,false);
+  } else {
+    // inserts the channel
+    channels_.push_back(x);
+    addChannel((x->board()<<8)|x->id());
+    return std::make_pair(end()-1,true);
+  }
+}
+
+ChannelGroup::iterator ChannelGroup::erase(ChannelGroup::const_iterator position) {
+  // remove it from the hardware group
+  removeChannel((*position)->board()<<8|(*position)->id());
+  // remove from the set
+  return channels_.erase(position);
+}
+
+ChannelGroup::size_type ChannelGroup::erase(const ChannelGroup::value_type& x){
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(x);
+  if(item != end()) {
+    // remove it from the hardware group
+    removeChannel(x->board()<<8|x->id());
+    // remove from the set
+    channels_.erase(item);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+ChannelGroup::size_type ChannelGroup::erase(const ChannelGroup::key_type& x){
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(x);
+  if(item != end()) {
+    // remove it from the hardware group
+    removeChannel((*item)->board()<<8|(*item)->id());
+    // remove from the set
+    channels_.erase(item);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+ChannelGroup::iterator ChannelGroup::erase(ChannelGroup::const_iterator first, ChannelGroup::const_iterator last){
+  // remove all from hardware group
+  for(ChannelGroup::const_iterator position = first; position<last ; ++position) {
+    removeChannel((*position)->board()<<8|(*position)->id());
+  }
+  // remove from the set
+  return channels_.erase(first,last); 
+}
+
+void ChannelGroup::addChannel(uint16_t num) {
+  bridge_->write({0x1,address_,0x50, id_, num});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void ChannelGroup::removeChannel(uint16_t num) {
+  bridge_->write({0x1,address_,0x51, id_, num});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void ChannelGroup::readParameters() {
+  bridge_->write({0x1,address_,0x41,id_});
+  auto [ status, grStatus ] = bridge_->readResponse(); checkCAENETexception(status);
+  
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->vmon_ = ((grStatus[0+i*5]<<16) + grStatus[1+i*5])/float(quick_pow10(channels_[i]->getProperties().getVDecimals()));
+    channels_[i]->maxV_ = grStatus[2+i*5];
+    channels_[i]->imon_ = grStatus[3+i*5]/float(quick_pow10(channels_[i]->getProperties().getIDecimals()));
+    channels_[i]->status_ = grStatus[4+i*5]&0xFFFF | (channels_[i]->status_&0xFFFF0000); 
+  }
+}
+
+void ChannelGroup::readSettings() {
+  bridge_->write({0x1,address_,0x43,id_});
+  auto [ status, grStatus ] = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->v0_ = (grStatus[0+i*3]<<16) + grStatus[1+i*3];
+    channels_[i]->i0_ = grStatus[2+i*3];
+  }
+  bridge_->write({0x1,address_,0x44,id_});
+  std::tie( status, grStatus ) = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->v1_ = (grStatus[0+i*3]<<16) + grStatus[1+i*3];
+    channels_[i]->i1_ = grStatus[2+i*3];
+  }
+  bridge_->write({0x1,address_,0x45,id_});
+  std::tie( status, grStatus ) = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->softmaxV_ = grStatus[0+i*3];
+    channels_[i]->trip_ = grStatus[1+i*3];
+    channels_[i]->status_ = (grStatus[2+i*3]<<16) | (channels_[i]->status_&0xFFFF);
+  }
+  bridge_->write({0x1,address_,0x46,id_});
+  std::tie( status, grStatus ) = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->rampup_ = grStatus[0+i*2];
+    channels_[i]->rampdown_ = grStatus[1+i*2];
+  }
+}
+
+void ChannelGroup::setV0(uint32_t v0) {
+  for(auto channel : channels_) { channel->v0_ = v0; }
+  // send command
+  bridge_->write({0x1,address_,0x52,id_,v0});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": V0 set to " + to_string(v0));
+}
+
+void ChannelGroup::setV1(uint32_t v1) {
+  for(auto channel : channels_) { channel->v1_ = v1; }
+  // send command
+  bridge_->write({0x1,address_,0x53,id_,v1});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": V1 set to " + to_string(v1));
+}
+
+void ChannelGroup::setI0(uint32_t i0) {
+  for(auto channel : channels_) { channel->i0_ = i0; }
+  // send command
+  bridge_->write({0x1,address_,0x55,id_,i0});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": I1 set to " + to_string(i0));
+}
+
+void ChannelGroup::setI1(uint32_t i1) {
+  for(auto channel : channels_) { channel->i1_ = i1; }
+  // send command
+  bridge_->write({0x1,address_,0x55,id_,i1});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": I1 set to " + to_string(i1));
+}
+
+void ChannelGroup::setRampup(uint32_t rampup) {
+  for(auto channel : channels_) { channel->rampup_ = rampup; }
+  // send command
+  bridge_->write({0x1,address_,0x57,id_,rampup});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": Ramp UP set to " + to_string(rampup));
+}
+
+void ChannelGroup::setRampdown(uint32_t rampdown) {
+  for(auto channel : channels_) { channel->rampdown_ = rampdown; }
+  // send command
+  bridge_->write({0x1,address_,0x58,id_,rampdown});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": Ramp DOWN set to " + to_string(rampdown));
+}
+
+void ChannelGroup::setTrip(uint32_t trip) {
+  for(auto channel : channels_) { channel->trip_ = trip; }
+  // send command
+  bridge_->write({0x1,address_,0x59,id_,trip});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": TRIP set to " + to_string(trip));
+}
+
+void ChannelGroup::setSoftMaxV(uint32_t maxv) {
+  for(auto channel : channels_) { channel->softmaxV_ = maxv; }
+  // send command
+  bridge_->write({0x1,address_,0x56,id_,maxv});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": Soft MAXV set to " + to_string(maxv));
+}
+
+void ChannelGroup::on() {
+  bridge_->write({0x1,address_,0x5A, id_});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + " turned ON.");
+}
+
+void ChannelGroup::off() {
+  bridge_->write({0x1,address_,0x5B, id_});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + " turned OFF.");
+}
+
+void ChannelGroup::setGroupName() {
+  std::vector<uint32_t> data = {0x1,address_,0x1B, id_};
+  for(uint c = 0; c < name_.size(); c+=2) {
+    data.push_back(name_[c]<<8|name_[c+1]);
+  }
+  if(!(name_.size()%2)) data.push_back(0);
+  bridge_->write(data);
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
 }
 
 using namespace boost::python;
