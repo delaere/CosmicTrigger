@@ -172,6 +172,17 @@ void SY527HVChannel::readOperationalParameters() {
   LOG_DEBUG("Operation parameters of channel " + to_string(board()) + "." + to_string(id()) + " updated.");
 }
 
+void SY527HVChannel::setName(std::string name) {
+  std::vector<uint32_t> command = {0x1,address_,0x19,chAddress()};
+  for(uint c = 0; c < name.size(); c+=2) {
+    command.push_back(name[c]<<8|name[c+1]);
+  }
+  if(!(name.size()%2)) command.push_back(0);
+  bridge_->write(command);
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  name_=name;
+}
+
 SY527PowerSystem::SY527PowerSystem(uint32_t address, CaenetBridge* bridge):HVModule(address,bridge) { 
   // check that the idendity is as expected in the derived class
   assertIdentity();
@@ -276,6 +287,32 @@ void SY527PowerSystem::selfTest(bool alwaysRestart) {
   LOG_INFO("Triggered a self-test. Wait few seconds before checking the HW status.");
 }
 
+void SY527PowerSystem::formatEEPROM() {
+  bridge_->write({0x1,address_,0x30});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  // confirm
+  bridge_->write({0x1,address_,0x31});
+  std::tie(status, data) = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void SY527PowerSystem::clearAlarm() {
+  bridge_->write({0x1,address_,0x32});
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void  SY527PowerSystem::lockKeyboard(bool lock) {
+  bridge_->write({0x1,address_,(uint16_t)(lock ? 0x33 : 0x34)});
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+  
+void  SY527PowerSystem::killAll() {
+  bridge_->write({0x1,address_,0x35});
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  bridge_->write({0x1,address_,0x36});
+  std::tie(status,data) = bridge_->readResponse(); checkCAENETexception(status);
+}
+
 ChannelGroup SY527PowerSystem::getGroup(uint n) {
   bridge_->write({0x1,address_,0x40, n});
   auto [ status, groupDefinition ] = bridge_->readResponse(); checkCAENETexception(status);
@@ -298,6 +335,17 @@ ChannelGroup SY527PowerSystem::getGroup(uint n) {
   // return the group
   return group;
 }
+
+uint32_t SY527PowerSystem::getGeneralStatus() {
+  bridge_->write({0x1,address_,0x5});
+  auto [ status, globalStatus ] = bridge_->readResponse(); checkCAENETexception(status);
+  return (globalStatus[0]<<16)|globalStatus[1];
+}
+
+void SY527PowerSystem::programAlarms(bool levelHigh, bool pulsedAlarm, bool OVCalarm, bool OVValarm, bool UNValarm) {
+  uint16_t status = levelHigh | (pulsedAlarm<<1) | (OVCalarm<<2) | (OVValarm<<3) | (UNValarm<<4);
+}
+
 
 ChannelGroup::ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address):id_(id),name_(name),bridge_(bridge),address_(address) {
 }
@@ -568,7 +616,7 @@ template<> void exposeToPython<SY527HVChannel>() {
     .def("setPasswordFlag",&SY527HVChannel::setPasswordFlag)
     .def("setOnOffFlag",&SY527HVChannel::setOnOffFlag)
     .def("setPoweronFlag",&SY527HVChannel::setPoweronFlag)
-    .def("getName",&SY527HVChannel::getName)
+    .add_property("name",&ChannelGroup::getName, &ChannelGroup::setName)
     .def("getStatus",&SY527HVChannel::getStatus)
   ;
 }
@@ -579,6 +627,12 @@ template<> void exposeToPython<SY527PowerSystem>() {
     .def("getHWStatus",&SY527PowerSystem::getHWStatus)
     .def("selfTest",&SY527PowerSystem::selfTest)
     .def("getGroup",&SY527PowerSystem::getGroup)
+    .def("getGeneralStatus",&SY527PowerSystem::getGeneralStatus)
+    .def("programAlarms",&SY527PowerSystem::programAlarms)
+    .def("formatEEPROM",&SY527PowerSystem::formatEEPROM)
+    .def("clearAlarm",&SY527PowerSystem::clearAlarm)
+    .def("lockKeyboard",&SY527PowerSystem::lockKeyboard)
+    .def("killAll",&SY527PowerSystem::killAll)
   ;
 }
 

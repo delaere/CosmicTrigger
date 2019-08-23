@@ -93,6 +93,9 @@ public:
   // get the channel name (call readOperationalParameters first)
   inline std::string getName() const { return name_; }
   
+  // set the channel name
+  void setName(std::string name);
+  
   // readOperationalParameters should be called first.
   inline SY527StatusWord getStatus() const { return status_; }
 
@@ -121,6 +124,24 @@ public:
   
   // access groups of channels
   ChannelGroup getGroup(uint n);
+  
+  // read the general status
+  uint32_t getGeneralStatus();
+  
+  // program alarms
+  void programAlarms(bool levelHigh, bool pulsedAlarm, bool OVCalarm, bool OVValarm, bool UNValarm);
+  
+  // format the CPU EEPROM
+  void formatEEPROM();
+  
+  // clear alarms
+  void clearAlarm();
+  
+  // (un)lock the keyboard
+  void lockKeyboard(bool lock=true);
+  
+  // kill all channels
+  void killAll();
   
 protected:
   // method to populate the boards map
