@@ -302,6 +302,38 @@ ChannelGroup SY527PowerSystem::getGroup(uint n) {
 ChannelGroup::ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address):id_(id),name_(name),bridge_(bridge),address_(address) {
 }
 
+struct channelEqual {
+  SY527HVChannel* m_value;
+  channelEqual(SY527HVChannel* value) : m_value(value) {}
+  bool operator()(const SY527HVChannel* cls) const {
+    return ((cls->board()<<8)|cls->id()) == ((m_value->board()<<8)|m_value->id());
+  }
+};
+
+struct channelIdx {
+  std::pair<uint32_t,uint32_t> m_value;
+  channelIdx(std::pair<uint32_t,uint32_t> value) : m_value(value) {}
+  bool operator()(const SY527HVChannel* cls) const {
+    return ((cls->board()<<8)|cls->id()) == ((m_value.first<<8)|m_value.second);
+  }
+};
+
+ChannelGroup::iterator       ChannelGroup::find(const value_type& x) { 
+  return std::find_if(begin(),end(),channelEqual(x)); 
+}
+
+ChannelGroup::const_iterator ChannelGroup::find(const value_type& x) const { 
+  return std::find_if(begin(),end(),channelEqual(x)); 
+}
+
+ChannelGroup::iterator       ChannelGroup::find(const key_type& x) { 
+  return std::find_if(begin(),end(),channelIdx(x)); 
+}
+
+ChannelGroup::const_iterator ChannelGroup::find(const key_type& x) const { 
+  return std::find_if(begin(),end(),channelIdx(x)); 
+}
+
 std::pair<ChannelGroup::iterator,bool> ChannelGroup::insert(const value_type& x) {
   // check that the channel is not yet in the group
   ChannelGroup::iterator item = find(x);
