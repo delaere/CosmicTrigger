@@ -546,5 +546,54 @@ template<> void exposeToPython<SY527PowerSystem>() {
     .def("updateStatus",&SY527PowerSystem::updateStatus)
     .def("getHWStatus",&SY527PowerSystem::getHWStatus)
     .def("selfTest",&SY527PowerSystem::selfTest)
+    .def("getGroup",&SY527PowerSystem::getGroup)
   ;
+}
+
+template<> void exposeToPython<ChannelGroup>() {
+   
+  ChannelGroup::iterator (ChannelGroup::*find1)(const ChannelGroup::value_type&) = &ChannelGroup::find;
+  ChannelGroup::const_iterator (ChannelGroup::*find2)(const ChannelGroup::value_type&) const = &ChannelGroup::find;
+  ChannelGroup::iterator (ChannelGroup::*find3)(const ChannelGroup::key_type&) = &ChannelGroup::find;
+  ChannelGroup::const_iterator (ChannelGroup::*find4)(const ChannelGroup::key_type&) const = &ChannelGroup::find;
+  ChannelGroup::reference (ChannelGroup::*at1)(ChannelGroup::size_type) = &ChannelGroup::at;
+  ChannelGroup::const_reference (ChannelGroup::*at2)(ChannelGroup::size_type) const = &ChannelGroup::at;
+  ChannelGroup::size_type (ChannelGroup::*count1)(const ChannelGroup::value_type&) const = &ChannelGroup::count;
+  ChannelGroup::size_type (ChannelGroup::*count2)(const ChannelGroup::key_type&) const = &ChannelGroup::count;
+  ChannelGroup::iterator (ChannelGroup::*erase1)(ChannelGroup::const_iterator) = &ChannelGroup::erase;
+  ChannelGroup::size_type (ChannelGroup::*erase2)(const ChannelGroup::value_type&) = &ChannelGroup::erase;
+  ChannelGroup::size_type (ChannelGroup::*erase3)(const ChannelGroup::key_type&) = &ChannelGroup::erase;
+  ChannelGroup::iterator (ChannelGroup::*erase4)(ChannelGroup::const_iterator,ChannelGroup::const_iterator) = &ChannelGroup::erase;
+  
+  class_<ChannelGroup>("ChannelGroup",no_init)
+    .add_property("name",&ChannelGroup::getName, &ChannelGroup::setName)
+    .def("readParameters",&ChannelGroup::readParameters)
+    .def("readSettings",&ChannelGroup::readSettings)
+    .def("setV0",&ChannelGroup::setV0)
+    .def("setV1",&ChannelGroup::setV1)
+    .def("setI0",&ChannelGroup::setI0)
+    .def("setI1",&ChannelGroup::setI1)
+    .def("setRampup",&ChannelGroup::setRampup)
+    .def("setRampdown",&ChannelGroup::setRampdown)
+    .def("setTrip",&ChannelGroup::setTrip)
+    .def("setSoftMaxV",&ChannelGroup::setSoftMaxV)
+    .def("on",&ChannelGroup::on)
+    .def("off",&ChannelGroup::off)
+    .def("__len__",&ChannelGroup::size)
+    .def("find",find1)
+    .def("find",find2)
+    .def("find",find3)
+    .def("find",find4)
+    .def("count",count1)
+    .def("count",count2)
+    .def("__getitem__",at1,return_value_policy<copy_non_const_reference>())
+    .def("__getitem__",at2,return_value_policy<copy_const_reference>())
+    .def("insert",&ChannelGroup::insert)
+    .def("insert",&ChannelGroup::insert)
+    .def("erase",erase1)
+    .def("erase",erase2)
+    .def("erase",erase3)
+    .def("erase",erase4)
+  ;
+
 }
