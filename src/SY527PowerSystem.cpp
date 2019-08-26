@@ -346,6 +346,18 @@ void SY527PowerSystem::programAlarms(bool levelHigh, bool pulsedAlarm, bool OVCa
   uint16_t status = levelHigh | (pulsedAlarm<<1) | (OVCalarm<<2) | (OVValarm<<3) | (UNValarm<<4);
 }
 
+std::vector<SY527PowerSystem::Checksum> SY527PowerSystem::checksum(bool current){
+  bridge_->write({0x1,address_,(uint16_t)(current? 0x61 : 0x60)});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  // convert vector<uint16_t> to vector<checksum> (1 to 2)
+  std::vector<SY527PowerSystem::Checksum> checksums;
+  for (auto word : response) {
+    checksums.push_back(SY527PowerSystem::Checksum(word>>8));
+    checksums.push_back(SY527PowerSystem::Checksum(word&0xFF));
+  }
+  return checksums;
+}
+
 
 ChannelGroup::ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address):id_(id),name_(name),bridge_(bridge),address_(address) {
 }
@@ -622,7 +634,7 @@ template<> void exposeToPython<SY527HVChannel>() {
 }
 
 template<> void exposeToPython<SY527PowerSystem>() {
-  class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
+  scope in_SY527PowerSystem = class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
     .def("updateStatus",&SY527PowerSystem::updateStatus)
     .def("getHWStatus",&SY527PowerSystem::getHWStatus)
     .def("selfTest",&SY527PowerSystem::selfTest)
@@ -633,7 +645,20 @@ template<> void exposeToPython<SY527PowerSystem>() {
     .def("clearAlarm",&SY527PowerSystem::clearAlarm)
     .def("lockKeyboard",&SY527PowerSystem::lockKeyboard)
     .def("killAll",&SY527PowerSystem::killAll)
+    .def("checksum",&SY527PowerSystem::checksum)
   ;
+  enum_<SY527PowerSystem::Checksum>("Checksum")
+    .value("correctChecksum", SY527PowerSystem::correctChecksum)
+    .value("wrongHdrChecksum", SY527PowerSystem::wrongHdrChecksum)
+    .value("wrongFwChecksum", SY527PowerSystem::wrongFwChecksum)
+    .value("wrongChecksum", SY527PowerSystem::wrongChecksum)
+    .value("boardAbsent", SY527PowerSystem::boardAbsent)
+  ;
+  class_<std::vector<SY527PowerSystem::Checksum> >("vec_checksum")
+    .def(vector_indexing_suite<std::vector<SY527PowerSystem::Checksum> >())
+    .def("__iter__", boost::python::iterator<std::vector<SY527PowerSystem::Checksum> >())
+  ;
+ 
 }
 
 template<> void exposeToPython<ChannelGroup>() {

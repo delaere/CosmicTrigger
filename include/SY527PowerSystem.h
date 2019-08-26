@@ -111,6 +111,15 @@ private:
 class SY527PowerSystem: public HVModule 
 {
 public:
+  
+  typedef enum Checksum {
+    correctChecksum  = 0,
+    wrongHdrChecksum = 1,
+    wrongFwChecksum  = 2,
+    wrongChecksum    = 3,
+    boardAbsent      = 0xFF
+  } Checksum;
+  
   explicit SY527PowerSystem(uint32_t address, CaenetBridge* bridge);
   ~SY527PowerSystem() {}
   
@@ -143,6 +152,9 @@ public:
   // kill all channels
   void killAll();
   
+  // checksums
+  std::vector<SY527PowerSystem::Checksum> checksum(bool current = true);
+  
 protected:
   // method to populate the boards map
   virtual void discoverBoards() override;
@@ -153,6 +165,19 @@ protected:
 };
 
 //TODO handle channel priority
+// since priority is a channel feature, it makes sense to add that to channels.
+// still, it is read when getting the group, and written through the group
+// set/get methods at channel level should be local (and set private) default to 0
+// group should set the value when initialized and when we call a group method (setPriorityON/OFF(channel,value)) channel can be value_type or key_type
+// pseudocode:
+// find(channel)
+// if !=end() 
+//   channel.setPriorityON/OFF(value)
+//   bridge_->write()
+// no getPriority at the group level.
+//
+// then, add an arg to the on and off methods (default:-1)
+// if that arg is not -1, use codes 0x62 and 0x63 instead. assert(n<=0x10)
 class ChannelGroup
 {
 public:
