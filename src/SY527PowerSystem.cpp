@@ -726,6 +726,10 @@ template<> void exposeToPython<ChannelGroup>() {
   ChannelGroup::size_type (ChannelGroup::*erase2)(const ChannelGroup::value_type&) = &ChannelGroup::erase;
   ChannelGroup::size_type (ChannelGroup::*erase3)(const ChannelGroup::key_type&) = &ChannelGroup::erase;
   ChannelGroup::iterator (ChannelGroup::*erase4)(ChannelGroup::const_iterator,ChannelGroup::const_iterator) = &ChannelGroup::erase;
+  void (ChannelGroup::*pron1)(const ChannelGroup::value_type& ,uint16_t) =  &ChannelGroup::setPriorityON;
+  void (ChannelGroup::*pron2)(const ChannelGroup::key_type& ,uint16_t) =  &ChannelGroup::setPriorityON;
+  void (ChannelGroup::*proff1)(const ChannelGroup::value_type& ,uint16_t) =  &ChannelGroup::setPriorityOFF;
+  void (ChannelGroup::*proff2)(const ChannelGroup::key_type& ,uint16_t) =  &ChannelGroup::setPriorityOFF;
   
   class_<ChannelGroup>("ChannelGroup",no_init)
     .add_property("name",&ChannelGroup::getName, &ChannelGroup::setName)
@@ -756,6 +760,10 @@ template<> void exposeToPython<ChannelGroup>() {
     .def("erase",erase2)
     .def("erase",erase3)
     .def("erase",erase4)
+    .def("setPriorityON",pron1)
+    .def("setPriorityON",pron2)
+    .def("setPriorityOFF",proff1)
+    .def("setPriorityOFF",proff2)
   ;
 
 }
