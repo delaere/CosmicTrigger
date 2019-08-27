@@ -671,6 +671,9 @@ template<> void exposeToPython<SY527StatusWord>() {
     .value("cvPOWDOWN", SY527StatusWord::cvPOWDOWN)
     .value("cvOOEN", SY527StatusWord::cvOOEN)
     .value("cvPOWON", SY527StatusWord::cvPOWON)
+    .value("cvABSORBS", SY527StatusWord::cvABSORBS)
+    .value("cvEXDIS", SY527StatusWord::cvEXDIS)
+    .value("cvPOWER", SY527StatusWord::cvPOWER)
   ;
 }
 

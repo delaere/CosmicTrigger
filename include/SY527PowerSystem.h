@@ -30,6 +30,8 @@ public:
   // meaning of the status bits
   typedef enum CVStatusWordBit {
     cvPRESENT = 0, /* The channel is present or not */
+    cvABSORBS = 3, /* Channel absorbs current (0=delivers) */
+    cvEXDIS   = 4, /* External disable */
     cvINTRIP  = 5, /* The channel has been switched OFF for internal TRIP condition */
     cvKILL    = 6, /* Module KILLed by external pulse still active */
     cvMAXV    = 8, /* The channel has reached the preset MAXV */
@@ -41,6 +43,7 @@ public:
     cvRUP     = 14,/* The channel is ramping up */ 
     cvONOFF   = 15,/* The channel is ON(1) or OFF(0) */ 
     cvEXTRIPEN= 25,/* The external trip feature is enabled */
+    cvPOWER   = 27,/* Power flag */
     cvPWDREQ  = 28,/* Password required for console operations */
     cvPOWDOWN = 29,/* Power down behavior: Kill(0) or RDW(1) */
     cvOOEN    = 30,/* On/Off enabled from console */
@@ -116,6 +119,27 @@ private:
   friend class ChannelGroup;
 };
 
+/*
+- The SY527 Software release 3.27 allows to program a non integer (1 decimal digit) VMAX limit; 
+TODO: add a field in ChannelDescription with the VMAXDEC. Let the user handle it as for VDEC.
+
+theBoard Parameters Packet structure (§ 3 of this User note) for homogeneous boards has been modified
+as follows:
+Bit 11 of Word 18 indicates if the board features VMAX decimal digit (Bit11=1) or not (Bit11=0).
+Bits [7...0] of Word 10 indicate the highest allowed VMAX decimal digit.
+If the board features VMAX decimal digit the VMAX value in Words 19, 20, 21 is multiplied by 10.
+
+The Board Parameters Packet structure (§ 3 of this User note) for non homogeneous boards has been
+modified as follows:
+Bit 3 of Word [n/2]+3 indicates if the board features VMAX decimal digit (Bit3=1) or not (Bit3=0).
+Bits [7...0] of Word [n/2]+2 indicate the highest allowed VMAX decimal digit.
+If the board features VMAX decimal digit the VMAX value in Words [n/2]+5 and [n/2]+6 is
+multiplied by 10.
+
+- The VMAX value returned after a %45 CAENET command is multiplied by 10 if the board features
+VMAX decimal digit.
+TODO: check what 0x45 returns (soft or hw maxV)
+*/
 class SY527PowerSystem: public HVModule 
 {
 public:
