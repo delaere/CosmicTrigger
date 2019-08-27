@@ -98,11 +98,19 @@ public:
   
   // readOperationalParameters should be called first.
   inline SY527StatusWord getStatus() const { return status_; }
+  
+  // channel priority in a group
+  inline unsigned int getPriorityON() const { return priorityOn_; }
+  inline unsigned int getPriorityOFF() const { return priorityOff_; }
 
 private:
   std::string name_;
+  uint8_t priorityOn_,priorityOff_;
   
   inline uint16_t chAddress() const { return ((board_->getSlot()<<8) + id_); }
+  
+  inline void setPriorityON( uint8_t priority) { priorityOn_ = priority; }
+  inline void setPriorityOFF( uint8_t priority) { priorityOff_ = priority; }
   
   friend class SY527PowerSystem;
   friend class ChannelGroup;
@@ -165,19 +173,12 @@ protected:
 };
 
 //TODO handle channel priority
-// since priority is a channel feature, it makes sense to add that to channels.
-// still, it is read when getting the group, and written through the group
-// set/get methods at channel level should be local (and set private) default to 0
-// group should set the value when initialized and when we call a group method (setPriorityON/OFF(channel,value)) channel can be value_type or key_type
-// pseudocode:
-// find(channel)
-// if !=end() 
-//   channel.setPriorityON/OFF(value)
-//   bridge_->write()
-// no getPriority at the group level.
 //
-// then, add an arg to the on and off methods (default:-1)
+// add an arg to the on and off methods (default:-1)
 // if that arg is not -1, use codes 0x62 and 0x63 instead. assert(n<=0x10)
+// TODO FIRST test the commands 0x62 and 0x63 to see what it does 
+// not clear if it is a turn on with some priority threshold, or if it programs the priority for all channels in the group.
+
 class ChannelGroup
 {
 public:
@@ -252,6 +253,12 @@ public:
   void setSoftMaxV(uint32_t maxv);
   void on();
   void off();
+  
+  // set channel priority
+  void setPriorityON(const value_type& channel, uint16_t priority);
+  void setPriorityOFF(const value_type& channel, uint16_t priority);
+  void setPriorityON(const key_type& channel, uint16_t priority);
+  void setPriorityOFF(const key_type& channel, uint16_t priority);
   
 private:
   ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address);

@@ -22,7 +22,7 @@
 
 using namespace std;
 
-SY527HVChannel::SY527HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):HVChannel(address,board,id,type,bridge),name_("") {}
+SY527HVChannel::SY527HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):HVChannel(address,board,id,type,bridge),name_(""),priorityOn_(0),priorityOff_(0) {}
 
 void SY527HVChannel::on() {
   // send command
@@ -328,9 +328,11 @@ ChannelGroup SY527PowerSystem::getGroup(uint n) {
   for(uint i = 6;i<groupDefinition.size();i+=2) {
     uint8_t board = groupDefinition[i]>>8;
     uint8_t chan = groupDefinition[i]&0xFF;
-    uint8_t priorityOn = groupDefinition[i+1]>>8; //TODO handle this
-    uint8_t priotityOff = groupDefinition[i+1]&0xFF; //TODO handle this
+    uint8_t priorityOn = groupDefinition[i+1]>>8;
+    uint8_t priorityOff = groupDefinition[i+1]&0xFF;
     group.insert((SY527HVChannel*)(channel(board,chan)));
+    group.back()->setPriorityON(priorityOn);
+    group.back()->setPriorityOFF(priorityOff);
   }
   // return the group
   return group;
@@ -594,6 +596,55 @@ void ChannelGroup::setGroupName() {
   bridge_->write(data);
   auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
 }
+
+void ChannelGroup::setPriorityON(const value_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x21, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityON(priority);
+  }
+}
+
+void ChannelGroup::setPriorityOFF(const value_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x20, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityOFF(priority);
+  }
+}
+
+void ChannelGroup::setPriorityON(const key_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x21, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityON(priority);
+  }
+}
+
+void ChannelGroup::setPriorityOFF(const key_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x20, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityOFF(priority);
+  }
+}
+
 
 using namespace boost::python;
 
