@@ -22,7 +22,7 @@
 
 using namespace std;
 
-SY527HVChannel::SY527HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):HVChannel(address,board,id,type,bridge),name_("") {}
+SY527HVChannel::SY527HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):HVChannel(address,board,id,type,bridge),name_(""),priorityOn_(0),priorityOff_(0) {}
 
 void SY527HVChannel::on() {
   // send command
@@ -172,6 +172,17 @@ void SY527HVChannel::readOperationalParameters() {
   LOG_DEBUG("Operation parameters of channel " + to_string(board()) + "." + to_string(id()) + " updated.");
 }
 
+void SY527HVChannel::setName(std::string name) {
+  std::vector<uint32_t> command = {0x1,address_,0x19,chAddress()};
+  for(uint c = 0; c < name.size(); c+=2) {
+    command.push_back(name[c]<<8|name[c+1]);
+  }
+  if(!(name.size()%2)) command.push_back(0);
+  bridge_->write(command);
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  name_=name;
+}
+
 SY527PowerSystem::SY527PowerSystem(uint32_t address, CaenetBridge* bridge):HVModule(address,bridge) { 
   // check that the idendity is as expected in the derived class
   assertIdentity();
@@ -216,7 +227,8 @@ void SY527PowerSystem::discoverBoards() {
         uint16_t ires    = (boardDesc[24]>>8)+((boardDesc[23]&0xFF)<<8);
         uint16_t vdec    = (boardDesc[25]>>8)+((boardDesc[24]&0xFF)<<8);
         uint16_t idec    = (boardDesc[26]>>8)+((boardDesc[25]&0xFF)<<8);
-        ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec);
+        uint16_t vmdec   = ((boardDesc[16]&0x800)>>11);
+        ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec,vmdec);
         board.add(props);
         boards_.insert({i,board});
         // instantiate the channels
@@ -238,14 +250,15 @@ void SY527PowerSystem::discoverBoards() {
           uint16_t ires    =  boardDesc[startword+9];
           uint16_t vdec    =  boardDesc[startword+10];
           uint16_t idec    =  boardDesc[startword+11];
-          ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec);
+          uint16_t vmdec   = ((boardDesc[startword+1]&0x8)>>3);
+          ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec,vmdec);
           board.add(props);
         }
         boards_.insert({i,board});
         LOG_INFO("Board " + to_string(board.getSlot()) + " has " + to_string(numtypes) + " channels types.");
         // instantiate the channels
         for(int ch=0;ch<nchan;ch++) {
-          uint8_t chtype = ch%2 ? ((boardDesc[28+ch/2])&0xFF) : ((boardDesc[28+ch/2])>>8);
+          uint8_t chtype = (ch%2) ? ((boardDesc[28+ch/2])&0xFF) : ((boardDesc[28+ch/2])>>8);
           channels_[std::pair(i,ch)] = new SY527HVChannel(address_,boards_[i],ch,chtype,bridge_);
         }
       }
@@ -276,6 +289,386 @@ void SY527PowerSystem::selfTest(bool alwaysRestart) {
   LOG_INFO("Triggered a self-test. Wait few seconds before checking the HW status.");
 }
 
+void SY527PowerSystem::formatEEPROM() {
+  bridge_->write({0x1,address_,0x30});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  // confirm
+  bridge_->write({0x1,address_,0x31});
+  std::tie(status, data) = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void SY527PowerSystem::clearAlarm() {
+  bridge_->write({0x1,address_,0x32});
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void  SY527PowerSystem::lockKeyboard(bool lock) {
+  bridge_->write({0x1,address_,(uint16_t)(lock ? 0x33 : 0x34)});
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+  
+void  SY527PowerSystem::killAll() {
+  bridge_->write({0x1,address_,0x35});
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  bridge_->write({0x1,address_,0x36});
+  std::tie(status,data) = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+ChannelGroup SY527PowerSystem::getGroup(uint n) {
+  bridge_->write({0x1,address_,0x40, n});
+  auto [ status, groupDefinition ] = bridge_->readResponse(); checkCAENETexception(status);
+  // group name
+  std::string name = { char(groupDefinition[0]>>8),char(groupDefinition[0]&0xFF),
+                       char(groupDefinition[1]>>8),char(groupDefinition[1]&0xFF),
+                       char(groupDefinition[2]>>8),char(groupDefinition[2]&0xFF),
+                       char(groupDefinition[3]>>8),char(groupDefinition[3]&0xFF),
+                       char(groupDefinition[4]>>8),char(groupDefinition[4]&0xFF),
+                       char(groupDefinition[5]>>8)};
+  ChannelGroup group(n,name,bridge_,address_);
+  // channels
+  for(uint i = 6;i<groupDefinition.size()-1;i+=2) {
+    uint8_t board = groupDefinition[i]>>8;
+    uint8_t chan = groupDefinition[i]&0xFF;
+    uint8_t priorityOn = groupDefinition[i+1]>>8;
+    uint8_t priorityOff = groupDefinition[i+1]&0xFF;
+    group.channels_.push_back((SY527HVChannel*)(channel(board,chan)));
+    group.back()->setPriorityON(priorityOn);
+    group.back()->setPriorityOFF(priorityOff);
+  }
+  // return the group
+  return group;
+}
+
+uint32_t SY527PowerSystem::getGeneralStatus() {
+  bridge_->write({0x1,address_,0x5});
+  auto [ status, globalStatus ] = bridge_->readResponse(); checkCAENETexception(status);
+  return (globalStatus[0]<<16)|globalStatus[1];
+}
+
+void SY527PowerSystem::programAlarms(bool levelHigh, bool pulsedAlarm, bool OVCalarm, bool OVValarm, bool UNValarm) {
+  uint16_t status = levelHigh | (pulsedAlarm<<1) | (OVCalarm<<2) | (OVValarm<<3) | (UNValarm<<4);
+}
+
+std::vector<SY527PowerSystem::Checksum> SY527PowerSystem::checksum(bool current){
+  bridge_->write({0x1,address_,(uint16_t)(current? 0x61 : 0x60)});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  // convert vector<uint16_t> to vector<checksum> (1 to 2)
+  std::vector<SY527PowerSystem::Checksum> checksums;
+  for (auto word : response) {
+    checksums.push_back(SY527PowerSystem::Checksum(word>>8));
+    checksums.push_back(SY527PowerSystem::Checksum(word&0xFF));
+  }
+  return checksums;
+}
+
+
+ChannelGroup::ChannelGroup(uint id, std::string name, CaenetBridge* bridge, uint32_t address):id_(id),name_(name),bridge_(bridge),address_(address) {
+}
+
+struct channelEqual {
+  SY527HVChannel* m_value;
+  channelEqual(SY527HVChannel* value) : m_value(value) {}
+  bool operator()(const SY527HVChannel* cls) const {
+    return ((cls->board()<<8)|cls->id()) == ((m_value->board()<<8)|m_value->id());
+  }
+};
+
+struct channelIdx {
+  std::pair<uint32_t,uint32_t> m_value;
+  channelIdx(std::pair<uint32_t,uint32_t> value) : m_value(value) {}
+  bool operator()(const SY527HVChannel* cls) const {
+    return ((cls->board()<<8)|cls->id()) == ((m_value.first<<8)|m_value.second);
+  }
+};
+
+ChannelGroup::iterator       ChannelGroup::find(const value_type& x) { 
+  return std::find_if(begin(),end(),channelEqual(x)); 
+}
+
+ChannelGroup::const_iterator ChannelGroup::find(const value_type& x) const { 
+  return std::find_if(begin(),end(),channelEqual(x)); 
+}
+
+ChannelGroup::iterator       ChannelGroup::find(const key_type& x) { 
+  return std::find_if(begin(),end(),channelIdx(x)); 
+}
+
+ChannelGroup::const_iterator ChannelGroup::find(const key_type& x) const { 
+  return std::find_if(begin(),end(),channelIdx(x)); 
+}
+
+std::pair<ChannelGroup::iterator,bool> ChannelGroup::insert(const value_type& x) {
+  // check that the channel is not yet in the group
+  ChannelGroup::iterator item = find(x);
+  if(item != end()) {
+    return make_pair(item,false);
+  } else {
+    // inserts the channel
+    channels_.push_back(x);
+    addChannel((x->board()<<8)|x->id());
+    return std::make_pair(end()-1,true);
+  }
+}
+
+ChannelGroup::iterator ChannelGroup::erase(ChannelGroup::const_iterator position) {
+  // remove it from the hardware group
+  removeChannel((*position)->board()<<8|(*position)->id());
+  // remove from the set
+  return channels_.erase(position);
+}
+
+ChannelGroup::size_type ChannelGroup::erase(const ChannelGroup::value_type& x){
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(x);
+  if(item != end()) {
+    // remove it from the hardware group
+    removeChannel(x->board()<<8|x->id());
+    // remove from the set
+    channels_.erase(item);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+ChannelGroup::size_type ChannelGroup::erase(const ChannelGroup::key_type& x){
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(x);
+  if(item != end()) {
+    // remove it from the hardware group
+    removeChannel((*item)->board()<<8|(*item)->id());
+    // remove from the set
+    channels_.erase(item);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+ChannelGroup::iterator ChannelGroup::erase(ChannelGroup::const_iterator first, ChannelGroup::const_iterator last){
+  // remove all from hardware group
+  for(ChannelGroup::const_iterator position = first; position<last ; ++position) {
+    removeChannel((*position)->board()<<8|(*position)->id());
+  }
+  // remove from the set
+  return channels_.erase(first,last); 
+}
+
+void ChannelGroup::addChannel(uint16_t num) {
+  bridge_->write({0x1,address_,0x50, id_, num});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void ChannelGroup::removeChannel(uint16_t num) {
+  bridge_->write({0x1,address_,0x51, id_, num});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void ChannelGroup::readParameters() {
+  bridge_->write({0x1,address_,0x41,id_});
+  auto [ status, grStatus ] = bridge_->readResponse(); checkCAENETexception(status);
+  
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->vmon_ = ((grStatus[0+i*5]<<16) + grStatus[1+i*5])/float(quick_pow10(channels_[i]->getProperties().getVDecimals()));
+    channels_[i]->maxV_ = grStatus[2+i*5];
+    channels_[i]->imon_ = grStatus[3+i*5]/float(quick_pow10(channels_[i]->getProperties().getIDecimals()));
+    channels_[i]->status_ = grStatus[4+i*5]&0xFFFF | (channels_[i]->status_&0xFFFF0000); 
+  }
+}
+
+void ChannelGroup::readSettings() {
+  bridge_->write({0x1,address_,0x43,id_});
+  auto [ status, grStatus ] = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->v0_ = (grStatus[0+i*3]<<16) + grStatus[1+i*3];
+    channels_[i]->i0_ = grStatus[2+i*3];
+  }
+  bridge_->write({0x1,address_,0x44,id_});
+  std::tie( status, grStatus ) = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->v1_ = (grStatus[0+i*3]<<16) + grStatus[1+i*3];
+    channels_[i]->i1_ = grStatus[2+i*3];
+  }
+  bridge_->write({0x1,address_,0x45,id_});
+  std::tie( status, grStatus ) = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->softmaxV_ = grStatus[0+i*3];
+    channels_[i]->trip_ = grStatus[1+i*3];
+    channels_[i]->status_ = (grStatus[2+i*3]<<16) | (channels_[i]->status_&0xFFFF);
+  }
+  bridge_->write({0x1,address_,0x46,id_});
+  std::tie( status, grStatus ) = bridge_->readResponse(); checkCAENETexception(status);
+  for(uint i = 0; i<channels_.size(); ++i) {
+    channels_[i]->rampup_ = grStatus[0+i*2];
+    channels_[i]->rampdown_ = grStatus[1+i*2];
+  }
+}
+
+void ChannelGroup::setV0(uint32_t v0) {
+  for(auto channel : channels_) { channel->v0_ = v0; }
+  // send command
+  bridge_->write({0x1,address_,0x52,id_,v0});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": V0 set to " + to_string(v0));
+}
+
+void ChannelGroup::setV1(uint32_t v1) {
+  for(auto channel : channels_) { channel->v1_ = v1; }
+  // send command
+  bridge_->write({0x1,address_,0x53,id_,v1});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": V1 set to " + to_string(v1));
+}
+
+void ChannelGroup::setI0(uint32_t i0) {
+  for(auto channel : channels_) { channel->i0_ = i0; }
+  // send command
+  bridge_->write({0x1,address_,0x55,id_,i0});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": I1 set to " + to_string(i0));
+}
+
+void ChannelGroup::setI1(uint32_t i1) {
+  for(auto channel : channels_) { channel->i1_ = i1; }
+  // send command
+  bridge_->write({0x1,address_,0x55,id_,i1});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": I1 set to " + to_string(i1));
+}
+
+void ChannelGroup::setRampup(uint32_t rampup) {
+  for(auto channel : channels_) { channel->rampup_ = rampup; }
+  // send command
+  bridge_->write({0x1,address_,0x57,id_,rampup});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": Ramp UP set to " + to_string(rampup));
+}
+
+void ChannelGroup::setRampdown(uint32_t rampdown) {
+  for(auto channel : channels_) { channel->rampdown_ = rampdown; }
+  // send command
+  bridge_->write({0x1,address_,0x58,id_,rampdown});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": Ramp DOWN set to " + to_string(rampdown));
+}
+
+void ChannelGroup::setTrip(uint32_t trip) {
+  for(auto channel : channels_) { channel->trip_ = trip; }
+  // send command
+  bridge_->write({0x1,address_,0x59,id_,trip});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": TRIP set to " + to_string(trip));
+}
+
+void ChannelGroup::setSoftMaxV(uint32_t maxv) {
+  for(auto channel : channels_) { channel->softmaxV_ = maxv; }
+  // send command
+  bridge_->write({0x1,address_,0x56,id_,maxv});
+  // read response
+  auto [ status, data ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + ": Soft MAXV set to " + to_string(maxv));
+}
+
+void ChannelGroup::on() {
+  bridge_->write({0x1,address_,0x5A, id_});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + " turned ON.");
+}
+
+void ChannelGroup::off() {
+  bridge_->write({0x1,address_,0x5B, id_});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  LOG_DEBUG("Group " + to_string(id_) + " turned OFF.");
+}
+
+void ChannelGroup::setGroupName() {
+  std::vector<uint32_t> data = {0x1,address_,0x1B, id_};
+  for(uint c = 0; c < name_.size(); c+=2) {
+    data.push_back(name_[c]<<8|name_[c+1]);
+  }
+  if(!(name_.size()%2)) data.push_back(0);
+  bridge_->write(data);
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+}
+
+void ChannelGroup::setPriorityON(const value_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x21, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityON(priority);
+  }
+}
+
+void ChannelGroup::setPriorityOFF(const value_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x20, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityOFF(priority);
+  }
+}
+
+void ChannelGroup::setPriorityON(const key_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x21, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityON(priority);
+  }
+}
+
+void ChannelGroup::setPriorityOFF(const key_type& channel, uint16_t priority) {
+  assert(priority<=16);
+  // find the element in the group
+  ChannelGroup::const_iterator item = find(channel);
+  if(item != end()) {
+    // set the priority
+    bridge_->write({0x1,address_,0x20, id_,(*item)->chAddress(),priority});
+    auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+    (*item)->setPriorityOFF(priority);
+  }
+}
+
+void ChannelGroup::setPriorityON(uint16_t priority) {
+  assert(priority<=16);
+  // set the priority
+  bridge_->write({0x1,address_,0x63, id_,priority});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  // update channel objects
+  for(auto channel : channels_) {
+    channel->setPriorityON(priority);
+  }
+}
+  
+void ChannelGroup::setPriorityOFF(uint16_t priority) {
+  assert(priority<=16);
+  // set the priority
+  bridge_->write({0x1,address_,0x62, id_,priority});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  // update channel objects
+  for(auto channel : channels_) {
+    channel->setPriorityOFF(priority);
+  }
+}
+
 using namespace boost::python;
 
 template<> void exposeToPython<SY527StatusWord>() {
@@ -301,6 +694,9 @@ template<> void exposeToPython<SY527StatusWord>() {
     .value("cvPOWDOWN", SY527StatusWord::cvPOWDOWN)
     .value("cvOOEN", SY527StatusWord::cvOOEN)
     .value("cvPOWON", SY527StatusWord::cvPOWON)
+    .value("cvABSORBS", SY527StatusWord::cvABSORBS)
+    .value("cvEXDIS", SY527StatusWord::cvEXDIS)
+    .value("cvPOWER", SY527StatusWord::cvPOWER)
   ;
 }
 
@@ -309,15 +705,97 @@ template<> void exposeToPython<SY527HVChannel>() {
     .def("setPasswordFlag",&SY527HVChannel::setPasswordFlag)
     .def("setOnOffFlag",&SY527HVChannel::setOnOffFlag)
     .def("setPoweronFlag",&SY527HVChannel::setPoweronFlag)
-    .def("getName",&SY527HVChannel::getName)
+    .add_property("name",&ChannelGroup::getName, &ChannelGroup::setName)
     .def("getStatus",&SY527HVChannel::getStatus)
+    .def("getPriorityON",&SY527HVChannel::getPriorityON)
+    .def("getPriorityOFF",&SY527HVChannel::getPriorityOFF)
   ;
 }
 
 template<> void exposeToPython<SY527PowerSystem>() {
-  class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
+  scope in_SY527PowerSystem = class_<SY527PowerSystem, bases<HVModule> >("SY527PowerSystem",init<uint32_t,CaenetBridge*>())
     .def("updateStatus",&SY527PowerSystem::updateStatus)
     .def("getHWStatus",&SY527PowerSystem::getHWStatus)
     .def("selfTest",&SY527PowerSystem::selfTest)
+    .def("getGroup",&SY527PowerSystem::getGroup)
+    .def("getGeneralStatus",&SY527PowerSystem::getGeneralStatus)
+    .def("programAlarms",&SY527PowerSystem::programAlarms)
+    .def("formatEEPROM",&SY527PowerSystem::formatEEPROM)
+    .def("clearAlarm",&SY527PowerSystem::clearAlarm)
+    .def("lockKeyboard",&SY527PowerSystem::lockKeyboard)
+    .def("killAll",&SY527PowerSystem::killAll)
+    .def("checksum",&SY527PowerSystem::checksum)
   ;
+  enum_<SY527PowerSystem::Checksum>("Checksum")
+    .value("correctChecksum", SY527PowerSystem::correctChecksum)
+    .value("wrongHdrChecksum", SY527PowerSystem::wrongHdrChecksum)
+    .value("wrongFwChecksum", SY527PowerSystem::wrongFwChecksum)
+    .value("wrongChecksum", SY527PowerSystem::wrongChecksum)
+    .value("boardAbsent", SY527PowerSystem::boardAbsent)
+  ;
+  class_<std::vector<SY527PowerSystem::Checksum> >("vec_checksum")
+    .def(vector_indexing_suite<std::vector<SY527PowerSystem::Checksum> >())
+    .def("__iter__", boost::python::iterator<std::vector<SY527PowerSystem::Checksum> >())
+  ;
+ 
+}
+
+template<> void exposeToPython<ChannelGroup>() {
+   
+  ChannelGroup::iterator (ChannelGroup::*find1)(const ChannelGroup::value_type&) = &ChannelGroup::find;
+  ChannelGroup::const_iterator (ChannelGroup::*find2)(const ChannelGroup::value_type&) const = &ChannelGroup::find;
+  ChannelGroup::iterator (ChannelGroup::*find3)(const ChannelGroup::key_type&) = &ChannelGroup::find;
+  ChannelGroup::const_iterator (ChannelGroup::*find4)(const ChannelGroup::key_type&) const = &ChannelGroup::find;
+  ChannelGroup::reference (ChannelGroup::*at1)(ChannelGroup::size_type) = &ChannelGroup::at;
+  ChannelGroup::const_reference (ChannelGroup::*at2)(ChannelGroup::size_type) const = &ChannelGroup::at;
+  ChannelGroup::size_type (ChannelGroup::*count1)(const ChannelGroup::value_type&) const = &ChannelGroup::count;
+  ChannelGroup::size_type (ChannelGroup::*count2)(const ChannelGroup::key_type&) const = &ChannelGroup::count;
+  ChannelGroup::iterator (ChannelGroup::*erase1)(ChannelGroup::const_iterator) = &ChannelGroup::erase;
+  ChannelGroup::size_type (ChannelGroup::*erase2)(const ChannelGroup::value_type&) = &ChannelGroup::erase;
+  ChannelGroup::size_type (ChannelGroup::*erase3)(const ChannelGroup::key_type&) = &ChannelGroup::erase;
+  ChannelGroup::iterator (ChannelGroup::*erase4)(ChannelGroup::const_iterator,ChannelGroup::const_iterator) = &ChannelGroup::erase;
+  void (ChannelGroup::*pron1)(const ChannelGroup::value_type& ,uint16_t) =  &ChannelGroup::setPriorityON;
+  void (ChannelGroup::*pron2)(const ChannelGroup::key_type& ,uint16_t) =  &ChannelGroup::setPriorityON;
+  void (ChannelGroup::*pron3)(uint16_t) =  &ChannelGroup::setPriorityON;
+  void (ChannelGroup::*proff1)(const ChannelGroup::value_type& ,uint16_t) =  &ChannelGroup::setPriorityOFF;
+  void (ChannelGroup::*proff2)(const ChannelGroup::key_type& ,uint16_t) =  &ChannelGroup::setPriorityOFF;
+  void (ChannelGroup::*proff3)(uint16_t) =  &ChannelGroup::setPriorityOFF;
+  
+  class_<ChannelGroup>("ChannelGroup",no_init)
+    .add_property("name",&ChannelGroup::getName, &ChannelGroup::setName)
+    .def("readParameters",&ChannelGroup::readParameters)
+    .def("readSettings",&ChannelGroup::readSettings)
+    .def("setV0",&ChannelGroup::setV0)
+    .def("setV1",&ChannelGroup::setV1)
+    .def("setI0",&ChannelGroup::setI0)
+    .def("setI1",&ChannelGroup::setI1)
+    .def("setRampup",&ChannelGroup::setRampup)
+    .def("setRampdown",&ChannelGroup::setRampdown)
+    .def("setTrip",&ChannelGroup::setTrip)
+    .def("setSoftMaxV",&ChannelGroup::setSoftMaxV)
+    .def("on",&ChannelGroup::on)
+    .def("off",&ChannelGroup::off)
+    .def("__len__",&ChannelGroup::size)
+    .def("find",find1)
+    .def("find",find2)
+    .def("find",find3)
+    .def("find",find4)
+    .def("count",count1)
+    .def("count",count2)
+    .def("__getitem__",at1,return_value_policy<copy_non_const_reference>())
+    .def("__getitem__",at2,return_value_policy<copy_const_reference>())
+    .def("insert",&ChannelGroup::insert)
+    .def("insert",&ChannelGroup::insert)
+    .def("erase",erase1)
+    .def("erase",erase2)
+    .def("erase",erase3)
+    .def("erase",erase4)
+    .def("setPriorityON",pron1)
+    .def("setPriorityON",pron2)
+    .def("setPriorityON",pron3)
+    .def("setPriorityOFF",proff1)
+    .def("setPriorityOFF",proff2)
+    .def("setPriorityOFF",proff3)
+  ;
+
 }

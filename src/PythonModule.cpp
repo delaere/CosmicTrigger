@@ -64,6 +64,7 @@ BOOST_PYTHON_MODULE(VeheMencE)
   exposeToPython<SY527StatusWord>();
   exposeToPython<SY527HVChannel>();
   exposeToPython<SY527PowerSystem>();
+  exposeToPython<ChannelGroup>();
   
   // expose 1151N scaler
   exposeToPython<Scaler>();

@@ -140,7 +140,7 @@ N470HVModule::N470HVModule(uint32_t address, CaenetBridge* bridge):HVModule(addr
 void N470HVModule::discoverBoards() {
   // only one board in that module. Cannot be dynamically discovered.
   HVBoard board(0,"N470", 0, 0, 4);
-  ChannelProperties props(2, 8000, 3000, 0, 500, 500, 1000, 0, 0);
+  ChannelProperties props(2, 8000, 3000, 0, 500, 500, 1000, 0, 0, 0);
   board.add(props);
   boards_.insert({0,board});
   
