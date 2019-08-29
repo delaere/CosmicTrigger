@@ -16,7 +16,7 @@ Status of the supported boards:
 | Board     |  Purpose           | Implementaton   |  Tested       |  C++  | Python |
 |-----------|--------------------|-----------------|---------------|-------|--------|
 | V1718     | USB VME bridge     | Full            | yes           | yes   | yes    |
-| SY527     | CAEN Power system  | Full(initial fw)| yes           | yes   | yes    |
+| SY527     | CAEN Power system  | Full            | yes           | yes   | yes    |
 | N470      | CAEN NIM HV module | Full            | yes           | yes   | yes    |
 | V288      | CAENET bridge      | Full            | yes           | yes   | yes    |
 | V812      | COINC / DISCRI     | Full            | yes           | yes   | yes    |
