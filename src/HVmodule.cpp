@@ -48,8 +48,9 @@ ChannelProperties::ChannelProperties(
           uint16_t vres,
           uint16_t ires,
           uint16_t vdec,
-          uint16_t idec ):current_unit_(current_unit),vmax_(vmax),imax_(imax),
-            rampmin_(rampmin),rampmax_(rampmax),vres_(vres),ires_(ires),vdec_(vdec),idec_(idec) {
+          uint16_t idec, 
+          uint16_t vmdec ):current_unit_(current_unit),vmax_(vmax),imax_(imax),
+            rampmin_(rampmin),rampmax_(rampmax),vres_(vres),ires_(ires),vdec_(vdec),idec_(idec),vmdec_(vmdec) {
   LOG_TRACE("current_unit: " + to_string(current_unit));
   LOG_TRACE("vmax: " + to_string(vmax));
   LOG_TRACE("imax: " + to_string(imax));
@@ -59,6 +60,7 @@ ChannelProperties::ChannelProperties(
   LOG_TRACE("ires: " + to_string(ires));
   LOG_TRACE("vdec: " + to_string(vdec));
   LOG_TRACE("idec: " + to_string(idec));
+  LOG_TRACE("vmdec: " + to_string(vmdec));
 }
             
 HVChannel::HVChannel(uint32_t address, const HVBoard& board, uint32_t id, uint8_t type, CaenetBridge* bridge):bridge_(bridge),type_(type),address_(address),id_(id),
@@ -188,7 +190,7 @@ template<> void exposeToPython<HVBoard>() {
 }
 
 template<> void exposeToPython<ChannelProperties>() {
-  class_<ChannelProperties>("ChannelProperties",init<uint8_t,uint32_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t>())
+  class_<ChannelProperties>("ChannelProperties",init<uint8_t,uint32_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t>())
     .def("getCurrentUnit",&ChannelProperties::getCurrentUnit)
     .def("getVMax",&ChannelProperties::getVMax)
     .def("getIMax",&ChannelProperties::getIMax)
@@ -198,6 +200,7 @@ template<> void exposeToPython<ChannelProperties>() {
     .def("getIResolution",&ChannelProperties::getIResolution)
     .def("getVDecimals",&ChannelProperties::getVDecimals)
     .def("getIDecimals",&ChannelProperties::getIDecimals)
+    .def("getVMaxDecimals",&ChannelProperties::getVMaxDecimals)
   ;
 }
 

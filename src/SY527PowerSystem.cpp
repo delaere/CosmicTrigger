@@ -227,7 +227,8 @@ void SY527PowerSystem::discoverBoards() {
         uint16_t ires    = (boardDesc[24]>>8)+((boardDesc[23]&0xFF)<<8);
         uint16_t vdec    = (boardDesc[25]>>8)+((boardDesc[24]&0xFF)<<8);
         uint16_t idec    = (boardDesc[26]>>8)+((boardDesc[25]&0xFF)<<8);
-        ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec);
+        uint16_t vmdec   = ((boardDesc[16]&0x800)>>11);
+        ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec,vmdec);
         board.add(props);
         boards_.insert({i,board});
         // instantiate the channels
@@ -249,7 +250,8 @@ void SY527PowerSystem::discoverBoards() {
           uint16_t ires    =  boardDesc[startword+9];
           uint16_t vdec    =  boardDesc[startword+10];
           uint16_t idec    =  boardDesc[startword+11];
-          ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec);
+          uint16_t vmdec   = ((boardDesc[startword+1]&0x8)>>3);
+          ChannelProperties props(curruni,vmax,imax,rpmin,rpmax,vres,ires,vdec,idec,vmdec);
           board.add(props);
         }
         boards_.insert({i,board});
@@ -325,12 +327,12 @@ ChannelGroup SY527PowerSystem::getGroup(uint n) {
                        char(groupDefinition[5]>>8)};
   ChannelGroup group(n,name,bridge_,address_);
   // channels
-  for(uint i = 6;i<groupDefinition.size();i+=2) {
+  for(uint i = 6;i<groupDefinition.size()-1;i+=2) {
     uint8_t board = groupDefinition[i]>>8;
     uint8_t chan = groupDefinition[i]&0xFF;
     uint8_t priorityOn = groupDefinition[i+1]>>8;
     uint8_t priorityOff = groupDefinition[i+1]&0xFF;
-    group.insert((SY527HVChannel*)(channel(board,chan)));
+    group.channels_.push_back((SY527HVChannel*)(channel(board,chan)));
     group.back()->setPriorityON(priorityOn);
     group.back()->setPriorityOFF(priorityOff);
   }
@@ -645,6 +647,27 @@ void ChannelGroup::setPriorityOFF(const key_type& channel, uint16_t priority) {
   }
 }
 
+void ChannelGroup::setPriorityON(uint16_t priority) {
+  assert(priority<=16);
+  // set the priority
+  bridge_->write({0x1,address_,0x63, id_,priority});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  // update channel objects
+  for(auto channel : channels_) {
+    channel->setPriorityON(priority);
+  }
+}
+  
+void ChannelGroup::setPriorityOFF(uint16_t priority) {
+  assert(priority<=16);
+  // set the priority
+  bridge_->write({0x1,address_,0x62, id_,priority});
+  auto [ status, response ] = bridge_->readResponse(); checkCAENETexception(status);
+  // update channel objects
+  for(auto channel : channels_) {
+    channel->setPriorityOFF(priority);
+  }
+}
 
 using namespace boost::python;
 
@@ -684,6 +707,8 @@ template<> void exposeToPython<SY527HVChannel>() {
     .def("setPoweronFlag",&SY527HVChannel::setPoweronFlag)
     .add_property("name",&ChannelGroup::getName, &ChannelGroup::setName)
     .def("getStatus",&SY527HVChannel::getStatus)
+    .def("getPriorityON",&SY527HVChannel::getPriorityON)
+    .def("getPriorityOFF",&SY527HVChannel::getPriorityOFF)
   ;
 }
 
@@ -731,8 +756,10 @@ template<> void exposeToPython<ChannelGroup>() {
   ChannelGroup::iterator (ChannelGroup::*erase4)(ChannelGroup::const_iterator,ChannelGroup::const_iterator) = &ChannelGroup::erase;
   void (ChannelGroup::*pron1)(const ChannelGroup::value_type& ,uint16_t) =  &ChannelGroup::setPriorityON;
   void (ChannelGroup::*pron2)(const ChannelGroup::key_type& ,uint16_t) =  &ChannelGroup::setPriorityON;
+  void (ChannelGroup::*pron3)(uint16_t) =  &ChannelGroup::setPriorityON;
   void (ChannelGroup::*proff1)(const ChannelGroup::value_type& ,uint16_t) =  &ChannelGroup::setPriorityOFF;
   void (ChannelGroup::*proff2)(const ChannelGroup::key_type& ,uint16_t) =  &ChannelGroup::setPriorityOFF;
+  void (ChannelGroup::*proff3)(uint16_t) =  &ChannelGroup::setPriorityOFF;
   
   class_<ChannelGroup>("ChannelGroup",no_init)
     .add_property("name",&ChannelGroup::getName, &ChannelGroup::setName)
@@ -765,8 +792,10 @@ template<> void exposeToPython<ChannelGroup>() {
     .def("erase",erase4)
     .def("setPriorityON",pron1)
     .def("setPriorityON",pron2)
+    .def("setPriorityON",pron3)
     .def("setPriorityOFF",proff1)
     .def("setPriorityOFF",proff2)
+    .def("setPriorityOFF",proff3)
   ;
 
 }

@@ -163,9 +163,11 @@ public:
           uint16_t vres,
           uint16_t ires,
           uint16_t vdec,
-          uint16_t idec );
+          uint16_t idec,
+          uint16_t vmdec
+                   );
   ChannelProperties():current_unit_(0),vmax_(0),imax_(0),
-            rampmin_(0),rampmax_(0),vres_(0),ires_(0),vdec_(0),idec_(0) { }
+            rampmin_(0),rampmax_(0),vres_(0),ires_(0),vdec_(0),idec_(0),vmdec_(0) { }
   virtual ~ChannelProperties() {};
 
   inline uint8_t getCurrentUnit() const { return current_unit_; }
@@ -177,6 +179,7 @@ public:
   inline uint16_t getIResolution() const { return ires_; }
   inline uint16_t getVDecimals() const { return vdec_; }
   inline uint16_t getIDecimals() const { return idec_; }
+  inline uint16_t getVMaxDecimals() const { return vmdec_; }
   
 private:
   uint8_t current_unit_; // 0:A, 1:mA, 2:uA, 3:nA
@@ -188,6 +191,7 @@ private:
   uint16_t ires_;
   uint16_t vdec_;
   uint16_t idec_;
+  uint16_t vmdec_;
 };
 
 // One HV module or crate
