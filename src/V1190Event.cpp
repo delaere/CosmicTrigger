@@ -33,13 +33,13 @@ bool operator==(const V1190Event& lhs, const V1190Event& rhs)
 std::string TDCHit::toString() const {
   std::stringstream  output;
   if(getType()) {
+    output << "Trailing edge measurement on channel " << std::dec << getChannel();
+    output << " : " << getMeasurement() << std::endl;
+  } else {
     output << "Leading edge measurement on channel " << std::dec << getChannel();
     output << " : " << getMeasurement();
     output << " ( width = " << (getMeasurement()>>12);
     output << ", leading time = " << (getMeasurement()&0xFFF) << " for pair measurement )" << std::endl;
-  } else {
-    output << "Trailing edge measurement on channel " << std::dec << getChannel();
-    output << " : " << getMeasurement() << std::endl;
   }
   return output.str();
 }
@@ -50,7 +50,7 @@ std::string TDCEvent::toString() const {
   output << ", bunch id: " << bunchid_ << " :" << std::endl;
   output << "  Errors: " << std::showbase << std::hex << errorflags_ << std::endl;
   if(hits_.size()) {
-    output << "  Recorded measurements :" << std::endl; 
+    output << "  Recorded measurements :" << std::endl;
     for (auto measurement : hits_) {
       output << "    " << measurement << std::endl;
     }
@@ -64,12 +64,12 @@ std::string V1190Event::toString() const {
   output << " (GEO " << std::showbase << std::hex << geo_ << ", status " << status_ << ")" << std::endl;
   if(extTriggerTime_) output << "Extended Trigger Time: " << std::dec << extTriggerTime_ << std::endl;
   if(hits_.size()) {
-    output << "Recorded measurements :" << std::endl; 
+    output << "Recorded measurements :" << std::endl;
     for (auto measurement : hits_) {
       output << "  " << measurement << std::endl;
     }
   } else if (tdcevents_.size()) {
-    output << "Recorded TDC events :" << std::endl; 
+    output << "Recorded TDC events :" << std::endl;
     for (auto measurement : tdcevents_) {
       output << measurement << std::endl;
     }
