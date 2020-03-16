@@ -24,6 +24,15 @@ Status of the supported boards:
 | 1151N     | Lecroy Scaler      | Full            | yes           | yes   | yes    |
 | TTCvi     | TTC controler      | Full            | yes           | yes   | yes    |
 
+## Requirements
+The following external libraries are required to compile and run this project:
+ - CAENVMELib library (https://www.caen.it/download/?filter=CAENVMELib%20Library)
+ - boost (stacktrace_basic, stacktrace_noop, thread, log, log_setup, python27). Tested with boost 1.69.0
+ - Python development headers (for python bindings)
+ - c++17 compatible compiler. Tested with gcc/g++ 7.3.0
+
+In addition, in order to be able to connect to the VME bridge, the CAEN USB driver for the V1718 must be installed (https://www.caen.it/download/?filter=V1718)
+
 ## Installation
 
 The project is built through cmake:

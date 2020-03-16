@@ -59,10 +59,10 @@ Tdc::Tdc(VmeController* controller,uint32_t address):VmeBoard(controller, addres
   info_.revision_minor_ |= (readData<uint16_t>(baseAddress()+0x4040)&0xFF)<<8;
   // firmware version
   info_.firmwareVersion_ = readData<uint16_t>(baseAddress()+0x1026)&0xFF;
-  
-  LOG_DEBUG("CAEN V1190"+ ((info_.version_&0x1) ? string("B") : string("A")) + " initialized. " + 
-            "Serial number: " + int_to_hex(info_.serial_number_) + 
-            " rev. " + to_string(info_.revision_major_) + "." + to_string(info_.revision_minor_) + 
+
+  LOG_DEBUG("CAEN V1190"+ ((info_.version_&0x1) ? string("B") : string("A")) + " initialized. " +
+            "Serial number: " + int_to_hex(info_.serial_number_) +
+            " rev. " + to_string(info_.revision_major_) + "." + to_string(info_.revision_minor_) +
             " fw. "  + to_string(info_.firmwareVersion_>>4) + "." + to_string(info_.firmwareVersion_&0xF));
 }
 
@@ -79,7 +79,7 @@ void Tdc::enableFIFO(bool enable) {
   reg.setBit(V1190ControlRegister::cvFIFOEN,enable);
   setControlRegister(reg);
   if(enable) {
-    LOG_INFO("FIFO enabled !") 
+    LOG_INFO("FIFO enabled !");
   } else {
     LOG_INFO("FIFO disabled !");
   }
@@ -90,7 +90,7 @@ void Tdc::enableBERR(bool enable) {
   reg.setBit(V1190ControlRegister::cvBERREN,enable);
   setControlRegister(reg);
   if(enable) {
-    LOG_INFO("BERR enabled !") 
+    LOG_INFO("BERR enabled !");
   } else {
     LOG_INFO("BERR disabled !");
   }
@@ -100,8 +100,8 @@ void Tdc::enableExtdTrigTime(bool enable) {
   V1190ControlRegister reg = getControlRegister();
   reg.setBit(V1190ControlRegister::cvEXTDTTEN,enable);
   setControlRegister(reg);
-  if(enable) { 
-    LOG_INFO("Extended Trigger Time Tag enabled !") 
+  if(enable) {
+    LOG_INFO("Extended Trigger Time Tag enabled !");
   } else {
     LOG_INFO("Extended Trigger Time Tag disabled !");
   }
@@ -112,7 +112,7 @@ void Tdc::enableCompensation(bool enable) {
   reg.setBit(V1190ControlRegister::cvCOMPEN,enable);
   setControlRegister(reg);
   if(enable) {
-    LOG_INFO("Compensation enabled !") 
+    LOG_INFO("Compensation enabled !");
   } else {
     LOG_INFO("Compensation disabled !");
   }
@@ -179,13 +179,13 @@ V1190Event Tdc::getEvent(bool useFIFO) {
     std::tie(eventId, nwords) = readFIFO();
   }
   // in D32 readout, read until we get to the trailer and fill progressively the event record
-  for(uint16_t i=0; !(useFIFO&&i) || (i<nwords);++i) { 
+  for(uint16_t i=0; !(useFIFO&&i) || (i<nwords);++i) {
     data = controller()->mode(cvA32_U_DATA,cvD32)->readData<uint32_t>(baseAddress());
     switch(data>>27) {
       case 0x8: // global header
         event = V1190Event(data);
         if(useFIFO && event.getEventCount()!=eventId)
-          LOG_WARN("Event Count mismatch: Expected " + to_string(eventId) + " from FIFO but got " 
+          LOG_WARN("Event Count mismatch: Expected " + to_string(eventId) + " from FIFO but got "
                    + to_string(event.getEventCount()) + " in the output buffer.");
         break;
       case 0x10: // global trailer
@@ -241,7 +241,7 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
   // read all
   bool done = false;
   while(!done) {
-    std::vector<uint32_t> tmp; 
+    std::vector<uint32_t> tmp;
     // read n 32 bits words (from FIFO or default)
     try {
       tmp = controller()->mode(cvA32_U_BLT,cvD32)->blockReadData<uint32_t>(baseAddress(), nwords);
@@ -286,7 +286,7 @@ std::vector<V1190Event> Tdc::getEvents(bool useFIFO) {
       case 0x3: // TDC trailer
         event.addTDCEvent(tdc);
         break;
-      case 0x18: // Filler... 
+      case 0x18: // Filler...
         break;
     }
   }
@@ -304,27 +304,27 @@ void Tdc::setAcquisitionMode(Tdc::CVAcquisitionMode mode) {
   writeOpcode((mode==cvTrigger ? 0x0000 :0x0100));
   LOG_DEBUG("Trigger Mode : " + to_string(mode));
 }
-  
+
 Tdc::CVAcquisitionMode Tdc::getAcquisitionMode(){
   writeOpcode(0x0200);
   return CVAcquisitionMode(readOpcode()&0x1);
 }
-  
+
 void Tdc::keepToken(bool keep) {
   writeOpcode((keep ? 0x0300 :0x0400));
   LOG_DEBUG("Keep Token : " + to_string(keep));
 }
-  
+
 void Tdc::saveUserConfiguration() {
   writeOpcode(0x0600);
   LOG_DEBUG("User configuration saved.");
 }
-  
+
 void Tdc::loadConfiguration(Tdc::CVConfiguration conf) {
   writeOpcode((conf==Tdc::cvDefault ? 0x0500 : 0x0700));
   LOG_DEBUG("Loaded " + std::string(conf==Tdc::cvDefault ? "default" : "user") + " configuration.");
 }
-  
+
 void Tdc::setStartupConfiguration(Tdc::CVConfiguration conf) {
   writeOpcode((conf==cvDefault ? 0x0900 : 0x0800));
   LOG_DEBUG("Set auto load " + std::string(conf==cvDefault ? "default" : "user") + " configuration.");
@@ -342,7 +342,7 @@ void Tdc::setTriggerWindow(Tdc::WindowConfiguration &conf) {
   writeOpcode((conf.triggerTimeSubstraction ? 0x1400 : 0x1500));
   LOG_DEBUG("Trigger Window configured.");
 }
-  
+
 Tdc::WindowConfiguration Tdc::getTriggerWindow() {
   writeOpcode(0x1600);
   Tdc::WindowConfiguration conf;
@@ -358,22 +358,22 @@ void Tdc::setEdgeDetectionConfiguration(Tdc::CVEdgeDetection conf){
   writeOpcode(0x2200);
   writeOpcode(conf);
 }
-  
+
 Tdc::CVEdgeDetection Tdc::getEdgeDetectionConfiguration(){
   writeOpcode(0x2300);
   return Tdc::CVEdgeDetection(readOpcode()&0x3);
 }
-  
+
 void Tdc::setEdgeLSB(Tdc::CVEdgeLSB lsb){
   writeOpcode(0x2400);
   writeOpcode(lsb);
 }
-  
+
 void Tdc::setPairResolution(Tdc::CVPairModeEdgeLSB edge, Tdc::CVPairModeWidthLSB width){
   writeOpcode(0x2500);
   writeOpcode(uint16_t(edge) + (uint16_t(width)<<8));
 }
-  
+
 Tdc::CVEdgeLSB Tdc::getResolution(){
   writeOpcode(0x2600);
   // assumes to be in leading/trailing edge mode
@@ -386,12 +386,12 @@ std::pair<Tdc::CVPairModeEdgeLSB, Tdc::CVPairModeWidthLSB> Tdc::getPairResolutio
   // assumes to be in pair mode
   return make_pair(Tdc::CVPairModeEdgeLSB(opcode&0x7),Tdc::CVPairModeWidthLSB((opcode>>8)&0xF));
 }
-  
+
 void Tdc::setDeadTime(Tdc::CVDeadTime dt){
   writeOpcode(0x2800);
   writeOpcode(dt);
 }
-  
+
 Tdc::CVDeadTime Tdc::getDeadTime(){
   writeOpcode(0x2900);
   return Tdc::CVDeadTime(readOpcode()&0x3);
@@ -400,12 +400,12 @@ Tdc::CVDeadTime Tdc::getDeadTime(){
 void Tdc::enableTDCHeader(bool enable){
   writeOpcode((enable? 0x3000 : 0x3100));
 }
-  
+
 bool Tdc::isTDCHeaderEnabled(){
   writeOpcode(0x3200);
   return (readOpcode()&0x1);
 }
-  
+
 void Tdc::setMaxHitsPerEvent(int numHits){
   writeOpcode(0x3300);
   uint16_t opcode;
@@ -418,7 +418,7 @@ void Tdc::setMaxHitsPerEvent(int numHits){
   }
   writeOpcode(opcode);
 }
-  
+
 int Tdc::getMaxHitsPerEvent(){
   writeOpcode(0x3400);
   uint16_t opcode = readOpcode()&0xF;
@@ -426,7 +426,7 @@ int Tdc::getMaxHitsPerEvent(){
   if(opcode==9) return -1;
   return 1<<(opcode-1);
 }
-  
+
 void Tdc::configureTDCReadout(bool enableErrorMask, bool enableBypass, uint16_t internalErrorTypes, uint16_t fifoSize){
   writeOpcode((enableErrorMask? 0x3500 : 0x3600));
   writeOpcode((enableBypass? 0x3700 : 0x3800));
@@ -435,12 +435,12 @@ void Tdc::configureTDCReadout(bool enableErrorMask, bool enableBypass, uint16_t 
   writeOpcode(0x3B00);
   writeOpcode(fifoSize);
 }
-  
+
 uint16_t Tdc::getInternalErrorTypes(){
   writeOpcode(0x3A00);
   return readOpcode();
 }
-  
+
 uint16_t Tdc::getFifoSize(){
   writeOpcode(0x3C00);
   return readOpcode();
@@ -451,7 +451,7 @@ void Tdc::enableChannel(uint8_t channel, bool enable){
   if(channel&128) opcode = (enable? 0x4200 : 0x4300);
   writeOpcode(opcode);
 }
-  
+
 void Tdc::writeEnablePattern(std::bitset<128> &pattern){
   writeOpcode(0x4400);
   int nTDC = (info_.version_&0x1) ? 4 : 8;
@@ -459,7 +459,7 @@ void Tdc::writeEnablePattern(std::bitset<128> &pattern){
     writeOpcode((pattern>>(16*i)).to_ulong());  // shift and truncate
   }
 }
-  
+
 std::bitset<128> Tdc::readEnablePattern(){
   writeOpcode(0x4500);
   std::bitset<128> pattern = 0;
@@ -667,7 +667,7 @@ template<> void exposeToPython<Tdc>() {
     .def_readwrite("rejectMargin", &Tdc::WindowConfiguration::rejectMargin)
     .def_readwrite("triggerTimeSubstraction", &Tdc::WindowConfiguration::triggerTimeSubstraction)
     .def("computeOffset",&Tdc::WindowConfiguration::computeOffset)
-    .staticmethod("computeOffset") 
+    .staticmethod("computeOffset")
   ;
   enum_<Tdc::CVAcquisitionMode>("CVAcquisitionMode")
     .value("cvContinuous", Tdc::CVAcquisitionMode::cvContinuous)
