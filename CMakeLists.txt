@@ -63,7 +63,8 @@ set(VEHEMENCE_SOURCES
 # Build and link the shared library
 add_library(VeheMencE SHARED ${VEHEMENCE_SOURCES})
 target_include_directories(VeheMencE PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(VeheMencE ${CAEN_LIBRARY} ${Boost_LIBRARIES})
+target_link_libraries(VeheMencE ${CAEN_LIBRARY} ${Boost_LIBRARIES}
+    ${CMAKE_DL_LIBS})
 
 target_compile_features(VeheMencE PUBLIC cxx_std_17)
 
