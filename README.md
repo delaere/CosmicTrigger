@@ -28,10 +28,9 @@ Status of the supported boards:
 
 The project is built through cmake:
 ```
-cd build
-cmake ..
-make
-[make install]
+cmake -S . -B build
+cmake --build build
+[cmake --build build --target install]
 ```
 
 ## Usage
