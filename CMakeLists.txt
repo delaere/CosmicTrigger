@@ -7,14 +7,12 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 # Control the verbosity of the build
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
+# no gnu++
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Python version
 set(PYTHON_MIN_VERSION "2.7" CACHE STRING "Minimum Python version to look for")
 set(Boost_PYTHON_VERSION_TAG "python27" CACHE STRING "Suffix for boost::python shared library (X in libboost_pythonX.py)")
-
-# Use C++17
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Python headers and configure the build
 find_package(PythonLibs ${PYTHON_MIN_VERSION} REQUIRED)
@@ -69,6 +67,8 @@ set(VEHEMENCE_SOURCES
 add_library(VeheMencE SHARED ${VEHEMENCE_SOURCES})
 target_include_directories(VeheMencE PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(VeheMencE ${CAEN_LIBRARY} ${Boost_LIBRARIES})
+
+target_compile_features(VeheMencE PUBLIC cxx_std_17)
 
 # Examples
 add_subdirectory (examples)
