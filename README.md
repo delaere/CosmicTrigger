@@ -26,12 +26,29 @@ Status of the supported boards:
 
 ## Installation
 
+### Requirements
+
+- CMake >= 3.11
+- C++17-compatible compiler
+- python >= 2.7
+- boost >= 1.54, components: python, stacktrace, thread, log, log
+- CAENVMELib: can be downloaded from [here](https://www.caen.it/products/caenvmelib-library/), requires creating a CAEN account (free)
+
+### Build
+
 The project is built through cmake:
 ```
 cmake -S . -B build
-cmake --build build
+cmake --build build -j 4
 [cmake --build build --target install]
 ```
+
+### Notes for CentOS7 and similar dinosaurs
+
+- Install modern CMake from EPEL (activate EPEL: `yum -y install epel-release`); `yum -y install cmake3.x86_64`. Note that you'll need to run with `cmake3` instead of `cmake`.
+- Install boost-1.69: `yum install -y boost169-python2-devel.x86_64 boost169-stacktrace.x86_64 boost169-thread.x86_64 boost169-log.x86_64`
+- Install [devtoolset](https://www.softwarecollections.org/en/scls/rhscl/devtoolset-8/) to have a newer compiler (tested with version 8); enable it using `scl enable devtoolset-8 $SHELL`
+- Configure the build using `cmake3 -S . -B build -DBOOST_LIBRARYDIR=/usr/lib64/boost169 -DBOOST_INCLUDEDIR=/usr/include/boost169`
 
 ## Usage
 
