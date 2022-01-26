@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.11)
 project (VeheMencE)
 
 # Don't put the lib prefix in front of the livrary, so that it nicely loads in python
