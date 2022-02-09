@@ -49,7 +49,7 @@ void throw_with_trace(const E& e) {
 class CAENVMEexception: public std::exception
 {
   public:
-    explicit CAENVMEexception(const CAENVME_API& errorcode) : errorcode_(errorcode) { }
+    explicit CAENVMEexception(const CVErrorCodes& errorcode) : errorcode_(errorcode) { }
     
     ~CAENVMEexception() {}
 
@@ -59,10 +59,10 @@ class CAENVMEexception: public std::exception
     }
     
   private:
-    CAENVME_API errorcode_;
+    CVErrorCodes errorcode_;
 };
 
-#define checkCAENVMEexception(x) {CAENVME_API status_cve = (x); if (status_cve) throw_with_trace(CAENVMEexception(status_cve));}
+#define checkCAENVMEexception(x) {CVErrorCodes status_cve = (x); if (status_cve) throw_with_trace(CAENVMEexception(status_cve));}
 
 class CAENETexception: public std::exception
 {
